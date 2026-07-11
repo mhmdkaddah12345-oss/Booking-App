@@ -5,10 +5,13 @@ import Link from "next/link";
 
 type Day = { date: string; label: string };
 type Slot = { time: string; available: boolean };
+type Service = { id: string; name: string; durationMinutes: number };
 
 export default function BookingPage() {
   const [businessName, setBusinessName] = useState<string>("");
   const [days, setDays] = useState<Day[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [selectedServiceId, setSelectedServiceId] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<string>("");
 
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -30,26 +33,29 @@ export default function BookingPage() {
         setBusinessName(data.business.name);
         setDays(data.days);
         setSelectedDate(data.days[0]?.date ?? "");
+        setServices(data.business.services);
+        setSelectedServiceId(data.business.services[0]?.id ?? "");
       });
   }, []);
 
   useEffect(() => {
-    if (!selectedDate) return;
+    if (!selectedDate || !selectedServiceId) return;
     setSlotsLoading(true);
     setSelectedTime(null);
     setFormError(null);
     setSuccessMessage(null);
-    fetch(`/api/slots?date=${selectedDate}`)
+    setJoiningWaitlist(false);
+    fetch(`/api/slots?date=${selectedDate}&serviceId=${selectedServiceId}`)
       .then((r) => r.json())
       .then((data) => {
         setSlots(data.slots);
         setFullyBooked(data.fullyBooked);
       })
       .finally(() => setSlotsLoading(false));
-  }, [selectedDate]);
+  }, [selectedDate, selectedServiceId]);
 
   function refreshSlots() {
-    fetch(`/api/slots?date=${selectedDate}`)
+    fetch(`/api/slots?date=${selectedDate}&serviceId=${selectedServiceId}`)
       .then((r) => r.json())
       .then((data) => {
         setSlots(data.slots);
@@ -66,7 +72,13 @@ export default function BookingPage() {
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: selectedDate, time: selectedTime, customerName: name, customerPhone: phone }),
+        body: JSON.stringify({
+          date: selectedDate,
+          time: selectedTime,
+          serviceId: selectedServiceId,
+          customerName: name,
+          customerPhone: phone,
+        }),
       });
       if (res.status === 409) {
         setFormError("Sorry, that slot was just taken. Please pick another time.");
@@ -96,7 +108,12 @@ export default function BookingPage() {
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: selectedDate, customerName: name, customerPhone: phone }),
+        body: JSON.stringify({
+          date: selectedDate,
+          serviceId: selectedServiceId,
+          customerName: name,
+          customerPhone: phone,
+        }),
       });
       if (!res.ok) {
         setFormError("Something went wrong. Please try again.");
@@ -120,7 +137,23 @@ export default function BookingPage() {
             Owner dashboard →
           </Link>
         </div>
-        <p className="mt-1 text-sm text-zinc-500">Pick a day and time to book your appointment.</p>
+        <p className="mt-1 text-sm text-zinc-500">Choose a service, then pick a day and time.</p>
+
+        <div className="mt-6 flex flex-col gap-2">
+          {services.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setSelectedServiceId(s.id)}
+              className={`rounded-lg px-4 py-3 text-left text-sm font-medium ring-1 transition-colors ${
+                selectedServiceId === s.id
+                  ? "bg-zinc-900 text-white ring-zinc-900"
+                  : "bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-100"
+              }`}
+            >
+              {s.name} <span className="opacity-70">— {s.durationMinutes} min</span>
+            </button>
+          ))}
+        </div>
 
         <div className="mt-6 flex gap-2 overflow-x-auto pb-2">
           {days.map((d) => (
@@ -144,7 +177,7 @@ export default function BookingPage() {
           ) : fullyBooked ? (
             <div>
               <p className="text-sm font-medium text-zinc-800">
-                This day is fully booked.
+                This day is fully booked for this service.
               </p>
               <p className="mt-1 text-sm text-zinc-500">
                 Join the waitlist and we&apos;ll message you if a slot opens up.

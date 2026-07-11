@@ -7,6 +7,8 @@ type Booking = {
   id: string;
   date: string;
   time: string;
+  serviceName: string;
+  durationMinutes: number;
   customerName: string;
   customerPhone: string;
 };
@@ -14,6 +16,8 @@ type Booking = {
 type WaitlistEntry = {
   id: string;
   date: string;
+  serviceName: string;
+  durationMinutes: number;
   customerName: string;
   customerPhone: string;
   status: "waiting" | "notified";
@@ -94,6 +98,9 @@ export default function DashboardPage() {
                       >
                         <span>
                           <span className="font-medium text-zinc-800">{b.time}</span>{" "}
+                          <span className="text-zinc-500">
+                            ({b.durationMinutes} min, {b.serviceName})
+                          </span>{" "}
                           <span className="text-zinc-600">
                             — {b.customerName} ({b.customerPhone})
                           </span>
@@ -122,7 +129,7 @@ export default function DashboardPage() {
                           }`}
                         >
                           <span className="text-zinc-700">
-                            {w.customerName} ({w.customerPhone})
+                            {w.customerName} ({w.customerPhone}) — {w.serviceName} ({w.durationMinutes} min)
                             {w.status === "notified" && (
                               <span className="ml-2 font-medium text-amber-700">
                                 — notified for {w.notifiedTime}

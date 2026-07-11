@@ -3,11 +3,12 @@ import { getSlotsForDay, isDayFullyBooked } from "@/lib/store";
 
 export async function GET(request: NextRequest) {
   const date = request.nextUrl.searchParams.get("date");
-  if (!date) {
-    return NextResponse.json({ error: "date is required" }, { status: 400 });
+  const serviceId = request.nextUrl.searchParams.get("serviceId");
+  if (!date || !serviceId) {
+    return NextResponse.json({ error: "date and serviceId are required" }, { status: 400 });
   }
   return NextResponse.json({
-    slots: getSlotsForDay(date),
-    fullyBooked: isDayFullyBooked(date),
+    slots: getSlotsForDay(date, serviceId),
+    fullyBooked: isDayFullyBooked(date, serviceId),
   });
 }

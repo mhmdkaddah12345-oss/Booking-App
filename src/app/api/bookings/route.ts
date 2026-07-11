@@ -3,13 +3,13 @@ import { createBooking } from "@/lib/store";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { date, time, customerName, customerPhone } = body ?? {};
+  const { date, time, serviceId, customerName, customerPhone } = body ?? {};
 
-  if (!date || !time || !customerName || !customerPhone) {
+  if (!date || !time || !serviceId || !customerName || !customerPhone) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
 
-  const result = createBooking(date, time, customerName, customerPhone);
+  const result = createBooking(date, time, serviceId, customerName, customerPhone);
   if (!result.success) {
     return NextResponse.json({ error: result.error }, { status: 409 });
   }
