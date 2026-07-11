@@ -139,21 +139,20 @@ export default function BookingPage() {
         </div>
         <p className="mt-1 text-sm text-zinc-500">Choose a service, then pick a day and time.</p>
 
-        <div className="mt-6 flex flex-col gap-2">
-          {services.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setSelectedServiceId(s.id)}
-              className={`rounded-lg px-4 py-3 text-left text-sm font-medium ring-1 transition-colors ${
-                selectedServiceId === s.id
-                  ? "bg-zinc-900 text-white ring-zinc-900"
-                  : "bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-100"
-              }`}
-            >
-              {s.name} <span className="opacity-70">— {s.durationMinutes} min</span>
-            </button>
-          ))}
-        </div>
+        <label className="mt-6 flex flex-col gap-1 text-sm text-zinc-600">
+          Service
+          <select
+            value={selectedServiceId}
+            onChange={(e) => setSelectedServiceId(e.target.value)}
+            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900"
+          >
+            {services.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name} — {s.durationMinutes} min
+              </option>
+            ))}
+          </select>
+        </label>
 
         <div className="mt-6 flex gap-2 overflow-x-auto pb-2">
           {days.map((d) => (
