@@ -3,7 +3,7 @@ import { cancelBooking } from "@/lib/store";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const result = cancelBooking(id);
+  const result = await cancelBooking(id);
   if (!result.success) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }

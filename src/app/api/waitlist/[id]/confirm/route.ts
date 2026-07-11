@@ -3,7 +3,7 @@ import { confirmWaitlistPromotion } from "@/lib/store";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const result = confirmWaitlistPromotion(id);
+  const result = await confirmWaitlistPromotion(id);
   if (!result.success) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }

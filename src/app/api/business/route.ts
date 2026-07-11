@@ -3,7 +3,7 @@ import { getBusinessConfig, updateBusinessConfig } from "@/lib/store";
 
 export async function GET() {
   return NextResponse.json({
-    business: getBusinessConfig(),
+    business: await getBusinessConfig(),
   });
 }
 
@@ -16,6 +16,6 @@ export async function PATCH(request: NextRequest) {
   if (typeof endHour === "number") updates.endHour = endHour;
   if (Array.isArray(offDays)) updates.offDays = offDays;
 
-  const business = updateBusinessConfig(updates);
+  const business = await updateBusinessConfig(updates);
   return NextResponse.json({ business });
 }

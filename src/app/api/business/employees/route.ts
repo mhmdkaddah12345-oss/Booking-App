@@ -9,6 +9,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
 
-  const employee = addEmployee(name);
+  const employee = await addEmployee(name);
   return NextResponse.json({ employee }, { status: 201 });
 }

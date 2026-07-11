@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
 
-  const entry = joinWaitlist(date, serviceId, customerName, customerPhone, note || undefined);
+  const entry = await joinWaitlist(date, serviceId, customerName, customerPhone, note || undefined);
   if ("error" in entry) {
     return NextResponse.json({ error: entry.error }, { status: 400 });
   }

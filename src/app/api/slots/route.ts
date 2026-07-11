@@ -7,9 +7,11 @@ export async function GET(request: NextRequest) {
   if (!date || !serviceId) {
     return NextResponse.json({ error: "date and serviceId are required" }, { status: 400 });
   }
-  return NextResponse.json({
-    slots: getSlotsForDay(date, serviceId),
-    fullyBooked: isDayFullyBooked(date, serviceId),
-    closed: isDayClosed(date),
-  });
+  const [slots, fullyBooked, closed] = await Promise.all([
+    getSlotsForDay(date, serviceId),
+    isDayFullyBooked(date, serviceId),
+    isDayClosed(date),
+  ]);
+
+  return NextResponse.json({ slots, fullyBooked, closed });
 }

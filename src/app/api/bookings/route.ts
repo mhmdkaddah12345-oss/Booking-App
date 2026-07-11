@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
 
-  const result = createBooking(date, time, serviceId, customerName, customerPhone, note || undefined);
+  const result = await createBooking(date, time, serviceId, customerName, customerPhone, note || undefined);
   if (!result.success) {
     return NextResponse.json({ error: result.error }, { status: 409 });
   }

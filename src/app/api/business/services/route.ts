@@ -9,6 +9,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
 
-  const service = addService(name, durationMinutes);
+  const service = await addService(name, durationMinutes);
   return NextResponse.json({ service }, { status: 201 });
 }
