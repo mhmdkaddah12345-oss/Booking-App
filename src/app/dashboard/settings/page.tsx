@@ -9,10 +9,20 @@ type Business = {
   startHour: number;
   endHour: number;
   services: Service[];
+  offDays: number[];
 };
 
 const DURATION_OPTIONS = [15, 30, 45, 60, 75, 90, 105, 120];
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, h) => h);
+const WEEKDAYS = [
+  { value: 0, label: "Sunday" },
+  { value: 1, label: "Monday" },
+  { value: 2, label: "Tuesday" },
+  { value: 3, label: "Wednesday" },
+  { value: 4, label: "Thursday" },
+  { value: 5, label: "Friday" },
+  { value: 6, label: "Saturday" },
+];
 
 function formatHour(h: number) {
   return `${h.toString().padStart(2, "0")}:00`;
@@ -23,6 +33,7 @@ export default function SettingsPage() {
   const [name, setName] = useState("");
   const [startHour, setStartHour] = useState(9);
   const [endHour, setEndHour] = useState(18);
+  const [offDays, setOffDays] = useState<number[]>([]);
   const [savingDetails, setSavingDetails] = useState(false);
   const [detailsSaved, setDetailsSaved] = useState(false);
 
@@ -39,6 +50,7 @@ export default function SettingsPage() {
         setName(data.business.name);
         setStartHour(data.business.startHour);
         setEndHour(data.business.endHour);
+        setOffDays(data.business.offDays);
       });
   }
 
@@ -54,13 +66,18 @@ export default function SettingsPage() {
       await fetch("/api/business", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, startHour, endHour }),
+        body: JSON.stringify({ name, startHour, endHour, offDays }),
       });
       loadBusiness();
       setDetailsSaved(true);
     } finally {
       setSavingDetails(false);
     }
+  }
+
+  function toggleOffDay(day: number) {
+    setOffDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
+    setDetailsSaved(false);
   }
 
   async function addService(e: React.FormEvent) {
@@ -156,6 +173,22 @@ export default function SettingsPage() {
                     ))}
                   </select>
                 </label>
+              </div>
+              <div className="flex flex-col gap-1 text-sm text-zinc-600">
+                Closed on
+                <div className="flex flex-wrap gap-3">
+                  {WEEKDAYS.map((w) => (
+                    <label key={w.value} className="flex items-center gap-1.5 text-sm text-zinc-700">
+                      <input
+                        type="checkbox"
+                        checked={offDays.includes(w.value)}
+                        onChange={() => toggleOffDay(w.value)}
+                        className="h-4 w-4 rounded border-zinc-300"
+                      />
+                      {w.label}
+                    </label>
+                  ))}
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <button

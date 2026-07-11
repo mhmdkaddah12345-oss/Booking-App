@@ -16,6 +16,7 @@ export type BusinessConfig = {
   endHour: number; // 24h, e.g. 18 = 18:00
   slotGranularityMinutes: number; // interval between candidate start times
   services: Service[];
+  offDays: number[]; // days of week the business is closed, 0=Sunday .. 6=Saturday
 };
 
 export type BookingStatus = "booked" | "cancelled";
@@ -69,6 +70,7 @@ const store: Store =
         { id: "svc-coloring", name: "Coloring", durationMinutes: 90 },
         { id: "svc-blowout", name: "Blowout", durationMinutes: 45 },
       ],
+      offDays: [],
     },
     bookings: [],
     waitlist: [],
@@ -82,7 +84,9 @@ export function getService(serviceId: string): Service | undefined {
   return store.business.services.find((s) => s.id === serviceId);
 }
 
-export function updateBusinessConfig(updates: Partial<Pick<BusinessConfig, "name" | "startHour" | "endHour">>) {
+export function updateBusinessConfig(
+  updates: Partial<Pick<BusinessConfig, "name" | "startHour" | "endHour" | "offDays">>
+) {
   Object.assign(store.business, updates);
   return store.business;
 }
@@ -108,15 +112,23 @@ export function formatDateISO(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-export function getNextDays(count: number): { date: string; label: string }[] {
+export function isDayClosed(date: string): boolean {
+  const [y, m, d] = date.split("-").map(Number);
+  const dayOfWeek = new Date(y, m - 1, d).getDay();
+  return store.business.offDays.includes(dayOfWeek);
+}
+
+export function getNextDays(count: number): { date: string; label: string; closed: boolean }[] {
   const days = [];
   const today = new Date();
   for (let i = 0; i < count; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
+    const date = formatDateISO(d);
     days.push({
-      date: formatDateISO(d),
+      date,
       label: d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }),
+      closed: isDayClosed(date),
     });
   }
   return days;
@@ -156,7 +168,7 @@ export type SlotInfo = { time: string; available: boolean };
 
 export function getSlotsForDay(date: string, serviceId: string): SlotInfo[] {
   const service = getService(serviceId);
-  if (!service) return [];
+  if (!service || isDayClosed(date)) return [];
 
   const { startHour, endHour, slotGranularityMinutes } = store.business;
   const closeMinutes = endHour * 60;

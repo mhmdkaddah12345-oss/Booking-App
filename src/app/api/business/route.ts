@@ -10,11 +10,12 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   const body = await request.json();
-  const { name, startHour, endHour } = body ?? {};
-  const updates: { name?: string; startHour?: number; endHour?: number } = {};
+  const { name, startHour, endHour, offDays } = body ?? {};
+  const updates: { name?: string; startHour?: number; endHour?: number; offDays?: number[] } = {};
   if (typeof name === "string") updates.name = name;
   if (typeof startHour === "number") updates.startHour = startHour;
   if (typeof endHour === "number") updates.endHour = endHour;
+  if (Array.isArray(offDays)) updates.offDays = offDays;
 
   const business = updateBusinessConfig(updates);
   return NextResponse.json({ business });

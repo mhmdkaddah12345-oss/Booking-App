@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSlotsForDay, isDayFullyBooked } from "@/lib/store";
+import { getSlotsForDay, isDayFullyBooked, isDayClosed } from "@/lib/store";
 
 export async function GET(request: NextRequest) {
   const date = request.nextUrl.searchParams.get("date");
@@ -10,5 +10,6 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     slots: getSlotsForDay(date, serviceId),
     fullyBooked: isDayFullyBooked(date, serviceId),
+    closed: isDayClosed(date),
   });
 }

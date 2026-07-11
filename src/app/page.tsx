@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-type Day = { date: string; label: string };
+type Day = { date: string; label: string; closed: boolean };
 type Slot = { time: string; available: boolean };
 type Service = { id: string; name: string; durationMinutes: number };
 
@@ -16,6 +16,7 @@ export default function BookingPage() {
 
   const [slots, setSlots] = useState<Slot[]>([]);
   const [fullyBooked, setFullyBooked] = useState(false);
+  const [dayClosed, setDayClosed] = useState(false);
   const [slotsLoading, setSlotsLoading] = useState(false);
 
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -50,6 +51,7 @@ export default function BookingPage() {
       .then((data) => {
         setSlots(data.slots);
         setFullyBooked(data.fullyBooked);
+        setDayClosed(data.closed);
       })
       .finally(() => setSlotsLoading(false));
   }, [selectedDate, selectedServiceId]);
@@ -60,6 +62,7 @@ export default function BookingPage() {
       .then((data) => {
         setSlots(data.slots);
         setFullyBooked(data.fullyBooked);
+        setDayClosed(data.closed);
       });
   }
 
@@ -162,10 +165,13 @@ export default function BookingPage() {
               className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 selectedDate === d.date
                   ? "bg-zinc-900 text-white"
+                  : d.closed
+                  ? "bg-white text-zinc-400 ring-1 ring-zinc-200 hover:bg-zinc-100"
                   : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-100"
               }`}
             >
               {d.label}
+              {d.closed && " (closed)"}
             </button>
           ))}
         </div>
@@ -173,6 +179,8 @@ export default function BookingPage() {
         <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
           {slotsLoading ? (
             <p className="text-sm text-zinc-500">Loading times...</p>
+          ) : dayClosed ? (
+            <p className="text-sm font-medium text-zinc-800">We&apos;re closed on this day.</p>
           ) : fullyBooked ? (
             <div>
               <p className="text-sm font-medium text-zinc-800">
