@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type Day = { date: string; label: string };
 type Slot = { time: string; available: boolean };
@@ -113,7 +114,12 @@ export default function BookingPage() {
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="mx-auto max-w-xl">
-        <h1 className="text-2xl font-semibold text-zinc-900">{businessName || "Loading..."}</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold text-zinc-900">{businessName || "Loading..."}</h1>
+          <Link href="/dashboard" className="text-sm font-medium text-zinc-600 hover:underline">
+            Owner dashboard →
+          </Link>
+        </div>
         <p className="mt-1 text-sm text-zinc-500">Pick a day and time to book your appointment.</p>
 
         <div className="mt-6 flex gap-2 overflow-x-auto pb-2">
