@@ -118,22 +118,6 @@ export function isDayClosed(date: string): boolean {
   return store.business.offDays.includes(dayOfWeek);
 }
 
-export function getNextDays(count: number): { date: string; label: string; closed: boolean }[] {
-  const days = [];
-  const today = new Date();
-  for (let i = 0; i < count; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    const date = formatDateISO(d);
-    days.push({
-      date,
-      label: d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }),
-      closed: isDayClosed(date),
-    });
-  }
-  return days;
-}
-
 function timeToMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
   return h * 60 + m;

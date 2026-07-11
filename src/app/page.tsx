@@ -3,16 +3,38 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-type Day = { date: string; label: string; closed: boolean };
 type Slot = { time: string; available: boolean };
 type Service = { id: string; name: string; durationMinutes: number };
 
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function pad2(n: number) {
+  return n.toString().padStart(2, "0");
+}
+
+function toDateStr(year: number, month: number, day: number) {
+  return `${year}-${pad2(month + 1)}-${pad2(day)}`;
+}
+
+function daysInMonth(year: number, month: number) {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+function firstWeekdayOfMonth(year: number, month: number) {
+  return new Date(year, month, 1).getDay();
+}
+
 export default function BookingPage() {
   const [businessName, setBusinessName] = useState<string>("");
-  const [days, setDays] = useState<Day[]>([]);
+  const [offDays, setOffDays] = useState<number[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
-  const [selectedDate, setSelectedDate] = useState<string>("");
+
+  const today = new Date();
+  const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
+  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
 
   const [slots, setSlots] = useState<Slot[]>([]);
   const [fullyBooked, setFullyBooked] = useState(false);
@@ -32,8 +54,7 @@ export default function BookingPage() {
       .then((r) => r.json())
       .then((data) => {
         setBusinessName(data.business.name);
-        setDays(data.days);
-        setSelectedDate(data.days[0]?.date ?? "");
+        setOffDays(data.business.offDays);
         setServices(data.business.services);
         setSelectedServiceId(data.business.services[0]?.id ?? "");
       });
@@ -131,6 +152,34 @@ export default function BookingPage() {
     }
   }
 
+  const isAtCurrentMonth = viewYear === today.getFullYear() && viewMonth === today.getMonth();
+
+  function goToPrevMonth() {
+    if (isAtCurrentMonth) return;
+    if (viewMonth === 0) {
+      setViewYear(viewYear - 1);
+      setViewMonth(11);
+    } else {
+      setViewMonth(viewMonth - 1);
+    }
+  }
+
+  function goToNextMonth() {
+    if (viewMonth === 11) {
+      setViewYear(viewYear + 1);
+      setViewMonth(0);
+    } else {
+      setViewMonth(viewMonth + 1);
+    }
+  }
+
+  const numDays = daysInMonth(viewYear, viewMonth);
+  const leadingBlanks = firstWeekdayOfMonth(viewYear, viewMonth);
+  const cells: (number | null)[] = [
+    ...Array.from({ length: leadingBlanks }, () => null),
+    ...Array.from({ length: numDays }, (_, i) => i + 1),
+  ];
+
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="mx-auto max-w-xl">
@@ -157,23 +206,59 @@ export default function BookingPage() {
           </select>
         </label>
 
-        <div className="mt-6 flex gap-2 overflow-x-auto pb-2">
-          {days.map((d) => (
+        <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+          <div className="flex items-center justify-between">
             <button
-              key={d.date}
-              onClick={() => setSelectedDate(d.date)}
-              className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                selectedDate === d.date
-                  ? "bg-zinc-900 text-white"
-                  : d.closed
-                  ? "bg-white text-zinc-400 ring-1 ring-zinc-200 hover:bg-zinc-100"
-                  : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-100"
-              }`}
+              onClick={goToPrevMonth}
+              disabled={isAtCurrentMonth}
+              className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-30"
             >
-              {d.label}
-              {d.closed && " (closed)"}
+              ‹
             </button>
-          ))}
+            <p className="text-sm font-semibold text-zinc-800">
+              {new Date(viewYear, viewMonth, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+            </p>
+            <button
+              onClick={goToNextMonth}
+              className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs font-medium text-zinc-400">
+            {WEEKDAY_LABELS.map((w) => (
+              <div key={w}>{w}</div>
+            ))}
+          </div>
+
+          <div className="mt-1 grid grid-cols-7 gap-1">
+            {cells.map((day, i) => {
+              if (day === null) return <div key={`blank-${i}`} />;
+              const dateStr = toDateStr(viewYear, viewMonth, day);
+              const isPast = dateStr < todayStr;
+              const isClosed = offDays.includes(new Date(viewYear, viewMonth, day).getDay());
+              const isSelected = dateStr === selectedDate;
+              return (
+                <button
+                  key={dateStr}
+                  disabled={isPast}
+                  onClick={() => setSelectedDate(dateStr)}
+                  className={`aspect-square rounded-lg text-sm font-medium transition-colors ${
+                    isPast
+                      ? "cursor-not-allowed text-zinc-200"
+                      : isSelected
+                      ? "bg-zinc-900 text-white"
+                      : isClosed
+                      ? "text-zinc-300 hover:bg-zinc-100"
+                      : "text-zinc-700 hover:bg-zinc-100"
+                  }`}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBusinessConfig, getNextDays, updateBusinessConfig } from "@/lib/store";
+import { getBusinessConfig, updateBusinessConfig } from "@/lib/store";
 
 export async function GET() {
   return NextResponse.json({
     business: getBusinessConfig(),
-    days: getNextDays(7),
   });
 }
 
