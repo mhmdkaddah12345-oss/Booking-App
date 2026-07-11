@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 type Service = { id: string; name: string; durationMinutes: number };
+type Employee = { id: string; name: string };
 type Business = {
   name: string;
   startHour: number;
   endHour: number;
   services: Service[];
+  employees: Employee[];
   offDays: number[];
 };
 
@@ -41,6 +43,10 @@ export default function SettingsPage() {
   const [newServiceDuration, setNewServiceDuration] = useState(30);
   const [addingService, setAddingService] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const [newEmployeeName, setNewEmployeeName] = useState("");
+  const [addingEmployee, setAddingEmployee] = useState(false);
+  const [removingEmployeeId, setRemovingEmployeeId] = useState<string | null>(null);
 
   function loadBusiness() {
     fetch("/api/business")
@@ -105,6 +111,33 @@ export default function SettingsPage() {
       loadBusiness();
     } finally {
       setRemovingId(null);
+    }
+  }
+
+  async function addEmployee(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newEmployeeName.trim()) return;
+    setAddingEmployee(true);
+    try {
+      await fetch("/api/business/employees", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newEmployeeName }),
+      });
+      setNewEmployeeName("");
+      loadBusiness();
+    } finally {
+      setAddingEmployee(false);
+    }
+  }
+
+  async function removeEmployee(id: string) {
+    setRemovingEmployeeId(id);
+    try {
+      await fetch(`/api/business/employees/${id}`, { method: "DELETE" });
+      loadBusiness();
+    } finally {
+      setRemovingEmployeeId(null);
     }
   }
 
@@ -262,6 +295,54 @@ export default function SettingsPage() {
                   className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
                 >
                   {addingService ? "Adding..." : "Add service"}
+                </button>
+              </form>
+            </div>
+
+            <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+              <h2 className="text-sm font-semibold text-zinc-800">Employees</h2>
+              <p className="mt-1 text-xs text-zinc-500">
+                Bookings are automatically assigned to whichever employee is free at that time.
+              </p>
+
+              <ul className="mt-3 flex flex-col gap-2">
+                {business.employees.map((emp) => (
+                  <li
+                    key={emp.id}
+                    className="flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm"
+                  >
+                    <span className="text-zinc-700">{emp.name}</span>
+                    <button
+                      onClick={() => removeEmployee(emp.id)}
+                      disabled={removingEmployeeId === emp.id}
+                      className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+                    >
+                      {removingEmployeeId === emp.id ? "..." : "Remove"}
+                    </button>
+                  </li>
+                ))}
+                {business.employees.length === 0 && (
+                  <li className="text-sm text-zinc-400">No employees yet — add one below.</li>
+                )}
+              </ul>
+
+              <form onSubmit={addEmployee} className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4 sm:flex-row sm:items-end">
+                <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
+                  Employee name
+                  <input
+                    required
+                    placeholder="e.g. Sarah"
+                    value={newEmployeeName}
+                    onChange={(e) => setNewEmployeeName(e.target.value)}
+                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  disabled={addingEmployee}
+                  className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+                >
+                  {addingEmployee ? "Adding..." : "Add employee"}
                 </button>
               </form>
             </div>

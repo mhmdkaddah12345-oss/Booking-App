@@ -12,7 +12,11 @@ type Booking = {
   customerName: string;
   customerPhone: string;
   note?: string;
+  employeeId: string;
+  employeeName: string;
 };
+
+type Employee = { id: string; name: string };
 
 type WaitlistEntry = {
   id: string;
@@ -49,6 +53,7 @@ export default function DashboardPage() {
   const [startHour, setStartHour] = useState(9);
   const [endHour, setEndHour] = useState(18);
   const [offDays, setOffDays] = useState<number[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [waitlist, setWaitlist] = useState<WaitlistEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +67,7 @@ export default function DashboardPage() {
         setStartHour(businessData.business.startHour);
         setEndHour(businessData.business.endHour);
         setOffDays(businessData.business.offDays);
+        setEmployees(businessData.business.employees);
         setBookings(dashboardData.bookings);
         setWaitlist(dashboardData.waitlist);
       })
@@ -110,6 +116,8 @@ export default function DashboardPage() {
   const gridHeightPx = (endHour - startHour) * ROW_HEIGHT_PX;
 
   const bookingsByDate = (date: string) => bookings.filter((b) => b.date === date);
+  const bookingsFor = (date: string, employeeId: string) =>
+    bookings.filter((b) => b.date === date && b.employeeId === employeeId);
 
   const laterDates = Array.from(new Set(bookings.filter((b) => b.date > lastGridDate).map((b) => b.date))).sort();
 
@@ -140,6 +148,15 @@ export default function DashboardPage() {
                 {fiveDays.map((d) => (
                   <div key={d.date} className="pb-2 text-center text-sm font-medium">
                     <span className={d.closed ? "text-zinc-300" : "text-zinc-800"}>{d.label}</span>
+                    {employees.length > 1 && (
+                      <div className="mt-1 flex">
+                        {employees.map((emp) => (
+                          <span key={emp.id} className="flex-1 truncate text-[10px] font-normal text-zinc-400">
+                            {emp.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
 
@@ -156,32 +173,36 @@ export default function DashboardPage() {
                 </div>
 
                 {fiveDays.map((day) => (
-                  <div key={day.date} className="relative border-l border-zinc-100" style={{ height: gridHeightPx }}>
+                  <div key={day.date} className="relative flex border-l border-zinc-100" style={{ height: gridHeightPx }}>
                     {hours.map((h, i) => (
                       <div
                         key={h}
-                        className="absolute left-0 right-0 border-t border-zinc-100"
+                        className="pointer-events-none absolute left-0 right-0 border-t border-zinc-100"
                         style={{ top: i * ROW_HEIGHT_PX }}
                       />
                     ))}
-                    {bookingsByDate(day.date).map((b) => {
-                      const startMinutesFromOpen = timeToMinutes(b.time) - startHour * 60;
-                      const topPx = (startMinutesFromOpen / 60) * ROW_HEIGHT_PX;
-                      const heightPx = Math.max((b.durationMinutes / 60) * ROW_HEIGHT_PX, 18);
-                      const isSelected = selectedBookingId === b.id;
-                      return (
-                        <button
-                          key={b.id}
-                          onClick={() => setSelectedBookingId(isSelected ? null : b.id)}
-                          className={`absolute left-0.5 right-0.5 overflow-hidden rounded px-1 text-left text-[10px] leading-tight transition-colors ${
-                            isSelected ? "bg-amber-500 text-white" : "bg-zinc-900 text-white hover:bg-zinc-700"
-                          }`}
-                          style={{ top: topPx, height: heightPx }}
-                        >
-                          {b.time} {b.customerName}
-                        </button>
-                      );
-                    })}
+                    {employees.map((emp) => (
+                      <div key={emp.id} className="relative flex-1 border-l border-zinc-50 first:border-l-0">
+                        {bookingsFor(day.date, emp.id).map((b) => {
+                          const startMinutesFromOpen = timeToMinutes(b.time) - startHour * 60;
+                          const topPx = (startMinutesFromOpen / 60) * ROW_HEIGHT_PX;
+                          const heightPx = Math.max((b.durationMinutes / 60) * ROW_HEIGHT_PX, 18);
+                          const isSelected = selectedBookingId === b.id;
+                          return (
+                            <button
+                              key={b.id}
+                              onClick={() => setSelectedBookingId(isSelected ? null : b.id)}
+                              className={`absolute left-0.5 right-0.5 overflow-hidden rounded px-1 text-left text-[10px] leading-tight transition-colors ${
+                                isSelected ? "bg-amber-500 text-white" : "bg-zinc-900 text-white hover:bg-zinc-700"
+                              }`}
+                              style={{ top: topPx, height: heightPx }}
+                            >
+                              {b.time} {b.customerName}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
@@ -191,7 +212,8 @@ export default function DashboardPage() {
               <div className="mt-2 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
                 <p className="text-sm font-medium text-zinc-800">{selectedBooking.serviceName}</p>
                 <p className="mt-1 text-sm text-zinc-600">
-                  {selectedBooking.date} at {selectedBooking.time} ({selectedBooking.durationMinutes} min)
+                  {selectedBooking.date} at {selectedBooking.time} ({selectedBooking.durationMinutes} min) —{" "}
+                  {selectedBooking.employeeName}
                 </p>
                 <p className="mt-1 text-sm text-zinc-500">
                   {selectedBooking.customerName} ({selectedBooking.customerPhone})
@@ -271,7 +293,7 @@ export default function DashboardPage() {
                             <span>
                               <span className="font-medium text-zinc-800">{b.time}</span>{" "}
                               <span className="text-zinc-500">
-                                ({b.durationMinutes} min, {b.serviceName})
+                                ({b.durationMinutes} min, {b.serviceName}, {b.employeeName})
                               </span>{" "}
                               <span className="text-zinc-600">
                                 — {b.customerName} ({b.customerPhone})

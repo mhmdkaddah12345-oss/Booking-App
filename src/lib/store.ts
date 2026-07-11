@@ -10,12 +10,18 @@ export type Service = {
   durationMinutes: number;
 };
 
+export type Employee = {
+  id: string;
+  name: string;
+};
+
 export type BusinessConfig = {
   name: string;
   startHour: number; // 24h, e.g. 9 = 9:00
   endHour: number; // 24h, e.g. 18 = 18:00
   slotGranularityMinutes: number; // interval between candidate start times
   services: Service[];
+  employees: Employee[];
   offDays: number[]; // days of week the business is closed, 0=Sunday .. 6=Saturday
 };
 
@@ -31,6 +37,8 @@ export type Booking = {
   customerName: string;
   customerPhone: string;
   note?: string;
+  employeeId: string;
+  employeeName: string;
   status: BookingStatus;
 };
 
@@ -72,6 +80,7 @@ const store: Store =
         { id: "svc-coloring", name: "Coloring", durationMinutes: 90 },
         { id: "svc-blowout", name: "Blowout", durationMinutes: 45 },
       ],
+      employees: [{ id: "emp-1", name: "Staff Member 1" }],
       offDays: [],
     },
     bookings: [],
@@ -103,6 +112,23 @@ export function removeService(serviceId: string): { success: boolean } {
   const index = store.business.services.findIndex((s) => s.id === serviceId);
   if (index === -1) return { success: false };
   store.business.services.splice(index, 1);
+  return { success: true };
+}
+
+export function getEmployee(employeeId: string): Employee | undefined {
+  return store.business.employees.find((e) => e.id === employeeId);
+}
+
+export function addEmployee(name: string): Employee {
+  const employee: Employee = { id: crypto.randomUUID(), name };
+  store.business.employees.push(employee);
+  return employee;
+}
+
+export function removeEmployee(employeeId: string): { success: boolean } {
+  const index = store.business.employees.findIndex((e) => e.id === employeeId);
+  if (index === -1) return { success: false };
+  store.business.employees.splice(index, 1);
   return { success: true };
 }
 
@@ -139,15 +165,35 @@ function rangesOverlap(aStart: number, aEnd: number, bStart: number, bEnd: numbe
   return aStart < bEnd && bStart < aEnd;
 }
 
-/** Is [start, start+durationMinutes) free of any booked appointment on that date? */
-function isRangeFree(date: string, startMinutes: number, durationMinutes: number, ignoreBookingId?: string): boolean {
+/** Is [start, start+durationMinutes) free on this employee's timeline that date? */
+function isEmployeeRangeFree(
+  employeeId: string,
+  date: string,
+  startMinutes: number,
+  durationMinutes: number,
+  ignoreBookingId?: string
+): boolean {
   const endMinutes = startMinutes + durationMinutes;
   return !store.bookings.some((b) => {
-    if (b.date !== date || b.status !== "booked" || b.id === ignoreBookingId) return false;
+    if (b.employeeId !== employeeId || b.date !== date || b.status !== "booked" || b.id === ignoreBookingId) {
+      return false;
+    }
     const bStart = timeToMinutes(b.time);
     const bEnd = bStart + b.durationMinutes;
     return rangesOverlap(startMinutes, endMinutes, bStart, bEnd);
   });
+}
+
+/** First employee with no conflicting booking for this date/time range, if any. */
+function findFreeEmployee(
+  date: string,
+  startMinutes: number,
+  durationMinutes: number,
+  ignoreBookingId?: string
+): Employee | undefined {
+  return store.business.employees.find((e) =>
+    isEmployeeRangeFree(e.id, date, startMinutes, durationMinutes, ignoreBookingId)
+  );
 }
 
 export type SlotInfo = { time: string; available: boolean };
@@ -165,7 +211,7 @@ export function getSlotsForDay(date: string, serviceId: string): SlotInfo[] {
   const slots: SlotInfo[] = [];
   for (let start = startHour * 60; start + service.durationMinutes <= closeMinutes; start += slotGranularityMinutes) {
     if (date === today && start <= nowMinutes) continue;
-    slots.push({ time: minutesToTime(start), available: isRangeFree(date, start, service.durationMinutes) });
+    slots.push({ time: minutesToTime(start), available: !!findFreeEmployee(date, start, service.durationMinutes) });
   }
   return slots;
 }
@@ -193,7 +239,8 @@ export function createBooking(
   }
 
   const startMinutes = timeToMinutes(time);
-  if (!isRangeFree(date, startMinutes, service.durationMinutes)) {
+  const employee = findFreeEmployee(date, startMinutes, service.durationMinutes);
+  if (!employee) {
     return { success: false, error: "slot_taken" };
   }
 
@@ -207,6 +254,8 @@ export function createBooking(
     customerName,
     customerPhone,
     note,
+    employeeId: employee.id,
+    employeeName: employee.name,
     status: "booked",
   };
   store.bookings.push(booking);
@@ -302,7 +351,8 @@ export function rescheduleBooking(
   }
 
   const startMinutes = timeToMinutes(newTime);
-  if (!isRangeFree(newDate, startMinutes, booking.durationMinutes, booking.id)) {
+  const employee = findFreeEmployee(newDate, startMinutes, booking.durationMinutes, booking.id);
+  if (!employee) {
     return { success: false, error: "slot_taken" };
   }
 
@@ -310,6 +360,8 @@ export function rescheduleBooking(
   const oldTime = booking.time;
   booking.date = newDate;
   booking.time = newTime;
+  booking.employeeId = employee.id;
+  booking.employeeName = employee.name;
 
   notify("booking_rescheduled", {
     phone: booking.customerPhone,
