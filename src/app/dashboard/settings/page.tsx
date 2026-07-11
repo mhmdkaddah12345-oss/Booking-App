@@ -135,7 +135,7 @@ export default function SettingsPage() {
                     setName(e.target.value);
                     setDetailsSaved(false);
                   }}
-                  className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900"
+                  className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
                 />
               </label>
               <div className="flex gap-3">
@@ -147,7 +147,7 @@ export default function SettingsPage() {
                       setStartHour(Number(e.target.value));
                       setDetailsSaved(false);
                     }}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900"
+                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
                   >
                     {HOUR_OPTIONS.map((h) => (
                       <option key={h} value={h}>
@@ -164,7 +164,7 @@ export default function SettingsPage() {
                       setEndHour(Number(e.target.value));
                       setDetailsSaved(false);
                     }}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900"
+                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
                   >
                     {HOUR_OPTIONS.map((h) => (
                       <option key={h} value={h}>
@@ -239,7 +239,7 @@ export default function SettingsPage() {
                     placeholder="e.g. Haircut"
                     value={newServiceName}
                     onChange={(e) => setNewServiceName(e.target.value)}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900"
+                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
                   />
                 </label>
                 <label className="flex flex-col gap-1 text-sm text-zinc-600">
@@ -247,7 +247,7 @@ export default function SettingsPage() {
                   <select
                     value={newServiceDuration}
                     onChange={(e) => setNewServiceDuration(Number(e.target.value))}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900"
+                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
                   >
                     {DURATION_OPTIONS.map((d) => (
                       <option key={d} value={d}>
