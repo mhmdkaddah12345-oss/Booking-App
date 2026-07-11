@@ -206,7 +206,7 @@ export function createBooking(
     status: "booked",
   };
   store.bookings.push(booking);
-  notify("booking_confirmed", { phone: customerPhone, name: customerName, date, time });
+  notify("booking_confirmed", { phone: customerPhone, name: customerName, date, time, bookingId: booking.id });
   return { success: true, booking };
 }
 
@@ -239,8 +239,33 @@ export function getAllBookings(): Booking[] {
   return store.bookings;
 }
 
+export function getBooking(id: string): Booking | undefined {
+  return store.bookings.find((b) => b.id === id);
+}
+
 export function getAllWaitlist(): WaitlistEntry[] {
   return store.waitlist;
+}
+
+// Only promote someone whose service fits inside the freed time — starting
+// them at the same time guarantees no overlap with anything else, since that
+// whole range was occupied solely by the booking that just left it.
+function promoteNextWaitlisted(date: string, time: string, freedDurationMinutes: number): WaitlistEntry | undefined {
+  const nextInLine = store.waitlist
+    .filter((w) => w.date === date && w.status === "waiting" && w.durationMinutes <= freedDurationMinutes)
+    .sort((a, b) => a.createdAt - b.createdAt)[0];
+
+  if (nextInLine) {
+    nextInLine.status = "notified";
+    nextInLine.notifiedTime = time;
+    notify("waitlist_slot_offered", {
+      phone: nextInLine.customerPhone,
+      name: nextInLine.customerName,
+      date: nextInLine.date,
+      time,
+    });
+  }
+  return nextInLine;
 }
 
 export function cancelBooking(id: string): { success: boolean; promoted?: WaitlistEntry } {
@@ -256,31 +281,43 @@ export function cancelBooking(id: string): { success: boolean; promoted?: Waitli
     time: booking.time,
   });
 
-  // Only promote someone whose service fits inside the freed time —
-  // starting them at the same time guarantees no overlap with anything else,
-  // since that whole range was occupied solely by the cancelled booking.
-  const nextInLine = store.waitlist
-    .filter(
-      (w) =>
-        w.date === booking.date &&
-        w.status === "waiting" &&
-        w.durationMinutes <= booking.durationMinutes
-    )
-    .sort((a, b) => a.createdAt - b.createdAt)[0];
+  const promoted = promoteNextWaitlisted(booking.date, booking.time, booking.durationMinutes);
+  return { success: true, promoted };
+}
 
-  if (nextInLine) {
-    nextInLine.status = "notified";
-    nextInLine.notifiedTime = booking.time;
-    notify("waitlist_slot_offered", {
-      phone: nextInLine.customerPhone,
-      name: nextInLine.customerName,
-      date: nextInLine.date,
-      time: booking.time,
-    });
-    return { success: true, promoted: nextInLine };
+export function rescheduleBooking(
+  id: string,
+  newDate: string,
+  newTime: string
+): { success: true; booking: Booking } | { success: false; error: string } {
+  const booking = store.bookings.find((b) => b.id === id);
+  if (!booking || booking.status !== "booked") {
+    return { success: false, error: "not_found" };
   }
 
-  return { success: true };
+  const startMinutes = timeToMinutes(newTime);
+  if (!isRangeFree(newDate, startMinutes, booking.durationMinutes, booking.id)) {
+    return { success: false, error: "slot_taken" };
+  }
+
+  const oldDate = booking.date;
+  const oldTime = booking.time;
+  booking.date = newDate;
+  booking.time = newTime;
+
+  notify("booking_rescheduled", {
+    phone: booking.customerPhone,
+    name: booking.customerName,
+    date: newDate,
+    time: newTime,
+    bookingId: booking.id,
+  });
+
+  if (oldDate !== newDate || oldTime !== newTime) {
+    promoteNextWaitlisted(oldDate, oldTime, booking.durationMinutes);
+  }
+
+  return { success: true, booking };
 }
 
 export function confirmWaitlistPromotion(waitlistId: string): { success: boolean; error?: string } {

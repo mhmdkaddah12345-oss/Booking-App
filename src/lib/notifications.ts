@@ -4,6 +4,7 @@
 export type NotificationEvent =
   | "booking_confirmed"
   | "booking_cancelled"
+  | "booking_rescheduled"
   | "waitlist_joined"
   | "waitlist_slot_offered"
   | "waitlist_confirmed";
@@ -23,9 +24,11 @@ const messageLog: LoggedMessage[] = g.__messageLog ?? (g.__messageLog = []);
 function buildMessage(event: NotificationEvent, data: Record<string, string>): string {
   switch (event) {
     case "booking_confirmed":
-      return `Hi ${data.name}, your appointment on ${data.date} at ${data.time} is confirmed.`;
+      return `Hi ${data.name}, your appointment on ${data.date} at ${data.time} is confirmed. Manage or cancel: /manage/${data.bookingId}`;
     case "booking_cancelled":
       return `Hi ${data.name}, your appointment on ${data.date} at ${data.time} has been cancelled.`;
+    case "booking_rescheduled":
+      return `Hi ${data.name}, your appointment has been moved to ${data.date} at ${data.time}. Manage or cancel: /manage/${data.bookingId}`;
     case "waitlist_joined":
       return `Hi ${data.name}, you've been added to the waitlist for ${data.date}. We'll message you if a slot opens.`;
     case "waitlist_slot_offered":
@@ -37,14 +40,19 @@ function buildMessage(event: NotificationEvent, data: Record<string, string>): s
 
 export function notify(
   event: NotificationEvent,
-  data: { phone: string; name: string; date: string; time?: string }
+  data: { phone: string; name: string; date: string; time?: string; bookingId?: string }
 ) {
   const message: LoggedMessage = {
     id: crypto.randomUUID(),
     timestamp: new Date().toISOString(),
     to: data.phone,
     event,
-    text: buildMessage(event, { name: data.name, date: data.date, time: data.time ?? "" }),
+    text: buildMessage(event, {
+      name: data.name,
+      date: data.date,
+      time: data.time ?? "",
+      bookingId: data.bookingId ?? "",
+    }),
   };
   messageLog.unshift(message);
   console.log(`[NOTIFY -> ${data.phone}] ${message.text}`);

@@ -49,6 +49,7 @@ export default function BookingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [bookedId, setBookedId] = useState<string | null>(null);
   const [joiningWaitlist, setJoiningWaitlist] = useState(false);
 
   useEffect(() => {
@@ -68,6 +69,7 @@ export default function BookingPage() {
     setSelectedTime(null);
     setFormError(null);
     setSuccessMessage(null);
+    setBookedId(null);
     setJoiningWaitlist(false);
     fetch(`/api/slots?date=${selectedDate}&serviceId=${selectedServiceId}`)
       .then((r) => r.json())
@@ -116,7 +118,9 @@ export default function BookingPage() {
         setFormError("Something went wrong. Please try again.");
         return;
       }
+      const data = await res.json();
       setSuccessMessage(`You're booked for ${selectedDate} at ${selectedTime}.`);
+      setBookedId(data.booking.id);
       setSelectedTime(null);
       setName("");
       setPhone("");
@@ -435,9 +439,14 @@ export default function BookingPage() {
           )}
 
           {successMessage && (
-            <p className="mt-4 rounded-lg bg-green-50 px-3 py-2 text-sm font-medium text-green-700">
-              {successMessage}
-            </p>
+            <div className="mt-4 rounded-lg bg-green-50 px-3 py-2 text-sm font-medium text-green-700">
+              <p>{successMessage}</p>
+              {bookedId && (
+                <Link href={`/manage/${bookedId}`} className="mt-1 block underline">
+                  Manage or cancel this booking
+                </Link>
+              )}
+            </div>
           )}
         </div>
       </div>
