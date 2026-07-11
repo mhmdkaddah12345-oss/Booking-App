@@ -72,9 +72,14 @@ export default function DashboardPage() {
       <div className="mx-auto max-w-2xl">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-zinc-900">Owner dashboard</h1>
-          <Link href="/" className="text-sm font-medium text-zinc-600 hover:underline">
-            Customer booking page →
-          </Link>
+          <div className="flex gap-4">
+            <Link href="/dashboard/settings" className="text-sm font-medium text-zinc-600 hover:underline">
+              Settings
+            </Link>
+            <Link href="/" className="text-sm font-medium text-zinc-600 hover:underline">
+              Customer booking page →
+            </Link>
+          </div>
         </div>
 
         {loading ? (

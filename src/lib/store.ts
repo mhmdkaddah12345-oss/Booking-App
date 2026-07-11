@@ -65,9 +65,9 @@ const store: Store =
       endHour: 18,
       slotGranularityMinutes: 15,
       services: [
-        { id: "svc-standard", name: "Standard appointment (30 min)", durationMinutes: 30 },
-        { id: "svc-extended", name: "Extended appointment (60 min)", durationMinutes: 60 },
-        { id: "svc-long", name: "Long appointment (90 min)", durationMinutes: 90 },
+        { id: "svc-haircut", name: "Haircut", durationMinutes: 30 },
+        { id: "svc-coloring", name: "Coloring", durationMinutes: 90 },
+        { id: "svc-blowout", name: "Blowout", durationMinutes: 45 },
       ],
     },
     bookings: [],
@@ -80,6 +80,24 @@ export function getBusinessConfig(): BusinessConfig {
 
 export function getService(serviceId: string): Service | undefined {
   return store.business.services.find((s) => s.id === serviceId);
+}
+
+export function updateBusinessConfig(updates: Partial<Pick<BusinessConfig, "name" | "startHour" | "endHour">>) {
+  Object.assign(store.business, updates);
+  return store.business;
+}
+
+export function addService(name: string, durationMinutes: number): Service {
+  const service: Service = { id: crypto.randomUUID(), name, durationMinutes };
+  store.business.services.push(service);
+  return service;
+}
+
+export function removeService(serviceId: string): { success: boolean } {
+  const index = store.business.services.findIndex((s) => s.id === serviceId);
+  if (index === -1) return { success: false };
+  store.business.services.splice(index, 1);
+  return { success: true };
 }
 
 function pad(n: number) {
