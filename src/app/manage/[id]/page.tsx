@@ -12,6 +12,7 @@ type Booking = {
   durationMinutes: number;
   customerName: string;
   customerPhone: string;
+  note?: string;
   status: "booked" | "cancelled";
 };
 
@@ -195,6 +196,7 @@ export default function ManageBookingPage() {
               <p className="mt-1 text-sm text-zinc-500">
                 Booked under {booking.customerName} ({booking.customerPhone})
               </p>
+              {booking.note && <p className="mt-1 text-sm italic text-zinc-500">&ldquo;{booking.note}&rdquo;</p>}
 
               {statusMessage && (
                 <p className="mt-4 rounded-lg bg-green-50 px-3 py-2 text-sm font-medium text-green-700">

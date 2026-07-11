@@ -11,6 +11,7 @@ type Booking = {
   durationMinutes: number;
   customerName: string;
   customerPhone: string;
+  note?: string;
 };
 
 type WaitlistEntry = {
@@ -20,6 +21,7 @@ type WaitlistEntry = {
   durationMinutes: number;
   customerName: string;
   customerPhone: string;
+  note?: string;
   status: "waiting" | "notified";
   notifiedTime?: string;
 };
@@ -194,6 +196,9 @@ export default function DashboardPage() {
                 <p className="mt-1 text-sm text-zinc-500">
                   {selectedBooking.customerName} ({selectedBooking.customerPhone})
                 </p>
+                {selectedBooking.note && (
+                  <p className="mt-1 text-sm italic text-zinc-500">&ldquo;{selectedBooking.note}&rdquo;</p>
+                )}
                 <div className="mt-3 flex gap-2">
                   <button
                     onClick={() => handleCancel(selectedBooking.id)}
@@ -231,6 +236,7 @@ export default function DashboardPage() {
                         {w.status === "notified" && (
                           <span className="ml-2 font-medium text-amber-700">— notified for {w.notifiedTime}</span>
                         )}
+                        {w.note && <span className="ml-2 italic text-zinc-500">&ldquo;{w.note}&rdquo;</span>}
                       </span>
                       {w.status === "notified" && (
                         <button
@@ -270,6 +276,7 @@ export default function DashboardPage() {
                               <span className="text-zinc-600">
                                 — {b.customerName} ({b.customerPhone})
                               </span>
+                              {b.note && <span className="ml-2 italic text-zinc-500">&ldquo;{b.note}&rdquo;</span>}
                             </span>
                             <button
                               onClick={() => handleCancel(b.id)}

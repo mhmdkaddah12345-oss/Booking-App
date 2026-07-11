@@ -46,6 +46,7 @@ export default function BookingPage() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -106,6 +107,7 @@ export default function BookingPage() {
           serviceId: selectedServiceId,
           customerName: name,
           customerPhone: phone,
+          note,
         }),
       });
       if (res.status === 409) {
@@ -124,6 +126,7 @@ export default function BookingPage() {
       setSelectedTime(null);
       setName("");
       setPhone("");
+      setNote("");
       refreshSlots();
     } finally {
       setSubmitting(false);
@@ -143,6 +146,7 @@ export default function BookingPage() {
           serviceId: selectedServiceId,
           customerName: name,
           customerPhone: phone,
+          note,
         }),
       });
       if (!res.ok) {
@@ -153,6 +157,7 @@ export default function BookingPage() {
       setJoiningWaitlist(false);
       setName("");
       setPhone("");
+      setNote("");
     } finally {
       setSubmitting(false);
     }
@@ -354,6 +359,13 @@ export default function BookingPage() {
                     onChange={(e) => setPhone(e.target.value)}
                     className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
                   />
+                  <textarea
+                    placeholder="Note for the business (optional)"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    rows={2}
+                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+                  />
                   {formError && <p className="text-sm text-red-600">{formError}</p>}
                   <div className="flex gap-2">
                     <button
@@ -416,6 +428,13 @@ export default function BookingPage() {
                 placeholder="Phone number"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+              />
+              <textarea
+                placeholder="Note for the business (optional)"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={2}
                 className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
               />
               {formError && <p className="text-sm text-red-600">{formError}</p>}

@@ -30,6 +30,7 @@ export type Booking = {
   durationMinutes: number;
   customerName: string;
   customerPhone: string;
+  note?: string;
   status: BookingStatus;
 };
 
@@ -43,6 +44,7 @@ export type WaitlistEntry = {
   durationMinutes: number;
   customerName: string;
   customerPhone: string;
+  note?: string;
   status: WaitlistStatus;
   createdAt: number;
   notifiedTime?: string; // slot offered once status becomes "notified"
@@ -182,7 +184,8 @@ export function createBooking(
   time: string,
   serviceId: string,
   customerName: string,
-  customerPhone: string
+  customerPhone: string,
+  note?: string
 ): BookingResult {
   const service = getService(serviceId);
   if (!service) {
@@ -203,6 +206,7 @@ export function createBooking(
     durationMinutes: service.durationMinutes,
     customerName,
     customerPhone,
+    note,
     status: "booked",
   };
   store.bookings.push(booking);
@@ -214,7 +218,8 @@ export function joinWaitlist(
   date: string,
   serviceId: string,
   customerName: string,
-  customerPhone: string
+  customerPhone: string,
+  note?: string
 ): WaitlistEntry | { error: "unknown_service" } {
   const service = getService(serviceId);
   if (!service) return { error: "unknown_service" };
@@ -227,6 +232,7 @@ export function joinWaitlist(
     durationMinutes: service.durationMinutes,
     customerName,
     customerPhone,
+    note,
     status: "waiting",
     createdAt: Date.now(),
   };
@@ -326,7 +332,14 @@ export function confirmWaitlistPromotion(waitlistId: string): { success: boolean
     return { success: false, error: "not_eligible" };
   }
 
-  const result = createBooking(entry.date, entry.notifiedTime, entry.serviceId, entry.customerName, entry.customerPhone);
+  const result = createBooking(
+    entry.date,
+    entry.notifiedTime,
+    entry.serviceId,
+    entry.customerName,
+    entry.customerPhone,
+    entry.note
+  );
   if (!result.success) {
     return { success: false, error: result.error };
   }
