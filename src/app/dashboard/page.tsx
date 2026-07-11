@@ -117,13 +117,13 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="mx-auto max-w-4xl">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-zinc-900">Owner dashboard</h1>
+          <h1 className="text-2xl font-semibold text-zinc-900">Owner Dashboard</h1>
           <div className="flex gap-4">
             <Link href="/dashboard/settings" className="text-sm font-medium text-zinc-600 hover:underline">
               Settings
             </Link>
             <Link href="/" className="text-sm font-medium text-zinc-600 hover:underline">
-              Customer booking page →
+              Customer Booking Page →
             </Link>
           </div>
         </div>
@@ -248,7 +248,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
-              <h2 className="text-sm font-semibold text-zinc-800">Later appointments</h2>
+              <h2 className="text-sm font-semibold text-zinc-800">Later Appointments</h2>
               {laterDates.length === 0 ? (
                 <p className="mt-2 text-sm text-zinc-400">Nothing booked beyond the next 5 days.</p>
               ) : (

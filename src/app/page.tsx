@@ -203,7 +203,7 @@ export default function BookingPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-zinc-900">{businessName || "Loading..."}</h1>
           <Link href="/dashboard" className="text-sm font-medium text-zinc-600 hover:underline">
-            Owner dashboard →
+            Owner Dashboard →
           </Link>
         </div>
         <p className="mt-1 text-sm text-zinc-500">Choose a service, then pick a day and time.</p>

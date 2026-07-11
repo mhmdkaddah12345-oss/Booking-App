@@ -126,7 +126,7 @@ export default function SettingsPage() {
               onSubmit={saveDetails}
               className="mt-6 flex flex-col gap-3 rounded-xl bg-white p-4 ring-1 ring-zinc-200"
             >
-              <h2 className="text-sm font-semibold text-zinc-800">Business details</h2>
+              <h2 className="text-sm font-semibold text-zinc-800">Business Details</h2>
               <label className="flex flex-col gap-1 text-sm text-zinc-600">
                 Business name
                 <input
