@@ -41,6 +41,8 @@ export default function BookingPage() {
   const [dayClosed, setDayClosed] = useState(false);
   const [slotsLoading, setSlotsLoading] = useState(false);
 
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -180,6 +182,17 @@ export default function BookingPage() {
     ...Array.from({ length: numDays }, (_, i) => i + 1),
   ];
 
+  const quickDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const date = toDateStr(d.getFullYear(), d.getMonth(), d.getDate());
+    return {
+      date,
+      label: d.toLocaleDateString(undefined, { weekday: "short", day: "numeric" }),
+      closed: offDays.includes(d.getDay()),
+    };
+  });
+
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="mx-auto max-w-xl">
@@ -206,60 +219,97 @@ export default function BookingPage() {
           </select>
         </label>
 
-        <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={goToPrevMonth}
-              disabled={isAtCurrentMonth}
-              className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-30"
-            >
-              ‹
-            </button>
-            <p className="text-sm font-semibold text-zinc-800">
-              {new Date(viewYear, viewMonth, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" })}
-            </p>
-            <button
-              onClick={goToNextMonth}
-              className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-            >
-              ›
-            </button>
-          </div>
-
-          <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs font-medium text-zinc-400">
-            {WEEKDAY_LABELS.map((w) => (
-              <div key={w}>{w}</div>
+        <div className="mt-6 flex items-center gap-2">
+          <div className="flex flex-1 gap-2 overflow-x-auto pb-2">
+            {quickDays.map((d) => (
+              <button
+                key={d.date}
+                onClick={() => {
+                  setSelectedDate(d.date);
+                  setCalendarOpen(false);
+                }}
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                  selectedDate === d.date
+                    ? "bg-zinc-900 text-white"
+                    : d.closed
+                    ? "bg-white text-zinc-400 ring-1 ring-zinc-200 hover:bg-zinc-100"
+                    : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-100"
+                }`}
+              >
+                {d.label}
+              </button>
             ))}
           </div>
-
-          <div className="mt-1 grid grid-cols-7 gap-1">
-            {cells.map((day, i) => {
-              if (day === null) return <div key={`blank-${i}`} />;
-              const dateStr = toDateStr(viewYear, viewMonth, day);
-              const isPast = dateStr < todayStr;
-              const isClosed = offDays.includes(new Date(viewYear, viewMonth, day).getDay());
-              const isSelected = dateStr === selectedDate;
-              return (
-                <button
-                  key={dateStr}
-                  disabled={isPast}
-                  onClick={() => setSelectedDate(dateStr)}
-                  className={`aspect-square rounded-lg text-sm font-medium transition-colors ${
-                    isPast
-                      ? "cursor-not-allowed text-zinc-200"
-                      : isSelected
-                      ? "bg-zinc-900 text-white"
-                      : isClosed
-                      ? "text-zinc-300 hover:bg-zinc-100"
-                      : "text-zinc-700 hover:bg-zinc-100"
-                  }`}
-                >
-                  {day}
-                </button>
-              );
-            })}
-          </div>
+          <button
+            onClick={() => setCalendarOpen((open) => !open)}
+            aria-label="Pick another date"
+            className={`shrink-0 rounded-full p-2 text-lg ring-1 transition-colors ${
+              calendarOpen ? "bg-zinc-900 text-white ring-zinc-900" : "bg-white text-zinc-600 ring-zinc-200 hover:bg-zinc-100"
+            }`}
+          >
+            📅
+          </button>
         </div>
+
+        {calendarOpen && (
+          <div className="mt-2 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={goToPrevMonth}
+                disabled={isAtCurrentMonth}
+                className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                ‹
+              </button>
+              <p className="text-sm font-semibold text-zinc-800">
+                {new Date(viewYear, viewMonth, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+              </p>
+              <button
+                onClick={goToNextMonth}
+                className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+              >
+                ›
+              </button>
+            </div>
+
+            <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs font-medium text-zinc-400">
+              {WEEKDAY_LABELS.map((w) => (
+                <div key={w}>{w}</div>
+              ))}
+            </div>
+
+            <div className="mt-1 grid grid-cols-7 gap-1">
+              {cells.map((day, i) => {
+                if (day === null) return <div key={`blank-${i}`} />;
+                const dateStr = toDateStr(viewYear, viewMonth, day);
+                const isPast = dateStr < todayStr;
+                const isClosed = offDays.includes(new Date(viewYear, viewMonth, day).getDay());
+                const isSelected = dateStr === selectedDate;
+                return (
+                  <button
+                    key={dateStr}
+                    disabled={isPast}
+                    onClick={() => {
+                      setSelectedDate(dateStr);
+                      setCalendarOpen(false);
+                    }}
+                    className={`aspect-square rounded-lg text-sm font-medium transition-colors ${
+                      isPast
+                        ? "cursor-not-allowed text-zinc-200"
+                        : isSelected
+                        ? "bg-zinc-900 text-white"
+                        : isClosed
+                        ? "text-zinc-300 hover:bg-zinc-100"
+                        : "text-zinc-700 hover:bg-zinc-100"
+                    }`}
+                  >
+                    {day}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
           {slotsLoading ? (
