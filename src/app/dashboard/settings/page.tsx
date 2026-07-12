@@ -7,6 +7,7 @@ type Service = { id: string; name: string; durationMinutes: number };
 type Employee = { id: string; name: string };
 type Business = {
   name: string;
+  slug: string;
   startHour: number;
   endHour: number;
   services: Service[];
@@ -166,6 +167,16 @@ export default function SettingsPage() {
           <p className="mt-6 text-sm text-zinc-500">Loading...</p>
         ) : (
           <>
+            <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+              <h2 className="text-sm font-semibold text-zinc-800">Your booking page</h2>
+              <p className="mt-1 text-sm text-zinc-600">
+                Share this link with customers:{" "}
+                <Link href={`/b/${business.slug}`} className="font-medium underline">
+                  /b/{business.slug}
+                </Link>
+              </p>
+            </div>
+
             <form
               onSubmit={saveDetails}
               className="mt-6 flex flex-col gap-3 rounded-xl bg-white p-4 ring-1 ring-zinc-200"

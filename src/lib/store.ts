@@ -1,8 +1,13 @@
 // Supabase-backed data layer. All Supabase access lives here — API routes
 // only ever call these functions, never the client directly.
+//
+// Everything is scoped to a business_id (multi-tenant): owner-only actions
+// take the businessId resolved from the caller's session; customer-facing
+// actions resolve the business from its public slug instead.
 
 import { supabase } from "./supabaseClient";
 import { notify } from "./notifications";
+import { hashPassword, verifyPassword } from "./passwordHash";
 
 export type Service = {
   id: string;
@@ -16,6 +21,8 @@ export type Employee = {
 };
 
 export type BusinessConfig = {
+  id: string;
+  slug: string;
   name: string;
   startHour: number; // 24h, e.g. 9 = 9:00
   endHour: number; // 24h, e.g. 18 = 18:00
@@ -29,6 +36,7 @@ export type BookingStatus = "booked" | "cancelled";
 
 export type Booking = {
   id: string;
+  businessId: string;
   date: string; // YYYY-MM-DD
   time: string; // HH:MM start time
   serviceId: string;
@@ -46,6 +54,7 @@ export type WaitlistStatus = "waiting" | "notified" | "confirmed";
 
 export type WaitlistEntry = {
   id: string;
+  businessId: string;
   date: string; // YYYY-MM-DD
   serviceId: string;
   serviceName: string;
@@ -69,6 +78,7 @@ function trimTime(t: string): string {
 function mapBooking(row: Record<string, unknown>): Booking {
   return {
     id: row.id as string,
+    businessId: row.business_id as string,
     date: row.date as string,
     time: trimTime(row.time as string),
     serviceId: row.service_id as string,
@@ -86,6 +96,7 @@ function mapBooking(row: Record<string, unknown>): Booking {
 function mapWaitlist(row: Record<string, unknown>): WaitlistEntry {
   return {
     id: row.id as string,
+    businessId: row.business_id as string,
     date: row.date as string,
     serviceId: row.service_id as string,
     serviceName: row.service_name as string,
@@ -99,84 +110,153 @@ function mapWaitlist(row: Record<string, unknown>): WaitlistEntry {
   };
 }
 
-async function getBusinessRow() {
-  const { data, error } = await supabase.from("business").select("*").limit(1).single();
+function mapBusinessConfig(business: Record<string, unknown>, services: Service[], employees: Employee[]): BusinessConfig {
+  return {
+    id: business.id as string,
+    slug: business.slug as string,
+    name: business.name as string,
+    startHour: business.start_hour as number,
+    endHour: business.end_hour as number,
+    slotGranularityMinutes: business.slot_granularity_minutes as number,
+    offDays: business.off_days as number[],
+    services,
+    employees,
+  };
+}
+
+async function getBusinessRowById(businessId: string) {
+  const { data, error } = await supabase.from("business").select("*").eq("id", businessId).maybeSingle();
   if (error) throw new Error(error.message);
   return data;
 }
 
-export async function getBusinessConfig(): Promise<BusinessConfig> {
-  const business = await getBusinessRow();
-  const [{ data: services }, { data: employees }] = await Promise.all([
-    supabase.from("services").select("*").eq("business_id", business.id),
-    supabase.from("employees").select("*").eq("business_id", business.id),
-  ]);
+async function getBusinessRowBySlug(slug: string) {
+  const { data, error } = await supabase.from("business").select("*").eq("slug", slug).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data;
+}
 
+async function servicesAndEmployeesFor(businessId: string) {
+  const [{ data: services }, { data: employees }] = await Promise.all([
+    supabase.from("services").select("*").eq("business_id", businessId),
+    supabase.from("employees").select("*").eq("business_id", businessId),
+  ]);
   return {
-    name: business.name,
-    startHour: business.start_hour,
-    endHour: business.end_hour,
-    slotGranularityMinutes: business.slot_granularity_minutes,
-    offDays: business.off_days,
     services: (services ?? []).map((s) => ({ id: s.id, name: s.name, durationMinutes: s.duration_minutes })),
     employees: (employees ?? []).map((e) => ({ id: e.id, name: e.name })),
   };
 }
 
-export async function getService(serviceId: string): Promise<Service | undefined> {
-  const { data } = await supabase.from("services").select("*").eq("id", serviceId).maybeSingle();
-  return data ? { id: data.id, name: data.name, durationMinutes: data.duration_minutes } : undefined;
+export async function getBusinessConfig(businessId: string): Promise<BusinessConfig | undefined> {
+  const business = await getBusinessRowById(businessId);
+  if (!business) return undefined;
+  const { services, employees } = await servicesAndEmployeesFor(business.id);
+  return mapBusinessConfig(business, services, employees);
+}
+
+export async function getBusinessConfigBySlug(slug: string): Promise<BusinessConfig | undefined> {
+  const business = await getBusinessRowBySlug(slug);
+  if (!business) return undefined;
+  const { services, employees } = await servicesAndEmployeesFor(business.id);
+  return mapBusinessConfig(business, services, employees);
+}
+
+export function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+export async function isSlugTaken(slug: string): Promise<boolean> {
+  const business = await getBusinessRowBySlug(slug);
+  return !!business;
+}
+
+export async function createBusiness(
+  name: string,
+  slug: string,
+  ownerEmail: string,
+  password: string
+): Promise<{ success: true; businessId: string } | { success: false; error: string }> {
+  if (await isSlugTaken(slug)) {
+    return { success: false, error: "slug_taken" };
+  }
+  const { data, error } = await supabase
+    .from("business")
+    .insert({
+      name,
+      slug,
+      owner_email: ownerEmail.toLowerCase(),
+      password_hash: hashPassword(password),
+      start_hour: 9,
+      end_hour: 18,
+      slot_granularity_minutes: 15,
+      off_days: [],
+    })
+    .select()
+    .single();
+  if (error) {
+    if (error.code === "23505") return { success: false, error: "email_taken" };
+    throw new Error(error.message);
+  }
+  return { success: true, businessId: data.id };
+}
+
+export async function verifyOwnerLogin(
+  email: string,
+  password: string
+): Promise<{ success: true; businessId: string } | { success: false }> {
+  const { data } = await supabase.from("business").select("*").eq("owner_email", email.toLowerCase()).maybeSingle();
+  if (!data || !verifyPassword(password, data.password_hash)) {
+    return { success: false };
+  }
+  return { success: true, businessId: data.id };
 }
 
 export async function updateBusinessConfig(
+  businessId: string,
   updates: Partial<Pick<BusinessConfig, "name" | "startHour" | "endHour" | "offDays">>
-): Promise<BusinessConfig> {
-  const business = await getBusinessRow();
+): Promise<BusinessConfig | undefined> {
   const dbUpdates: Record<string, unknown> = {};
   if (updates.name !== undefined) dbUpdates.name = updates.name;
   if (updates.startHour !== undefined) dbUpdates.start_hour = updates.startHour;
   if (updates.endHour !== undefined) dbUpdates.end_hour = updates.endHour;
   if (updates.offDays !== undefined) dbUpdates.off_days = updates.offDays;
 
-  const { error } = await supabase.from("business").update(dbUpdates).eq("id", business.id);
+  const { error } = await supabase.from("business").update(dbUpdates).eq("id", businessId);
   if (error) throw new Error(error.message);
-  return getBusinessConfig();
+  return getBusinessConfig(businessId);
 }
 
-export async function addService(name: string, durationMinutes: number): Promise<Service> {
-  const business = await getBusinessRow();
+export async function addService(businessId: string, name: string, durationMinutes: number): Promise<Service> {
   const { data, error } = await supabase
     .from("services")
-    .insert({ business_id: business.id, name, duration_minutes: durationMinutes })
+    .insert({ business_id: businessId, name, duration_minutes: durationMinutes })
     .select()
     .single();
   if (error) throw new Error(error.message);
   return { id: data.id, name: data.name, durationMinutes: data.duration_minutes };
 }
 
-export async function removeService(serviceId: string): Promise<{ success: boolean }> {
-  const { error } = await supabase.from("services").delete().eq("id", serviceId);
+export async function removeService(serviceId: string, businessId: string): Promise<{ success: boolean }> {
+  const { error } = await supabase.from("services").delete().eq("id", serviceId).eq("business_id", businessId);
   return { success: !error };
 }
 
-export async function getEmployee(employeeId: string): Promise<Employee | undefined> {
-  const { data } = await supabase.from("employees").select("*").eq("id", employeeId).maybeSingle();
-  return data ? { id: data.id, name: data.name } : undefined;
-}
-
-export async function addEmployee(name: string): Promise<Employee> {
-  const business = await getBusinessRow();
+export async function addEmployee(businessId: string, name: string): Promise<Employee> {
   const { data, error } = await supabase
     .from("employees")
-    .insert({ business_id: business.id, name })
+    .insert({ business_id: businessId, name })
     .select()
     .single();
   if (error) throw new Error(error.message);
   return { id: data.id, name: data.name };
 }
 
-export async function removeEmployee(employeeId: string): Promise<{ success: boolean }> {
-  const { error } = await supabase.from("employees").delete().eq("id", employeeId);
+export async function removeEmployee(employeeId: string, businessId: string): Promise<{ success: boolean }> {
+  const { error } = await supabase.from("employees").delete().eq("id", employeeId).eq("business_id", businessId);
   return { success: !error };
 }
 
@@ -184,8 +264,9 @@ export function formatDateISO(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-export async function isDayClosed(date: string): Promise<boolean> {
-  const business = await getBusinessRow();
+export async function isDayClosed(businessId: string, date: string): Promise<boolean> {
+  const business = await getBusinessRowById(businessId);
+  if (!business) return true;
   const [y, m, d] = date.split("-").map(Number);
   const dayOfWeek = new Date(y, m - 1, d).getDay();
   return (business.off_days as number[]).includes(dayOfWeek);
@@ -238,12 +319,14 @@ async function getBookedBookingsForDate(businessId: string, date: string): Promi
 
 export type SlotInfo = { time: string; available: boolean };
 
-export async function getSlotsForDay(date: string, serviceId: string): Promise<SlotInfo[]> {
-  const business = await getBusinessRow();
-  const service = await getService(serviceId);
+export async function getSlotsForDay(businessId: string, date: string, serviceId: string): Promise<SlotInfo[]> {
+  const business = await getBusinessRowById(businessId);
+  if (!business) return [];
+  const service = await getServiceForBusiness(serviceId, businessId);
+  if (!service) return [];
   const [y, m, d] = date.split("-").map(Number);
   const closed = (business.off_days as number[]).includes(new Date(y, m - 1, d).getDay());
-  if (!service || closed) return [];
+  if (closed) return [];
 
   const { data: employees } = await supabase.from("employees").select("*").eq("business_id", business.id);
   const bookingsThatDay = await getBookedBookingsForDate(business.id, date);
@@ -267,8 +350,8 @@ export async function getSlotsForDay(date: string, serviceId: string): Promise<S
   return slots;
 }
 
-export async function isDayFullyBooked(date: string, serviceId: string): Promise<boolean> {
-  const slots = await getSlotsForDay(date, serviceId);
+export async function isDayFullyBooked(businessId: string, date: string, serviceId: string): Promise<boolean> {
+  const slots = await getSlotsForDay(businessId, date, serviceId);
   return slots.length > 0 && slots.every((s) => !s.available);
 }
 
@@ -278,7 +361,18 @@ type BookingResult =
 
 const EXCLUSION_VIOLATION = "23P01";
 
+async function getServiceForBusiness(serviceId: string, businessId: string): Promise<Service | undefined> {
+  const { data } = await supabase
+    .from("services")
+    .select("*")
+    .eq("id", serviceId)
+    .eq("business_id", businessId)
+    .maybeSingle();
+  return data ? { id: data.id, name: data.name, durationMinutes: data.duration_minutes } : undefined;
+}
+
 export async function createBooking(
+  businessId: string,
   date: string,
   time: string,
   serviceId: string,
@@ -286,13 +380,12 @@ export async function createBooking(
   customerPhone: string,
   note?: string
 ): Promise<BookingResult> {
-  const service = await getService(serviceId);
+  const service = await getServiceForBusiness(serviceId, businessId);
   if (!service) {
     return { success: false, error: "unknown_service" };
   }
 
-  const business = await getBusinessRow();
-  const { data: employees } = await supabase.from("employees").select("*").eq("business_id", business.id);
+  const { data: employees } = await supabase.from("employees").select("*").eq("business_id", businessId);
 
   // Try each employee in turn — the database's exclusion constraint is the
   // real safety net here (it rejects an overlapping insert even if two
@@ -301,7 +394,7 @@ export async function createBooking(
     const { data, error } = await supabase
       .from("bookings")
       .insert({
-        business_id: business.id,
+        business_id: businessId,
         date,
         time,
         service_id: service.id,
@@ -331,20 +424,20 @@ export async function createBooking(
 }
 
 export async function joinWaitlist(
+  businessId: string,
   date: string,
   serviceId: string,
   customerName: string,
   customerPhone: string,
   note?: string
 ): Promise<WaitlistEntry | { error: "unknown_service" }> {
-  const service = await getService(serviceId);
+  const service = await getServiceForBusiness(serviceId, businessId);
   if (!service) return { error: "unknown_service" };
 
-  const business = await getBusinessRow();
   const { data, error } = await supabase
     .from("waitlist")
     .insert({
-      business_id: business.id,
+      business_id: businessId,
       date,
       service_id: service.id,
       service_name: service.name,
@@ -362,9 +455,8 @@ export async function joinWaitlist(
   return mapWaitlist(data);
 }
 
-export async function getAllBookings(): Promise<Booking[]> {
-  const business = await getBusinessRow();
-  const { data } = await supabase.from("bookings").select("*").eq("business_id", business.id);
+export async function getAllBookings(businessId: string): Promise<Booking[]> {
+  const { data } = await supabase.from("bookings").select("*").eq("business_id", businessId);
   return (data ?? []).map(mapBooking);
 }
 
@@ -373,9 +465,8 @@ export async function getBooking(id: string): Promise<Booking | undefined> {
   return data ? mapBooking(data) : undefined;
 }
 
-export async function getAllWaitlist(): Promise<WaitlistEntry[]> {
-  const business = await getBusinessRow();
-  const { data } = await supabase.from("waitlist").select("*").eq("business_id", business.id);
+export async function getAllWaitlist(businessId: string): Promise<WaitlistEntry[]> {
+  const { data } = await supabase.from("waitlist").select("*").eq("business_id", businessId);
   return (data ?? []).map(mapWaitlist);
 }
 
@@ -434,8 +525,7 @@ export async function cancelBooking(id: string): Promise<{ success: boolean; pro
     time: booking.time,
   });
 
-  const business = await getBusinessRow();
-  const promoted = await promoteNextWaitlisted(business.id, booking.date, booking.time, booking.durationMinutes);
+  const promoted = await promoteNextWaitlisted(booking.businessId, booking.date, booking.time, booking.durationMinutes);
   return { success: true, promoted };
 }
 
@@ -449,8 +539,7 @@ export async function rescheduleBooking(
     return { success: false, error: "not_found" };
   }
 
-  const business = await getBusinessRow();
-  const { data: employees } = await supabase.from("employees").select("*").eq("business_id", business.id);
+  const { data: employees } = await supabase.from("employees").select("*").eq("business_id", booking.businessId);
 
   for (const emp of employees ?? []) {
     const { data, error } = await supabase
@@ -471,7 +560,7 @@ export async function rescheduleBooking(
       });
 
       if (booking.date !== newDate || booking.time !== newTime) {
-        await promoteNextWaitlisted(business.id, booking.date, booking.time, booking.durationMinutes);
+        await promoteNextWaitlisted(booking.businessId, booking.date, booking.time, booking.durationMinutes);
       }
 
       return { success: true, booking: updated };
@@ -484,14 +573,18 @@ export async function rescheduleBooking(
   return { success: false, error: "slot_taken" };
 }
 
-export async function confirmWaitlistPromotion(waitlistId: string): Promise<{ success: boolean; error?: string }> {
+export async function confirmWaitlistPromotion(
+  waitlistId: string,
+  businessId: string
+): Promise<{ success: boolean; error?: string }> {
   const { data } = await supabase.from("waitlist").select("*").eq("id", waitlistId).maybeSingle();
   const entry = data ? mapWaitlist(data) : undefined;
-  if (!entry || entry.status !== "notified" || !entry.notifiedTime) {
+  if (!entry || entry.businessId !== businessId || entry.status !== "notified" || !entry.notifiedTime) {
     return { success: false, error: "not_eligible" };
   }
 
   const result = await createBooking(
+    businessId,
     entry.date,
     entry.notifiedTime,
     entry.serviceId,

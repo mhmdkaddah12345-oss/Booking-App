@@ -1,8 +1,12 @@
-import { NextResponse } from "next/server";
-import { SESSION_COOKIE } from "@/lib/ownerAuth";
+import { NextRequest, NextResponse } from "next/server";
+import { destroySession, SESSION_COOKIE, clearSessionCookie } from "@/lib/ownerAuth";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  const sessionId = request.cookies.get(SESSION_COOKIE)?.value;
+  if (sessionId) {
+    await destroySession(sessionId);
+  }
   const res = NextResponse.json({ success: true });
-  res.cookies.set(SESSION_COOKIE, "", { path: "/", maxAge: 0 });
+  clearSessionCookie(res);
   return res;
 }

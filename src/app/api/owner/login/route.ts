@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getExpectedSessionToken, SESSION_COOKIE } from "@/lib/ownerAuth";
+import { verifyOwnerLogin } from "@/lib/store";
+import { createSession, setSessionCookie } from "@/lib/ownerAuth";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { password } = body ?? {};
+  const { email, password } = body ?? {};
 
-  if (!password || password !== process.env.OWNER_PASSWORD) {
-    return NextResponse.json({ error: "invalid_password" }, { status: 401 });
+  if (!email || !password) {
+    return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
 
-  const token = await getExpectedSessionToken();
+  const result = await verifyOwnerLogin(email, password);
+  if (!result.success) {
+    return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });
+  }
+
+  const sessionId = await createSession(result.businessId);
   const res = NextResponse.json({ success: true });
-  res.cookies.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
+  setSessionCookie(res, sessionId);
   return res;
 }

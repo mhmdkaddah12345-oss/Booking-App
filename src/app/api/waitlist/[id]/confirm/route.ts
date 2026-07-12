@@ -3,11 +3,11 @@ import { confirmWaitlistPromotion } from "@/lib/store";
 import { requireOwner } from "@/lib/ownerAuth";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const unauthorized = await requireOwner(request);
-  if (unauthorized) return unauthorized;
+  const auth = await requireOwner(request);
+  if (auth instanceof NextResponse) return auth;
 
   const { id } = await params;
-  const result = await confirmWaitlistPromotion(id);
+  const result = await confirmWaitlistPromotion(id, auth.businessId);
   if (!result.success) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }

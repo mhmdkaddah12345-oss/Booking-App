@@ -3,10 +3,13 @@ import { getAllBookings, getAllWaitlist } from "@/lib/store";
 import { requireOwner } from "@/lib/ownerAuth";
 
 export async function GET(request: NextRequest) {
-  const unauthorized = await requireOwner(request);
-  if (unauthorized) return unauthorized;
+  const auth = await requireOwner(request);
+  if (auth instanceof NextResponse) return auth;
 
-  const [allBookings, allWaitlist] = await Promise.all([getAllBookings(), getAllWaitlist()]);
+  const [allBookings, allWaitlist] = await Promise.all([
+    getAllBookings(auth.businessId),
+    getAllWaitlist(auth.businessId),
+  ]);
 
   const bookings = allBookings
     .filter((b) => b.status === "booked")

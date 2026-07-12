@@ -3,11 +3,11 @@ import { removeEmployee } from "@/lib/store";
 import { requireOwner } from "@/lib/ownerAuth";
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const unauthorized = await requireOwner(request);
-  if (unauthorized) return unauthorized;
+  const auth = await requireOwner(request);
+  if (auth instanceof NextResponse) return auth;
 
   const { id } = await params;
-  const result = await removeEmployee(id);
+  const result = await removeEmployee(id, auth.businessId);
   if (!result.success) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }

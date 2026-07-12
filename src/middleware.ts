@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isOwnerRequest } from "@/lib/ownerAuth";
+import { hasValidSession } from "@/lib/ownerAuth";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (pathname === "/dashboard/login") {
     return NextResponse.next();
   }
-  if (await isOwnerRequest(request)) {
+  if (await hasValidSession(request)) {
     return NextResponse.next();
   }
   return NextResponse.redirect(new URL("/dashboard/login", request.url));

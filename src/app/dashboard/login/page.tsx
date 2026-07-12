@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export default function OwnerLoginPage() {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -15,10 +17,10 @@ export default function OwnerLoginPage() {
       const res = await fetch("/api/owner/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ email, password }),
       });
       if (!res.ok) {
-        setError("Incorrect password.");
+        setError("Incorrect email or password.");
         return;
       }
       window.location.href = "/dashboard";
@@ -35,9 +37,17 @@ export default function OwnerLoginPage() {
       >
         <h1 className="text-xl font-semibold text-zinc-900">Owner Login</h1>
         <input
-          type="password"
+          type="email"
           required
           autoFocus
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
+        />
+        <input
+          type="password"
+          required
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -51,6 +61,12 @@ export default function OwnerLoginPage() {
         >
           {submitting ? "Checking..." : "Log in"}
         </button>
+        <p className="text-center text-sm text-zinc-500">
+          New business?{" "}
+          <Link href="/signup" className="font-medium text-zinc-700 underline">
+            Create an account
+          </Link>
+        </p>
       </form>
     </div>
   );

@@ -3,8 +3,8 @@ import { addEmployee } from "@/lib/store";
 import { requireOwner } from "@/lib/ownerAuth";
 
 export async function POST(request: NextRequest) {
-  const unauthorized = await requireOwner(request);
-  if (unauthorized) return unauthorized;
+  const auth = await requireOwner(request);
+  if (auth instanceof NextResponse) return auth;
 
   const body = await request.json();
   const { name } = body ?? {};
@@ -13,6 +13,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
 
-  const employee = await addEmployee(name);
+  const employee = await addEmployee(auth.businessId, name);
   return NextResponse.json({ employee }, { status: 201 });
 }
