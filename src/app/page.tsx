@@ -1,6 +1,30 @@
 import Link from "next/link";
 import Wordmark from "@/components/Wordmark";
 
+const PAIN_POINTS = [
+  "A customer messages at midnight and you forget to reply by morning — booking lost.",
+  "Someone cancels last-minute and the slot just sits empty, because calling down the waitlist takes too long.",
+  "Two customers message at the same time for the same slot, and now you have an awkward call to make.",
+];
+
+const STEPS = [
+  {
+    step: "01",
+    title: "Tell us about your business",
+    body: "Business name, services, and staff. Takes about two minutes — no technical setup on your end.",
+  },
+  {
+    step: "02",
+    title: "Get your own booking link",
+    body: "A clean, branded link like yourbusiness.maw3edapp.com — share it on WhatsApp, Instagram, or your storefront window.",
+  },
+  {
+    step: "03",
+    title: "Bookings run themselves",
+    body: "Customers pick a time, get auto-assigned to whoever's free, and can reschedule or cancel on their own — day or night.",
+  },
+];
+
 const FEATURES = [
   {
     title: "No app to download",
@@ -14,16 +38,51 @@ const FEATURES = [
     title: "Multi-staff scheduling",
     body: "Bookings are assigned to whichever staff member is free. Customers never have to guess who to pick.",
   },
+  {
+    title: "Self-service changes",
+    body: "Customers can reschedule or cancel their own appointment from a link — no back-and-forth messages needed.",
+  },
+  {
+    title: "Your own branded link",
+    body: "Every business gets a clean, professional web address — yours to put on business cards, stories, or a storefront sign.",
+  },
+  {
+    title: "Race-condition-safe booking",
+    body: "Built on a real database with proper safeguards, so two customers can never accidentally book the same slot.",
+  },
+];
+
+const FAQS = [
+  {
+    q: "Do my customers need to download anything?",
+    a: "No. They open your link in any browser, book, and get a confirmation — nothing to install, no account to create.",
+  },
+  {
+    q: "What happens when a customer cancels?",
+    a: "The freed slot is automatically offered to the next person on that day's waitlist — you don't have to call anyone.",
+  },
+  {
+    q: "Can I have more than one staff member?",
+    a: "Yes. Add as many staff as you like in Settings — bookings are automatically assigned to whoever is free.",
+  },
+  {
+    q: "How much does it cost?",
+    a: "Sign up below and we'll be in touch to set up a plan that fits your business.",
+  },
 ];
 
 export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50">
-      <header className="mx-auto w-full max-w-5xl px-6 py-8">
+      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-8">
         <Wordmark />
+        <Link href="/dashboard/login" className="text-sm font-medium text-zinc-600 hover:underline">
+          Log in
+        </Link>
       </header>
 
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center px-6 pb-20 pt-8 text-center">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center px-6 pb-24 pt-8 text-center">
+        {/* Hero */}
         <h1 className="font-display max-w-2xl text-balance text-4xl font-semibold leading-tight text-zinc-800 sm:text-5xl">
           Booking pages for local businesses
         </h1>
@@ -40,21 +99,88 @@ export default function LandingPage() {
             Create your booking page
           </Link>
           <Link
-            href="/dashboard/login"
+            href="#how-it-works"
             className="rounded-full px-6 py-3 text-sm font-medium text-zinc-700 ring-1 ring-zinc-300 transition-colors hover:bg-zinc-100"
           >
-            Log in to your dashboard
+            See how it works
           </Link>
         </div>
 
-        <div className="mt-20 grid w-full gap-6 text-left sm:grid-cols-3">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="rounded-xl bg-paper p-6 ring-1 ring-zinc-200">
-              <h3 className="font-display text-base font-semibold text-zinc-800">{f.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-600">{f.body}</p>
-            </div>
-          ))}
-        </div>
+        {/* Problem */}
+        <section className="mt-24 w-full text-left">
+          <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
+            Still booking over WhatsApp and a notebook?
+          </h2>
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            {PAIN_POINTS.map((point) => (
+              <div key={point} className="rounded-xl bg-zinc-100 p-5 text-sm leading-relaxed text-zinc-600">
+                {point}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section id="how-it-works" className="mt-24 w-full scroll-mt-8 text-left">
+          <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
+            How Maw3ed works
+          </h2>
+          <div className="mt-8 grid gap-8 sm:grid-cols-3">
+            {STEPS.map((s) => (
+              <div key={s.step}>
+                <span className="font-display text-3xl font-semibold text-zinc-300">{s.step}</span>
+                <h3 className="font-display mt-2 text-base font-semibold text-zinc-800">{s.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{s.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Features */}
+        <section className="mt-24 w-full text-left">
+          <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
+            Everything your booking page needs
+          </h2>
+          <div className="mt-8 grid w-full gap-6 sm:grid-cols-3">
+            {FEATURES.map((f) => (
+              <div key={f.title} className="rounded-xl bg-paper p-6 ring-1 ring-zinc-200">
+                <h3 className="font-display text-base font-semibold text-zinc-800">{f.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{f.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="mt-24 w-full max-w-2xl text-left">
+          <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
+            Questions business owners ask
+          </h2>
+          <div className="mt-8 flex flex-col gap-6">
+            {FAQS.map((f) => (
+              <div key={f.q} className="border-b border-zinc-200 pb-6 last:border-0">
+                <h3 className="text-sm font-semibold text-zinc-800">{f.q}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-zinc-600">{f.a}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Closing CTA */}
+        <section className="mt-24 w-full rounded-2xl bg-zinc-900 px-8 py-12 text-center">
+          <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
+            Ready to stop losing bookings to a missed message?
+          </h2>
+          <p className="mt-3 text-sm text-zinc-300 sm:text-base">
+            Set up your booking page today — it takes about two minutes.
+          </p>
+          <Link
+            href="/signup"
+            className="mt-6 inline-block rounded-full bg-white px-6 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100"
+          >
+            Create your booking page
+          </Link>
+        </section>
       </main>
 
       <footer className="mx-auto w-full max-w-5xl px-6 pb-8 text-center text-xs text-zinc-400">
