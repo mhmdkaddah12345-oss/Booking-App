@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createBusiness, isSlugTaken, slugify } from "@/lib/store";
+import { notifyAdminOfNewSignup } from "@/lib/adminAlerts";
 
 async function uniqueSlugFor(businessName: string): Promise<string> {
   const base = slugify(businessName) || "business";
@@ -28,6 +29,8 @@ export async function POST(request: NextRequest) {
   if (!result.success) {
     return NextResponse.json({ error: result.error }, { status: 409 });
   }
+
+  await notifyAdminOfNewSignup({ name: businessName, email, phone, slug });
 
   return NextResponse.json({ success: true, slug });
 }
