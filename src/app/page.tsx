@@ -1,10 +1,30 @@
 import Link from "next/link";
 import Wordmark from "@/components/Wordmark";
+import {
+  IconAlert,
+  IconBrowser,
+  IconCalendarX,
+  IconChat,
+  IconClock,
+  IconLink,
+  IconRefresh,
+  IconShieldCheck,
+  IconUsers,
+} from "@/components/icons";
 
 const PAIN_POINTS = [
-  "A customer messages at midnight and you forget to reply by morning — booking lost.",
-  "Someone cancels last-minute and the slot just sits empty, because calling down the waitlist takes too long.",
-  "Two customers message at the same time for the same slot, and now you have an awkward call to make.",
+  {
+    icon: IconChat,
+    body: "A customer messages at midnight and you forget to reply by morning — booking lost.",
+  },
+  {
+    icon: IconCalendarX,
+    body: "Someone cancels last-minute and the slot just sits empty, because calling down the waitlist takes too long.",
+  },
+  {
+    icon: IconAlert,
+    body: "Two customers message at the same time for the same slot, and now you have an awkward call to make.",
+  },
 ];
 
 const STEPS = [
@@ -27,26 +47,32 @@ const STEPS = [
 
 const FEATURES = [
   {
+    icon: IconBrowser,
     title: "No app to download",
     body: "Customers book from a link you share — on WhatsApp, Instagram, or anywhere else. No install, no account.",
   },
   {
+    icon: IconClock,
     title: "Automatic waitlist",
     body: "When someone cancels, the freed slot is offered to the next person waiting — no calls, no missed revenue.",
   },
   {
+    icon: IconUsers,
     title: "Multi-staff scheduling",
     body: "Bookings are assigned to whichever staff member is free. Customers never have to guess who to pick.",
   },
   {
+    icon: IconRefresh,
     title: "Self-service changes",
     body: "Customers can reschedule or cancel their own appointment from a link — no back-and-forth messages needed.",
   },
   {
+    icon: IconLink,
     title: "Your own branded link",
     body: "Every business gets a clean, professional web address — yours to put on business cards, stories, or a storefront sign.",
   },
   {
+    icon: IconShieldCheck,
     title: "Race-condition-safe booking",
     body: "Built on a real database with proper safeguards, so two customers can never accidentally book the same slot.",
   },
@@ -112,9 +138,10 @@ export default function LandingPage() {
             Still booking over WhatsApp and a notebook?
           </h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            {PAIN_POINTS.map((point) => (
-              <div key={point} className="rounded-xl bg-zinc-100 p-5 text-sm leading-relaxed text-zinc-600">
-                {point}
+            {PAIN_POINTS.map(({ icon: Icon, body }) => (
+              <div key={body} className="rounded-xl bg-zinc-100 p-5">
+                <Icon className="h-6 w-6 text-zinc-500" />
+                <p className="mt-3 text-sm leading-relaxed text-zinc-600">{body}</p>
               </div>
             ))}
           </div>
@@ -142,10 +169,13 @@ export default function LandingPage() {
             Everything your booking page needs
           </h2>
           <div className="mt-8 grid w-full gap-6 sm:grid-cols-3">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="rounded-xl bg-paper p-6 ring-1 ring-zinc-200">
-                <h3 className="font-display text-base font-semibold text-zinc-800">{f.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{f.body}</p>
+            {FEATURES.map(({ icon: Icon, title, body }) => (
+              <div key={title} className="rounded-xl bg-paper p-6 ring-1 ring-zinc-200">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100">
+                  <Icon className="h-5 w-5 text-zinc-900" />
+                </div>
+                <h3 className="font-display mt-3 text-base font-semibold text-zinc-800">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{body}</p>
               </div>
             ))}
           </div>
