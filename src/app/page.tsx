@@ -205,12 +205,7 @@ export default function BookingPage() {
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="mx-auto max-w-xl">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-zinc-900">{businessName || "Loading..."}</h1>
-          <Link href="/dashboard" className="text-sm font-medium text-zinc-600 hover:underline">
-            Owner Dashboard →
-          </Link>
-        </div>
+        <h1 className="text-2xl font-semibold text-zinc-900">{businessName || "Loading..."}</h1>
         <p className="mt-1 text-sm text-zinc-500">Choose a service, then pick a day and time.</p>
 
         <label className="mt-6 flex flex-col gap-1 text-sm text-zinc-600">

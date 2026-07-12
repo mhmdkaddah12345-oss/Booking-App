@@ -146,9 +146,20 @@ export default function SettingsPage() {
       <div className="mx-auto max-w-xl">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-zinc-900">Settings</h1>
-          <Link href="/dashboard" className="text-sm font-medium text-zinc-600 hover:underline">
-            ← Dashboard
-          </Link>
+          <div className="flex gap-4">
+            <Link href="/dashboard" className="text-sm font-medium text-zinc-600 hover:underline">
+              ← Dashboard
+            </Link>
+            <button
+              onClick={async () => {
+                await fetch("/api/owner/logout", { method: "POST" });
+                window.location.href = "/dashboard/login";
+              }}
+              className="text-sm font-medium text-zinc-600 hover:underline"
+            >
+              Log out
+            </button>
+          </div>
         </div>
 
         {!business ? (

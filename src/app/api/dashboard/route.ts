@@ -1,7 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getAllBookings, getAllWaitlist } from "@/lib/store";
+import { requireOwner } from "@/lib/ownerAuth";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const unauthorized = await requireOwner(request);
+  if (unauthorized) return unauthorized;
+
   const [allBookings, allWaitlist] = await Promise.all([getAllBookings(), getAllWaitlist()]);
 
   const bookings = allBookings

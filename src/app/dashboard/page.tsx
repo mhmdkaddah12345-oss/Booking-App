@@ -135,6 +135,15 @@ export default function DashboardPage() {
             <Link href="/" className="text-sm font-medium text-zinc-600 hover:underline">
               Customer Booking Page →
             </Link>
+            <button
+              onClick={async () => {
+                await fetch("/api/owner/logout", { method: "POST" });
+                window.location.href = "/dashboard/login";
+              }}
+              className="text-sm font-medium text-zinc-600 hover:underline"
+            >
+              Log out
+            </button>
           </div>
         </div>
 
