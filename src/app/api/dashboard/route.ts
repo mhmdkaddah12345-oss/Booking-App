@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   ]);
 
   const bookings = allBookings
-    .filter((b) => b.status === "booked")
+    .filter((b) => b.status === "booked" || b.status === "pending")
     .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
   const waitlist = allWaitlist
     .filter((w) => w.status === "waiting" || w.status === "notified")

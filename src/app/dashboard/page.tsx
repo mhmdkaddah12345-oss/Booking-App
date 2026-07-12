@@ -15,6 +15,7 @@ type Booking = {
   note?: string;
   employeeId: string;
   employeeName: string;
+  status: "pending" | "booked";
 };
 
 type Employee = { id: string; name: string };
@@ -96,6 +97,28 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleAccept(id: string) {
+    setBusyId(id);
+    try {
+      await fetch(`/api/bookings/${id}/confirm`, { method: "POST" });
+      setSelectedBookingId(null);
+      loadDashboard();
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleDecline(id: string) {
+    setBusyId(id);
+    try {
+      await fetch(`/api/bookings/${id}/decline`, { method: "POST" });
+      setSelectedBookingId(null);
+      loadDashboard();
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   async function handleConfirmWaitlist(id: string) {
     setBusyId(id);
     try {
@@ -127,6 +150,10 @@ export default function DashboardPage() {
     bookings.filter((b) => b.date === date && b.employeeId === employeeId);
 
   const laterDates = Array.from(new Set(bookings.filter((b) => b.date > lastGridDate).map((b) => b.date))).sort();
+
+  const pendingBookings = bookings
+    .filter((b) => b.status === "pending")
+    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 
   const selectedBooking = bookings.find((b) => b.id === selectedBookingId) ?? null;
 
@@ -161,6 +188,48 @@ export default function DashboardPage() {
                 </Link>
               </div>
             )}
+
+            {pendingBookings.length > 0 && (
+              <div className="mt-6 rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
+                <h2 className="text-sm font-semibold text-amber-900">
+                  Pending Requests ({pendingBookings.length})
+                </h2>
+                <ul className="mt-2 flex flex-col gap-2">
+                  {pendingBookings.map((b) => (
+                    <li
+                      key={b.id}
+                      className="flex flex-col gap-2 rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-amber-200 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <span className="text-zinc-700">
+                        <span className="font-medium text-zinc-800">
+                          {b.date} at {b.time}
+                        </span>{" "}
+                        — {b.customerName} ({b.customerPhone}) — {b.serviceName} ({b.durationMinutes} min,{" "}
+                        {b.employeeName})
+                        {b.note && <span className="ml-2 italic text-zinc-500">&ldquo;{b.note}&rdquo;</span>}
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleAccept(b.id)}
+                          disabled={busyId === b.id}
+                          className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+                        >
+                          {busyId === b.id ? "..." : "Accept"}
+                        </button>
+                        <button
+                          onClick={() => handleDecline(b.id)}
+                          disabled={busyId === b.id}
+                          className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+                        >
+                          {busyId === b.id ? "..." : "Decline"}
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <div className="mt-6 overflow-x-auto rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
               <div className="grid" style={{ gridTemplateColumns: "50px repeat(5, minmax(110px, 1fr))" }}>
                 <div />
@@ -207,16 +276,22 @@ export default function DashboardPage() {
                           const topPx = (startMinutesFromOpen / 60) * ROW_HEIGHT_PX;
                           const heightPx = Math.max((b.durationMinutes / 60) * ROW_HEIGHT_PX, 18);
                           const isSelected = selectedBookingId === b.id;
+                          const isPending = b.status === "pending";
                           return (
                             <button
                               key={b.id}
                               onClick={() => setSelectedBookingId(isSelected ? null : b.id)}
                               className={`absolute left-0.5 right-0.5 overflow-hidden rounded px-1 text-left text-[10px] leading-tight transition-colors ${
-                                isSelected ? "bg-amber-500 text-white" : "bg-zinc-900 text-white hover:bg-zinc-700"
+                                isSelected
+                                  ? "bg-amber-500 text-white"
+                                  : isPending
+                                  ? "bg-amber-100 text-amber-800 ring-1 ring-inset ring-amber-300 hover:bg-amber-200"
+                                  : "bg-zinc-900 text-white hover:bg-zinc-700"
                               }`}
                               style={{ top: topPx, height: heightPx }}
                             >
                               {b.time} {b.customerName}
+                              {isPending && " ⏳"}
                             </button>
                           );
                         })}
@@ -229,7 +304,14 @@ export default function DashboardPage() {
 
             {selectedBooking && (
               <div className="mt-2 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
-                <p className="text-sm font-medium text-zinc-800">{selectedBooking.serviceName}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-zinc-800">{selectedBooking.serviceName}</p>
+                  {selectedBooking.status === "pending" && (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                      Awaiting your confirmation
+                    </span>
+                  )}
+                </div>
                 <p className="mt-1 text-sm text-zinc-600">
                   {selectedBooking.date} at {selectedBooking.time} ({selectedBooking.durationMinutes} min) —{" "}
                   {selectedBooking.employeeName}
@@ -241,13 +323,32 @@ export default function DashboardPage() {
                   <p className="mt-1 text-sm italic text-zinc-500">&ldquo;{selectedBooking.note}&rdquo;</p>
                 )}
                 <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => handleCancel(selectedBooking.id)}
-                    disabled={busyId === selectedBooking.id}
-                    className="rounded-full bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
-                  >
-                    {busyId === selectedBooking.id ? "Cancelling..." : "Cancel booking"}
-                  </button>
+                  {selectedBooking.status === "pending" ? (
+                    <>
+                      <button
+                        onClick={() => handleAccept(selectedBooking.id)}
+                        disabled={busyId === selectedBooking.id}
+                        className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+                      >
+                        {busyId === selectedBooking.id ? "..." : "Accept"}
+                      </button>
+                      <button
+                        onClick={() => handleDecline(selectedBooking.id)}
+                        disabled={busyId === selectedBooking.id}
+                        className="rounded-full bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+                      >
+                        {busyId === selectedBooking.id ? "..." : "Decline"}
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => handleCancel(selectedBooking.id)}
+                      disabled={busyId === selectedBooking.id}
+                      className="rounded-full bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+                    >
+                      {busyId === selectedBooking.id ? "Cancelling..." : "Cancel booking"}
+                    </button>
+                  )}
                   <button
                     onClick={() => setSelectedBookingId(null)}
                     className="rounded-full px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
@@ -317,6 +418,11 @@ export default function DashboardPage() {
                               <span className="text-zinc-600">
                                 — {b.customerName} ({b.customerPhone})
                               </span>
+                              {b.status === "pending" && (
+                                <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                                  Pending
+                                </span>
+                              )}
                               {b.note && <span className="ml-2 italic text-zinc-500">&ldquo;{b.note}&rdquo;</span>}
                             </span>
                             <button

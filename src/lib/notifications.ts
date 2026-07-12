@@ -2,7 +2,9 @@
 // WhatsApp Cloud API call later — nothing else in the app needs to change.
 
 export type NotificationEvent =
+  | "booking_requested"
   | "booking_confirmed"
+  | "booking_declined"
   | "booking_cancelled"
   | "booking_rescheduled"
   | "waitlist_joined"
@@ -23,8 +25,12 @@ const messageLog: LoggedMessage[] = g.__messageLog ?? (g.__messageLog = []);
 
 function buildMessage(event: NotificationEvent, data: Record<string, string>): string {
   switch (event) {
+    case "booking_requested":
+      return `Hi ${data.name}, we've received your request for ${data.date} at ${data.time}. We'll confirm it shortly. Manage: /manage/${data.bookingId}`;
     case "booking_confirmed":
       return `Hi ${data.name}, your appointment on ${data.date} at ${data.time} is confirmed. Manage or cancel: /manage/${data.bookingId}`;
+    case "booking_declined":
+      return `Hi ${data.name}, we're unable to confirm your request for ${data.date} at ${data.time}. Please try booking another time.`;
     case "booking_cancelled":
       return `Hi ${data.name}, your appointment on ${data.date} at ${data.time} has been cancelled.`;
     case "booking_rescheduled":

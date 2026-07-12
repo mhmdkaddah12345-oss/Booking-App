@@ -14,7 +14,7 @@ type Booking = {
   customerName: string;
   customerPhone: string;
   note?: string;
-  status: "booked" | "cancelled";
+  status: "pending" | "booked" | "cancelled";
 };
 
 type Slot = { time: string; available: boolean };
@@ -192,7 +192,18 @@ export default function ManageBookingPage() {
         ) : (
           booking && (
             <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
-              <p className="text-sm font-medium text-zinc-800">{booking.serviceName}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-zinc-800">{booking.serviceName}</p>
+                {booking.status === "pending" ? (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                    Pending confirmation
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                    Confirmed
+                  </span>
+                )}
+              </div>
               <p className="mt-1 text-sm text-zinc-600">
                 {booking.date} at {booking.time} ({booking.durationMinutes} min)
               </p>

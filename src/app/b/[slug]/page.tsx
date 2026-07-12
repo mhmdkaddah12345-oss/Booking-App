@@ -136,7 +136,9 @@ export default function BookingPage() {
         return;
       }
       const data = await res.json();
-      setSuccessMessage(`You're booked for ${selectedDate} at ${selectedTime}.`);
+      setSuccessMessage(
+        `Your request for ${selectedDate} at ${selectedTime} has been sent — we'll confirm it shortly.`
+      );
       setBookedId(data.booking.id);
       setSelectedTime(null);
       setName("");

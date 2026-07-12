@@ -40,7 +40,7 @@ export type BusinessConfig = {
   paymentPendingSince: string | null;
 };
 
-export type BookingStatus = "booked" | "cancelled";
+export type BookingStatus = "pending" | "booked" | "cancelled";
 
 export type Booking = {
   id: string;
@@ -384,7 +384,7 @@ async function getBookedBookingsForDate(businessId: string, date: string): Promi
     .select("*")
     .eq("business_id", businessId)
     .eq("date", date)
-    .eq("status", "booked");
+    .in("status", ["pending", "booked"]);
   return (data ?? []).map(mapBooking);
 }
 
@@ -449,7 +449,8 @@ export async function createBooking(
   serviceId: string,
   customerName: string,
   customerPhone: string,
-  note?: string
+  note?: string,
+  initialStatus: "pending" | "booked" = "pending"
 ): Promise<BookingResult> {
   const business = await getBusinessRowById(businessId);
   if (!business || isBusinessLocked(business)) {
@@ -466,6 +467,9 @@ export async function createBooking(
   // Try each employee in turn — the database's exclusion constraint is the
   // real safety net here (it rejects an overlapping insert even if two
   // requests race each other), this loop just finds who's actually free.
+  // A "pending" booking holds the slot exactly like a "booked" one — the
+  // exclusion constraint covers both — it just still needs the owner to
+  // accept it before it's confirmed.
   for (const emp of employees ?? []) {
     const { data, error } = await supabase
       .from("bookings")
@@ -481,14 +485,15 @@ export async function createBooking(
         note: note || null,
         employee_id: emp.id,
         employee_name: emp.name,
-        status: "booked",
+        status: initialStatus,
       })
       .select()
       .single();
 
     if (!error) {
       const booking = mapBooking(data);
-      notify("booking_confirmed", { phone: customerPhone, name: customerName, date, time, bookingId: booking.id });
+      const event = initialStatus === "pending" ? "booking_requested" : "booking_confirmed";
+      notify(event, { phone: customerPhone, name: customerName, date, time, bookingId: booking.id });
       return { success: true, booking };
     }
     if (error.code !== EXCLUSION_VIOLATION) {
@@ -592,7 +597,7 @@ async function promoteNextWaitlisted(
 
 export async function cancelBooking(id: string): Promise<{ success: boolean; promoted?: WaitlistEntry }> {
   const booking = await getBooking(id);
-  if (!booking || booking.status !== "booked") {
+  if (!booking || booking.status === "cancelled") {
     return { success: false };
   }
 
@@ -610,13 +615,57 @@ export async function cancelBooking(id: string): Promise<{ success: boolean; pro
   return { success: true, promoted };
 }
 
+/** Owner accepts a pending request. Only the owning business can confirm it. */
+export async function confirmBooking(id: string, businessId: string): Promise<{ success: boolean }> {
+  const booking = await getBooking(id);
+  if (!booking || booking.businessId !== businessId || booking.status !== "pending") {
+    return { success: false };
+  }
+
+  const { error } = await supabase.from("bookings").update({ status: "booked" }).eq("id", id);
+  if (error) throw new Error(error.message);
+
+  notify("booking_confirmed", {
+    phone: booking.customerPhone,
+    name: booking.customerName,
+    date: booking.date,
+    time: booking.time,
+    bookingId: booking.id,
+  });
+  return { success: true };
+}
+
+/** Owner declines a pending request — frees the slot and offers it down the waitlist, same as a cancellation. */
+export async function declineBooking(
+  id: string,
+  businessId: string
+): Promise<{ success: boolean; promoted?: WaitlistEntry }> {
+  const booking = await getBooking(id);
+  if (!booking || booking.businessId !== businessId || booking.status !== "pending") {
+    return { success: false };
+  }
+
+  const { error } = await supabase.from("bookings").update({ status: "cancelled" }).eq("id", id);
+  if (error) throw new Error(error.message);
+
+  notify("booking_declined", {
+    phone: booking.customerPhone,
+    name: booking.customerName,
+    date: booking.date,
+    time: booking.time,
+  });
+
+  const promoted = await promoteNextWaitlisted(booking.businessId, booking.date, booking.time, booking.durationMinutes);
+  return { success: true, promoted };
+}
+
 export async function rescheduleBooking(
   id: string,
   newDate: string,
   newTime: string
 ): Promise<{ success: true; booking: Booking } | { success: false; error: string }> {
   const booking = await getBooking(id);
-  if (!booking || booking.status !== "booked") {
+  if (!booking || booking.status === "cancelled") {
     return { success: false, error: "not_found" };
   }
 
@@ -730,7 +779,8 @@ export async function confirmWaitlistPromotion(
     entry.serviceId,
     entry.customerName,
     entry.customerPhone,
-    entry.note
+    entry.note,
+    "booked"
   );
   if (!result.success) {
     return { success: false, error: result.error };
