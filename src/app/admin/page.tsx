@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Wordmark from "@/components/Wordmark";
 
 type Business = {
   id: string;
@@ -104,7 +105,8 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="mx-auto max-w-3xl">
-        <div className="flex items-center justify-between">
+        <Wordmark />
+        <div className="mt-6 flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-zinc-900">Platform Admin</h1>
           <button
             onClick={async () => {
@@ -117,7 +119,7 @@ export default function AdminPage() {
           </button>
         </div>
 
-        <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+        <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
           <h2 className="text-sm font-semibold text-zinc-800">Businesses</h2>
           {!businesses ? (
             <p className="mt-3 text-sm text-zinc-500">Loading...</p>
@@ -187,7 +189,7 @@ export default function AdminPage() {
 
         <form
           onSubmit={saveSettings}
-          className="mt-6 flex flex-col gap-3 rounded-xl bg-white p-4 ring-1 ring-zinc-200"
+          className="mt-6 flex flex-col gap-3 rounded-xl bg-paper p-4 ring-1 ring-zinc-200"
         >
           <h2 className="text-sm font-semibold text-zinc-800">Bank transfer details</h2>
           <p className="text-xs text-zinc-500">

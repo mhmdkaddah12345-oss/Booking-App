@@ -288,7 +288,7 @@ export default function BookingPage() {
         </div>
 
         {calendarOpen && (
-          <div className="mt-2 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+          <div className="mt-2 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
             <div className="flex items-center justify-between">
               <button
                 onClick={goToPrevMonth}
@@ -347,7 +347,7 @@ export default function BookingPage() {
           </div>
         )}
 
-        <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+        <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
           {slotsLoading ? (
             <p className="text-sm text-zinc-500">Loading times...</p>
           ) : dayClosed ? (
@@ -495,6 +495,13 @@ export default function BookingPage() {
             </div>
           )}
         </div>
+
+        <p className="mt-8 text-center text-xs text-zinc-400">
+          Powered by{" "}
+          <Link href="/" className="font-medium text-zinc-500 hover:underline">
+            Maw3ed
+          </Link>
+        </p>
       </div>
     </div>
   );

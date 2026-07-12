@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 
 type Booking = {
   id: string;
@@ -41,6 +42,7 @@ export default function ManageBookingPage() {
   const bookingId = params.id;
 
   const [booking, setBooking] = useState<Booking | null>(null);
+  const [slug, setSlug] = useState<string>("");
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -73,22 +75,23 @@ export default function ManageBookingPage() {
         return r.json();
       })
       .then((data) => {
-        if (data) setBooking(data.booking);
+        if (data) {
+          setBooking(data.booking);
+          setSlug(data.business.slug);
+          setOffDays(data.business.offDays);
+        }
       })
       .finally(() => setLoading(false));
   }
 
   useEffect(() => {
-    fetch("/api/business")
-      .then((r) => r.json())
-      .then((data) => setOffDays(data.business.offDays));
     loadBooking();
   }, [bookingId]);
 
   useEffect(() => {
-    if (!rescheduling || !selectedDate || !booking) return;
+    if (!rescheduling || !selectedDate || !booking || !slug) return;
     setSlotsLoading(true);
-    fetch(`/api/slots?date=${selectedDate}&serviceId=${booking.serviceId}`)
+    fetch(`/api/slots?slug=${slug}&date=${selectedDate}&serviceId=${booking.serviceId}`)
       .then((r) => r.json())
       .then((data) => {
         setSlots(data.slots);
@@ -96,7 +99,7 @@ export default function ManageBookingPage() {
         setDayClosed(data.closed);
       })
       .finally(() => setSlotsLoading(false));
-  }, [rescheduling, selectedDate, booking]);
+  }, [rescheduling, selectedDate, booking, slug]);
 
   async function handleCancel() {
     setCancelling(true);
@@ -188,7 +191,7 @@ export default function ManageBookingPage() {
           <p className="mt-6 text-sm font-medium text-zinc-800">This booking has already been cancelled.</p>
         ) : (
           booking && (
-            <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+            <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
               <p className="text-sm font-medium text-zinc-800">{booking.serviceName}</p>
               <p className="mt-1 text-sm text-zinc-600">
                 {booking.date} at {booking.time} ({booking.durationMinutes} min)
@@ -378,6 +381,13 @@ export default function ManageBookingPage() {
             </div>
           )
         )}
+
+        <p className="mt-8 text-center text-xs text-zinc-400">
+          Powered by{" "}
+          <Link href="/" className="font-medium text-zinc-500 hover:underline">
+            Maw3ed
+          </Link>
+        </p>
       </div>
     </div>
   );

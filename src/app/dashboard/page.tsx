@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import OwnerNav from "@/components/OwnerNav";
 
 type Booking = {
   id: string;
@@ -132,31 +133,13 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="mx-auto max-w-4xl">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-zinc-900">Owner Dashboard</h1>
-          <div className="flex gap-4">
-            <Link href="/dashboard/settings" className="text-sm font-medium text-zinc-600 hover:underline">
-              Settings
-            </Link>
-            <Link href="/dashboard/billing" className="text-sm font-medium text-zinc-600 hover:underline">
-              Billing
-            </Link>
-            <button
-              onClick={async () => {
-                await fetch("/api/owner/logout", { method: "POST" });
-                window.location.href = "/dashboard/login";
-              }}
-              className="text-sm font-medium text-zinc-600 hover:underline"
-            >
-              Log out
-            </button>
-          </div>
-        </div>
+        <OwnerNav current="dashboard" />
+        <h1 className="mt-6 text-2xl font-semibold text-zinc-900">Owner Dashboard</h1>
 
         {loading ? (
           <p className="mt-6 text-sm text-zinc-500">Loading...</p>
         ) : subscriptionStatus === "expired" ? (
-          <div className="mt-6 rounded-xl bg-white p-6 text-center ring-1 ring-zinc-200">
+          <div className="mt-6 rounded-xl bg-paper p-6 text-center ring-1 ring-zinc-200">
             <p className="text-sm font-medium text-zinc-800">Your subscription has expired.</p>
             <p className="mt-1 text-sm text-zinc-500">
               Your dashboard and booking page are locked until you renew.
@@ -178,7 +161,7 @@ export default function DashboardPage() {
                 </Link>
               </div>
             )}
-            <div className="mt-6 overflow-x-auto rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+            <div className="mt-6 overflow-x-auto rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
               <div className="grid" style={{ gridTemplateColumns: "50px repeat(5, minmax(110px, 1fr))" }}>
                 <div />
                 {fiveDays.map((d) => (
@@ -245,7 +228,7 @@ export default function DashboardPage() {
             </div>
 
             {selectedBooking && (
-              <div className="mt-2 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+              <div className="mt-2 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
                 <p className="text-sm font-medium text-zinc-800">{selectedBooking.serviceName}</p>
                 <p className="mt-1 text-sm text-zinc-600">
                   {selectedBooking.date} at {selectedBooking.time} ({selectedBooking.durationMinutes} min) —{" "}
@@ -275,7 +258,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+            <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
               <h2 className="text-sm font-semibold text-zinc-800">Waitlist</h2>
               {waitlist.length === 0 ? (
                 <p className="mt-2 text-sm text-zinc-400">No one is waiting.</p>
@@ -311,7 +294,7 @@ export default function DashboardPage() {
               )}
             </div>
 
-            <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+            <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
               <h2 className="text-sm font-semibold text-zinc-800">Later Appointments</h2>
               {laterDates.length === 0 ? (
                 <p className="mt-2 text-sm text-zinc-400">Nothing booked beyond the next 5 days.</p>

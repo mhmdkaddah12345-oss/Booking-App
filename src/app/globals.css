@@ -1,29 +1,35 @@
 @import "tailwindcss";
 
-/* Warm & inviting brand palette. The whole app is built with Tailwind's
-   neutral "zinc" scale (bg-zinc-50, text-zinc-800, etc.) plus zinc-900 for
-   primary actions — re-defining that one scale here reskins every page from
-   a single place instead of touching every className. */
+/* Maw3ed brand system. Warm terracotta + cream base (Lebanon-inspired,
+   not a generic AI palette) plus a cedar-green secondary accent. Colors
+   are layered on Tailwind's neutral "zinc" scale so every existing
+   className in the app (bg-zinc-50, text-zinc-800, etc.) picks up the
+   system without being rewritten. Single Cambria typeface throughout. */
 :root {
   --background: #fbf3ec;
-  --foreground: #43342c;
+  --foreground: #3a2c24;
 
   --zinc-50: #fbf3ec;
-  --zinc-100: #f3e6d9;
-  --zinc-200: #ead9cc;
-  --zinc-300: #d9c0ae;
-  --zinc-400: #b8a093;
-  --zinc-500: #9c8778;
-  --zinc-600: #7a6559;
-  --zinc-700: #5c4a40;
-  --zinc-800: #43342c;
+  --zinc-100: #f4e8db;
+  --zinc-200: #ead9c8;
+  --zinc-300: #d9c0a8;
+  --zinc-400: #b39a85;
+  --zinc-500: #937a68;
+  --zinc-600: #745e4f;
+  --zinc-700: #59463b;
+  --zinc-800: #3a2c24;
   --zinc-900: #b5654f;
+
+  --color-cedar: #46614f;
+  --color-cedar-deep: #344a3d;
+  --color-paper: #fffdfb;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: Cambria, Georgia, "Times New Roman", serif;
+  --font-display: Cambria, Georgia, "Times New Roman", serif;
 
   --color-zinc-50: var(--zinc-50);
   --color-zinc-100: var(--zinc-100);
@@ -35,6 +41,10 @@
   --color-zinc-700: var(--zinc-700);
   --color-zinc-800: var(--zinc-800);
   --color-zinc-900: var(--zinc-900);
+
+  --color-cedar: var(--color-cedar);
+  --color-cedar-deep: var(--color-cedar-deep);
+  --color-paper: var(--color-paper);
 }
 
 body {

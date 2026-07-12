@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Wordmark from "@/components/Wordmark";
+
+const inputClass =
+  "rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200";
 
 export default function SignupPage() {
   const [businessName, setBusinessName] = useState("");
@@ -35,8 +39,9 @@ export default function SignupPage() {
 
   if (submitted) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-8">
-        <div className="flex w-full max-w-sm flex-col gap-4 rounded-xl bg-white p-6 text-center ring-1 ring-zinc-200">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-zinc-50 px-4 py-8">
+        <Wordmark />
+        <div className="flex w-full max-w-sm flex-col gap-4 rounded-xl bg-paper p-6 text-center ring-1 ring-zinc-200">
           <h1 className="text-xl font-semibold text-zinc-900">Thanks — request received!</h1>
           <p className="text-sm text-zinc-600">
             We&apos;ll be in touch shortly to set up your account and share your login details.
@@ -47,10 +52,11 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-8">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-zinc-50 px-4 py-8">
+      <Wordmark />
       <form
         onSubmit={handleSubmit}
-        className="flex w-full max-w-sm flex-col gap-4 rounded-xl bg-white p-6 ring-1 ring-zinc-200"
+        className="flex w-full max-w-sm flex-col gap-4 rounded-xl bg-paper p-6 ring-1 ring-zinc-200"
       >
         <h1 className="text-xl font-semibold text-zinc-900">Create your booking page</h1>
         <p className="text-sm text-zinc-500">
@@ -63,7 +69,7 @@ export default function SignupPage() {
           placeholder="Business name"
           value={businessName}
           onChange={(e) => setBusinessName(e.target.value)}
-          className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
+          className={inputClass}
         />
         <input
           type="email"
@@ -71,7 +77,7 @@ export default function SignupPage() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
+          className={inputClass}
         />
         <input
           type="tel"
@@ -79,7 +85,7 @@ export default function SignupPage() {
           placeholder="Phone number (WhatsApp)"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
+          className={inputClass}
         />
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button

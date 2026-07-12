@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBooking, rescheduleBooking } from "@/lib/store";
+import { getBooking, getBusinessConfig, rescheduleBooking } from "@/lib/store";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -7,7 +7,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!booking) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
-  return NextResponse.json({ booking });
+  const business = await getBusinessConfig(booking.businessId);
+  return NextResponse.json({ booking, business: { slug: business?.slug, offDays: business?.offDays ?? [] } });
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

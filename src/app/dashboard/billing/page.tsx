@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import OwnerNav from "@/components/OwnerNav";
 
 type BillingInfo = {
   subscriptionStatus: "trial" | "active" | "expired";
@@ -46,18 +46,14 @@ export default function BillingPage() {
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="mx-auto max-w-xl">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-zinc-900">Billing</h1>
-          <Link href="/dashboard" className="text-sm font-medium text-zinc-600 hover:underline">
-            ← Dashboard
-          </Link>
-        </div>
+        <OwnerNav current="billing" />
+        <h1 className="mt-6 text-2xl font-semibold text-zinc-900">Billing</h1>
 
         {!billing ? (
           <p className="mt-6 text-sm text-zinc-500">Loading...</p>
         ) : (
           <>
-            <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+            <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
               <h2 className="text-sm font-semibold text-zinc-800">Your plan</h2>
               {billing.subscriptionStatus === "trial" && (
                 <p className="mt-1 text-sm text-zinc-600">
@@ -83,7 +79,7 @@ export default function BillingPage() {
               )}
             </div>
 
-            <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+            <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
               <h2 className="text-sm font-semibold text-zinc-800">Renew via bank transfer</h2>
               {billing.bankTransferInstructions ? (
                 <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
@@ -106,7 +102,7 @@ export default function BillingPage() {
               )}
             </div>
 
-            <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200 opacity-60">
+            <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200 opacity-60">
               <h2 className="text-sm font-semibold text-zinc-800">Whish Money / OMT</h2>
               <p className="mt-1 text-sm text-zinc-500">Coming soon.</p>
             </div>

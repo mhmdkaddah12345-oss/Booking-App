@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import OwnerNav from "@/components/OwnerNav";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
@@ -149,32 +150,14 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="mx-auto max-w-xl">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-zinc-900">Settings</h1>
-          <div className="flex gap-4">
-            <Link href="/dashboard" className="text-sm font-medium text-zinc-600 hover:underline">
-              ← Dashboard
-            </Link>
-            <Link href="/dashboard/billing" className="text-sm font-medium text-zinc-600 hover:underline">
-              Billing
-            </Link>
-            <button
-              onClick={async () => {
-                await fetch("/api/owner/logout", { method: "POST" });
-                window.location.href = "/dashboard/login";
-              }}
-              className="text-sm font-medium text-zinc-600 hover:underline"
-            >
-              Log out
-            </button>
-          </div>
-        </div>
+        <OwnerNav current="settings" />
+        <h1 className="mt-6 text-2xl font-semibold text-zinc-900">Settings</h1>
 
         {!business ? (
           <p className="mt-6 text-sm text-zinc-500">Loading...</p>
         ) : (
           <>
-            <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+            <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
               <h2 className="text-sm font-semibold text-zinc-800">Your booking page</h2>
               <p className="mt-1 text-sm text-zinc-600">
                 This is the link to share with customers — send it on WhatsApp, Instagram, or
@@ -206,7 +189,7 @@ export default function SettingsPage() {
 
             <form
               onSubmit={saveDetails}
-              className="mt-6 flex flex-col gap-3 rounded-xl bg-white p-4 ring-1 ring-zinc-200"
+              className="mt-6 flex flex-col gap-3 rounded-xl bg-paper p-4 ring-1 ring-zinc-200"
             >
               <h2 className="text-sm font-semibold text-zinc-800">Business Details</h2>
               <label className="flex flex-col gap-1 text-sm text-zinc-600">
@@ -284,7 +267,7 @@ export default function SettingsPage() {
               </div>
             </form>
 
-            <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+            <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
               <h2 className="text-sm font-semibold text-zinc-800">Services</h2>
               <p className="mt-1 text-xs text-zinc-500">
                 Each service has its own duration — customers pick one before choosing a time.
@@ -348,7 +331,7 @@ export default function SettingsPage() {
               </form>
             </div>
 
-            <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
+            <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
               <h2 className="text-sm font-semibold text-zinc-800">Employees</h2>
               <p className="mt-1 text-xs text-zinc-500">
                 Bookings are automatically assigned to whichever employee is free at that time.

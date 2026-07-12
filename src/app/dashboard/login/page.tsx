@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Wordmark from "@/components/Wordmark";
+
+const inputClass =
+  "rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200";
 
 export default function OwnerLoginPage() {
   const [email, setEmail] = useState("");
@@ -30,10 +34,11 @@ export default function OwnerLoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-8">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-zinc-50 px-4 py-8">
+      <Wordmark />
       <form
         onSubmit={handleSubmit}
-        className="flex w-full max-w-sm flex-col gap-4 rounded-xl bg-white p-6 ring-1 ring-zinc-200"
+        className="flex w-full max-w-sm flex-col gap-4 rounded-xl bg-paper p-6 ring-1 ring-zinc-200"
       >
         <h1 className="text-xl font-semibold text-zinc-900">Owner Login</h1>
         <input
@@ -43,7 +48,7 @@ export default function OwnerLoginPage() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
+          className={inputClass}
         />
         <input
           type="password"
@@ -51,7 +56,7 @@ export default function OwnerLoginPage() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
+          className={inputClass}
         />
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
