@@ -31,6 +31,7 @@ export default function BookingPage() {
 
   const [businessName, setBusinessName] = useState<string>("");
   const [notFound, setNotFound] = useState(false);
+  const [locked, setLocked] = useState(false);
   const [offDays, setOffDays] = useState<number[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
@@ -70,6 +71,7 @@ export default function BookingPage() {
       .then((data) => {
         if (!data) return;
         setBusinessName(data.business.name);
+        setLocked(data.business.subscriptionStatus === "expired");
         setOffDays(data.business.offDays);
         setServices(data.business.services);
         setSelectedServiceId(data.business.services[0]?.id ?? "");
@@ -220,6 +222,14 @@ export default function BookingPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-8">
         <p className="text-sm text-zinc-500">We couldn&apos;t find that business.</p>
+      </div>
+    );
+  }
+
+  if (locked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-8">
+        <p className="text-sm text-zinc-500">This booking page is temporarily unavailable.</p>
       </div>
     );
   }

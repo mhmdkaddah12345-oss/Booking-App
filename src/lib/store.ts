@@ -5,6 +5,7 @@
 // take the businessId resolved from the caller's session; customer-facing
 // actions resolve the business from its public slug instead.
 
+import { randomBytes } from "crypto";
 import { supabase } from "./supabaseClient";
 import { notify } from "./notifications";
 import { hashPassword, verifyPassword } from "./passwordHash";
@@ -20,6 +21,8 @@ export type Employee = {
   name: string;
 };
 
+export type SubscriptionStatus = "trial" | "active" | "expired";
+
 export type BusinessConfig = {
   id: string;
   slug: string;
@@ -30,6 +33,11 @@ export type BusinessConfig = {
   services: Service[];
   employees: Employee[];
   offDays: number[]; // days of week the business is closed, 0=Sunday .. 6=Saturday
+  subscriptionStatus: SubscriptionStatus;
+  trialEndsAt: string;
+  paidUntil: string | null;
+  trialDaysLeft: number;
+  paymentPendingSince: string | null;
 };
 
 export type BookingStatus = "booked" | "cancelled";
@@ -110,6 +118,30 @@ function mapWaitlist(row: Record<string, unknown>): WaitlistEntry {
   };
 }
 
+function computeSubscriptionFields(business: Record<string, unknown>) {
+  const trialEndsAt = business.trial_ends_at as string;
+  const paidUntil = (business.paid_until as string | null) ?? null;
+  const now = Date.now();
+
+  const paidActive = paidUntil !== null && new Date(paidUntil).getTime() > now;
+  const trialActive = new Date(trialEndsAt).getTime() > now;
+
+  const subscriptionStatus: SubscriptionStatus = paidActive ? "active" : trialActive ? "trial" : "expired";
+  const trialDaysLeft = trialActive ? Math.ceil((new Date(trialEndsAt).getTime() - now) / (1000 * 60 * 60 * 24)) : 0;
+
+  return {
+    subscriptionStatus,
+    trialEndsAt,
+    paidUntil,
+    trialDaysLeft,
+    paymentPendingSince: (business.payment_pending_since as string | null) ?? null,
+  };
+}
+
+export function isBusinessLocked(business: Record<string, unknown>): boolean {
+  return computeSubscriptionFields(business).subscriptionStatus === "expired";
+}
+
 function mapBusinessConfig(business: Record<string, unknown>, services: Service[], employees: Employee[]): BusinessConfig {
   return {
     id: business.id as string,
@@ -121,6 +153,7 @@ function mapBusinessConfig(business: Record<string, unknown>, services: Service[
     offDays: business.off_days as number[],
     services,
     employees,
+    ...computeSubscriptionFields(business),
   };
 }
 
@@ -174,11 +207,14 @@ export async function isSlugTaken(slug: string): Promise<boolean> {
   return !!business;
 }
 
+// New signups get no working password — they land in a "pending" state
+// (password_hash null) until the platform admin activates them from /admin
+// once payment is confirmed. trial_ends_at is set to "now" (no free trial).
 export async function createBusiness(
   name: string,
   slug: string,
   ownerEmail: string,
-  password: string
+  ownerPhone: string
 ): Promise<{ success: true; businessId: string } | { success: false; error: string }> {
   if (await isSlugTaken(slug)) {
     return { success: false, error: "slug_taken" };
@@ -189,7 +225,9 @@ export async function createBusiness(
       name,
       slug,
       owner_email: ownerEmail.toLowerCase(),
-      password_hash: hashPassword(password),
+      owner_phone: ownerPhone,
+      password_hash: null,
+      trial_ends_at: new Date().toISOString(),
       start_hour: 9,
       end_hour: 18,
       slot_granularity_minutes: 15,
@@ -209,10 +247,43 @@ export async function verifyOwnerLogin(
   password: string
 ): Promise<{ success: true; businessId: string } | { success: false }> {
   const { data } = await supabase.from("business").select("*").eq("owner_email", email.toLowerCase()).maybeSingle();
-  if (!data || !verifyPassword(password, data.password_hash)) {
+  if (!data || !data.password_hash || !verifyPassword(password, data.password_hash)) {
     return { success: false };
   }
   return { success: true, businessId: data.id };
+}
+
+const ACTIVATION_PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+
+function generateActivationPassword(): string {
+  const bytes = randomBytes(12);
+  let result = "";
+  for (let i = 0; i < bytes.length; i++) {
+    result += ACTIVATION_PASSWORD_CHARS[bytes[i] % ACTIVATION_PASSWORD_CHARS.length];
+  }
+  return result;
+}
+
+/**
+ * Called from /admin once payment is confirmed. Generates a fresh password,
+ * stores only its hash, and returns the plaintext once so it can be copied
+ * and sent to the owner manually — it is never stored or retrievable again.
+ */
+export async function activateBusiness(businessId: string, extendByDays = 30): Promise<{ password: string }> {
+  const password = generateActivationPassword();
+  const newPaidUntil = new Date(Date.now() + extendByDays * 24 * 60 * 60 * 1000);
+
+  const { error } = await supabase
+    .from("business")
+    .update({
+      password_hash: hashPassword(password),
+      paid_until: newPaidUntil.toISOString(),
+      payment_pending_since: null,
+    })
+    .eq("id", businessId);
+  if (error) throw new Error(error.message);
+
+  return { password };
 }
 
 export async function updateBusinessConfig(
@@ -357,7 +428,7 @@ export async function isDayFullyBooked(businessId: string, date: string, service
 
 type BookingResult =
   | { success: true; booking: Booking }
-  | { success: false; error: "slot_taken" | "unknown_service" };
+  | { success: false; error: "slot_taken" | "unknown_service" | "business_locked" };
 
 const EXCLUSION_VIOLATION = "23P01";
 
@@ -380,6 +451,11 @@ export async function createBooking(
   customerPhone: string,
   note?: string
 ): Promise<BookingResult> {
+  const business = await getBusinessRowById(businessId);
+  if (!business || isBusinessLocked(business)) {
+    return { success: false, error: "business_locked" };
+  }
+
   const service = await getServiceForBusiness(serviceId, businessId);
   if (!service) {
     return { success: false, error: "unknown_service" };
@@ -430,7 +506,12 @@ export async function joinWaitlist(
   customerName: string,
   customerPhone: string,
   note?: string
-): Promise<WaitlistEntry | { error: "unknown_service" }> {
+): Promise<WaitlistEntry | { error: "unknown_service" | "business_locked" }> {
+  const business = await getBusinessRowById(businessId);
+  if (!business || isBusinessLocked(business)) {
+    return { error: "business_locked" };
+  }
+
   const service = await getServiceForBusiness(serviceId, businessId);
   if (!service) return { error: "unknown_service" };
 
@@ -571,6 +652,65 @@ export async function rescheduleBooking(
   }
 
   return { success: false, error: "slot_taken" };
+}
+
+export async function markPaymentPending(businessId: string): Promise<void> {
+  const { error } = await supabase
+    .from("business")
+    .update({ payment_pending_since: new Date().toISOString() })
+    .eq("id", businessId);
+  if (error) throw new Error(error.message);
+}
+
+export type AdminBusinessSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  ownerEmail: string;
+  ownerPhone: string | null;
+  activated: boolean;
+} & Pick<BusinessConfig, "subscriptionStatus" | "trialEndsAt" | "paidUntil" | "trialDaysLeft" | "paymentPendingSince">;
+
+export async function listAllBusinessesForAdmin(): Promise<AdminBusinessSummary[]> {
+  const { data, error } = await supabase.from("business").select("*").order("name");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((business) => ({
+    id: business.id,
+    name: business.name,
+    slug: business.slug,
+    ownerEmail: business.owner_email,
+    ownerPhone: business.owner_phone ?? null,
+    activated: business.password_hash !== null,
+    ...computeSubscriptionFields(business),
+  }));
+}
+
+export async function markBusinessPaid(businessId: string, extendByDays = 30): Promise<void> {
+  const business = await getBusinessRowById(businessId);
+  if (!business) throw new Error("business_not_found");
+
+  const currentPaidUntil = business.paid_until ? new Date(business.paid_until as string) : new Date();
+  const base = currentPaidUntil.getTime() > Date.now() ? currentPaidUntil : new Date();
+  const newPaidUntil = new Date(base.getTime() + extendByDays * 24 * 60 * 60 * 1000);
+
+  const { error } = await supabase
+    .from("business")
+    .update({ paid_until: newPaidUntil.toISOString(), payment_pending_since: null })
+    .eq("id", businessId);
+  if (error) throw new Error(error.message);
+}
+
+export async function getPlatformSettings(): Promise<{ bankTransferInstructions: string | null }> {
+  const { data } = await supabase.from("platform_settings").select("*").eq("id", true).maybeSingle();
+  return { bankTransferInstructions: data?.bank_transfer_instructions ?? null };
+}
+
+export async function updatePlatformSettings(bankTransferInstructions: string): Promise<void> {
+  const { error } = await supabase
+    .from("platform_settings")
+    .update({ bank_transfer_instructions: bankTransferInstructions })
+    .eq("id", true);
+  if (error) throw new Error(error.message);
 }
 
 export async function confirmWaitlistPromotion(

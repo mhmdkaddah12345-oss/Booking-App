@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
 
   const entry = await joinWaitlist(business.id, date, serviceId, customerName, customerPhone, note || undefined);
   if ("error" in entry) {
-    return NextResponse.json({ error: entry.error }, { status: 400 });
+    const status = entry.error === "business_locked" ? 403 : 400;
+    return NextResponse.json({ error: entry.error }, { status });
   }
   return NextResponse.json({ waitlistEntry: entry }, { status: 201 });
 }

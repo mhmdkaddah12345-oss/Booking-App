@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasValidSession } from "@/lib/ownerAuth";
+import { hasValidAdminSession } from "@/lib/adminAuth";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
@@ -36,6 +37,16 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
     return NextResponse.redirect(new URL("/dashboard/login", request.url));
+  }
+
+  if (pathname === "/admin/login") {
+    return NextResponse.next();
+  }
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    if (hasValidAdminSession(request)) {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL("/admin/login", request.url));
   }
 
   return NextResponse.next();

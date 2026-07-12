@@ -49,6 +49,8 @@ function formatHourLabel(h: number) {
   return `${pad2(h)}:00`;
 }
 
+type SubscriptionStatus = "trial" | "active" | "expired";
+
 export default function DashboardPage() {
   const [startHour, setStartHour] = useState(9);
   const [endHour, setEndHour] = useState(18);
@@ -59,6 +61,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>("trial");
+  const [trialDaysLeft, setTrialDaysLeft] = useState(0);
 
   function loadDashboard() {
     setLoading(true);
@@ -68,6 +72,8 @@ export default function DashboardPage() {
         setEndHour(businessData.business.endHour);
         setOffDays(businessData.business.offDays);
         setEmployees(businessData.business.employees);
+        setSubscriptionStatus(businessData.business.subscriptionStatus);
+        setTrialDaysLeft(businessData.business.trialDaysLeft);
         setBookings(dashboardData.bookings);
         setWaitlist(dashboardData.waitlist);
       })
@@ -132,8 +138,8 @@ export default function DashboardPage() {
             <Link href="/dashboard/settings" className="text-sm font-medium text-zinc-600 hover:underline">
               Settings
             </Link>
-            <Link href="/" className="text-sm font-medium text-zinc-600 hover:underline">
-              Customer Booking Page →
+            <Link href="/dashboard/billing" className="text-sm font-medium text-zinc-600 hover:underline">
+              Billing
             </Link>
             <button
               onClick={async () => {
@@ -149,8 +155,29 @@ export default function DashboardPage() {
 
         {loading ? (
           <p className="mt-6 text-sm text-zinc-500">Loading...</p>
+        ) : subscriptionStatus === "expired" ? (
+          <div className="mt-6 rounded-xl bg-white p-6 text-center ring-1 ring-zinc-200">
+            <p className="text-sm font-medium text-zinc-800">Your subscription has expired.</p>
+            <p className="mt-1 text-sm text-zinc-500">
+              Your dashboard and booking page are locked until you renew.
+            </p>
+            <Link
+              href="/dashboard/billing"
+              className="mt-4 inline-block rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+            >
+              Go to Billing
+            </Link>
+          </div>
         ) : (
           <>
+            {subscriptionStatus === "trial" && trialDaysLeft <= 3 && (
+              <div className="mt-6 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 ring-1 ring-amber-200">
+                Your free trial ends in {trialDaysLeft} day{trialDaysLeft === 1 ? "" : "s"}.{" "}
+                <Link href="/dashboard/billing" className="underline">
+                  Renew now
+                </Link>
+              </div>
+            )}
             <div className="mt-6 overflow-x-auto rounded-xl bg-white p-4 ring-1 ring-zinc-200">
               <div className="grid" style={{ gridTemplateColumns: "50px repeat(5, minmax(110px, 1fr))" }}>
                 <div />

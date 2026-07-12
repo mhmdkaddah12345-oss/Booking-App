@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+const ROOT_DOMAIN = "maw3edapp.com";
+
 type Service = { id: string; name: string; durationMinutes: number };
 type Employee = { id: string; name: string };
 type Business = {
@@ -48,6 +50,8 @@ export default function SettingsPage() {
   const [newEmployeeName, setNewEmployeeName] = useState("");
   const [addingEmployee, setAddingEmployee] = useState(false);
   const [removingEmployeeId, setRemovingEmployeeId] = useState<string | null>(null);
+
+  const [linkCopied, setLinkCopied] = useState(false);
 
   function loadBusiness() {
     fetch("/api/business")
@@ -151,6 +155,9 @@ export default function SettingsPage() {
             <Link href="/dashboard" className="text-sm font-medium text-zinc-600 hover:underline">
               ← Dashboard
             </Link>
+            <Link href="/dashboard/billing" className="text-sm font-medium text-zinc-600 hover:underline">
+              Billing
+            </Link>
             <button
               onClick={async () => {
                 await fetch("/api/owner/logout", { method: "POST" });
@@ -170,11 +177,31 @@ export default function SettingsPage() {
             <div className="mt-6 rounded-xl bg-white p-4 ring-1 ring-zinc-200">
               <h2 className="text-sm font-semibold text-zinc-800">Your booking page</h2>
               <p className="mt-1 text-sm text-zinc-600">
-                Share this link with customers:{" "}
-                <Link href={`/b/${business.slug}`} className="font-medium underline">
-                  /b/{business.slug}
-                </Link>
+                This is the link to share with customers — send it on WhatsApp, Instagram, or
+                anywhere else. Anyone who opens it can book an appointment directly.
               </p>
+              <div className="mt-3 flex items-center gap-2">
+                <code className="flex-1 truncate rounded-lg bg-zinc-50 px-3 py-2 text-sm font-medium text-zinc-800 ring-1 ring-zinc-200">
+                  {business.slug}.{ROOT_DOMAIN}
+                </code>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`https://${business.slug}.${ROOT_DOMAIN}`);
+                    setLinkCopied(true);
+                    setTimeout(() => setLinkCopied(false), 2000);
+                  }}
+                  className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+                >
+                  {linkCopied ? "Copied!" : "Copy link"}
+                </button>
+              </div>
+              <Link
+                href={`https://${business.slug}.${ROOT_DOMAIN}`}
+                target="_blank"
+                className="mt-2 inline-block text-sm font-medium text-zinc-600 underline"
+              >
+                Open booking page →
+              </Link>
             </div>
 
             <form

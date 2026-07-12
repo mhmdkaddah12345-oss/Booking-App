@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
 
   const result = await createBooking(business.id, date, time, serviceId, customerName, customerPhone, note || undefined);
   if (!result.success) {
-    return NextResponse.json({ error: result.error }, { status: 409 });
+    const status = result.error === "business_locked" ? 403 : 409;
+    return NextResponse.json({ error: result.error }, { status });
   }
   return NextResponse.json({ booking: result.booking }, { status: 201 });
 }
