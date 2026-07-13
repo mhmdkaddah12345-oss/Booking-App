@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { primaryButtonClass, dangerButtonClass, ghostButtonClass } from "@/lib/ui";
 
 type Booking = {
   id: string;
@@ -222,13 +223,13 @@ export default function ManageBookingPage() {
                 <div className="mt-4 flex gap-2">
                   <button
                     onClick={startReschedule}
-                    className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+                    className={primaryButtonClass}
                   >
                     Reschedule
                   </button>
                   <button
                     onClick={() => setConfirmingCancel(true)}
-                    className="rounded-full bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100"
+                    className={dangerButtonClass}
                   >
                     Cancel appointment
                   </button>
@@ -247,7 +248,7 @@ export default function ManageBookingPage() {
                   </button>
                   <button
                     onClick={() => setConfirmingCancel(false)}
-                    className="rounded-full px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                    className={ghostButtonClass}
                   >
                     No, keep it
                   </button>
@@ -383,7 +384,7 @@ export default function ManageBookingPage() {
 
                   <button
                     onClick={() => setRescheduling(false)}
-                    className="mt-3 rounded-full px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                    className={`mt-3 ${ghostButtonClass}`}
                   >
                     Cancel reschedule
                   </button>

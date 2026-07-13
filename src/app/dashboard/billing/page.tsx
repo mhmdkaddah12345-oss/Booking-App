@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import OwnerNav from "@/components/OwnerNav";
+import { primaryButtonClass } from "@/lib/ui";
 
 type BillingInfo = {
   subscriptionStatus: "trial" | "active" | "expired";
@@ -91,7 +92,7 @@ export default function BillingPage() {
               <button
                 onClick={reportPayment}
                 disabled={reporting}
-                className="mt-3 rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+                className={`mt-3 ${primaryButtonClass}`}
               >
                 {reporting ? "Reporting..." : "I've sent the transfer"}
               </button>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import OwnerNav from "@/components/OwnerNav";
+import { inputClass, primaryButtonClass } from "@/lib/ui";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
@@ -173,7 +174,7 @@ export default function SettingsPage() {
                     setLinkCopied(true);
                     setTimeout(() => setLinkCopied(false), 2000);
                   }}
-                  className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+                  className={primaryButtonClass}
                 >
                   {linkCopied ? "Copied!" : "Copy link"}
                 </button>
@@ -200,7 +201,7 @@ export default function SettingsPage() {
                     setName(e.target.value);
                     setDetailsSaved(false);
                   }}
-                  className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
+                  className={inputClass}
                 />
               </label>
               <div className="flex gap-3">
@@ -212,7 +213,7 @@ export default function SettingsPage() {
                       setStartHour(Number(e.target.value));
                       setDetailsSaved(false);
                     }}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
+                    className={inputClass}
                   >
                     {HOUR_OPTIONS.map((h) => (
                       <option key={h} value={h}>
@@ -229,7 +230,7 @@ export default function SettingsPage() {
                       setEndHour(Number(e.target.value));
                       setDetailsSaved(false);
                     }}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
+                    className={inputClass}
                   >
                     {HOUR_OPTIONS.map((h) => (
                       <option key={h} value={h}>
@@ -259,7 +260,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={savingDetails}
-                  className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+                  className={primaryButtonClass}
                 >
                   {savingDetails ? "Saving..." : "Save"}
                 </button>
@@ -304,7 +305,7 @@ export default function SettingsPage() {
                     placeholder="e.g. Haircut"
                     value={newServiceName}
                     onChange={(e) => setNewServiceName(e.target.value)}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
+                    className={inputClass}
                   />
                 </label>
                 <label className="flex flex-col gap-1 text-sm text-zinc-600">
@@ -312,7 +313,7 @@ export default function SettingsPage() {
                   <select
                     value={newServiceDuration}
                     onChange={(e) => setNewServiceDuration(Number(e.target.value))}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
+                    className={inputClass}
                   >
                     {DURATION_OPTIONS.map((d) => (
                       <option key={d} value={d}>
@@ -324,7 +325,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={addingService}
-                  className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+                  className={primaryButtonClass}
                 >
                   {addingService ? "Adding..." : "Add service"}
                 </button>
@@ -366,13 +367,13 @@ export default function SettingsPage() {
                     placeholder="e.g. Sarah"
                     value={newEmployeeName}
                     onChange={(e) => setNewEmployeeName(e.target.value)}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
+                    className={inputClass}
                   />
                 </label>
                 <button
                   type="submit"
                   disabled={addingEmployee}
-                  className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+                  className={primaryButtonClass}
                 >
                   {addingEmployee ? "Adding..." : "Add employee"}
                 </button>

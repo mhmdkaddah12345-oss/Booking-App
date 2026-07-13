@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { inputClass, primaryButtonClass, ghostButtonClass } from "@/lib/ui";
 
 type Slot = { time: string; available: boolean };
 type Service = { id: string; name: string; durationMinutes: number };
@@ -247,7 +248,7 @@ export default function BookingPage() {
           <select
             value={selectedServiceId}
             onChange={(e) => setSelectedServiceId(e.target.value)}
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-800"
+            className={`${inputClass} bg-white`}
           >
             {services.map((s) => (
               <option key={s.id} value={s.id}>
@@ -368,7 +369,7 @@ export default function BookingPage() {
                     setJoiningWaitlist(true);
                     setSuccessMessage(null);
                   }}
-                  className="mt-3 rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+                  className={`mt-3 ${primaryButtonClass}`}
                 >
                   Join waitlist
                 </button>
@@ -379,35 +380,35 @@ export default function BookingPage() {
                     placeholder="Your name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+                    className={inputClass}
                   />
                   <input
                     required
                     placeholder="Phone number"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+                    className={inputClass}
                   />
                   <textarea
                     placeholder="Note for the business (optional)"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     rows={2}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+                    className={inputClass}
                   />
                   {formError && <p className="text-sm text-red-600">{formError}</p>}
                   <div className="flex gap-2">
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+                      className={primaryButtonClass}
                     >
                       {submitting ? "Joining..." : "Confirm waitlist spot"}
                     </button>
                     <button
                       type="button"
                       onClick={() => setJoiningWaitlist(false)}
-                      className="rounded-full px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                      className={ghostButtonClass}
                     >
                       Cancel
                     </button>
@@ -450,35 +451,35 @@ export default function BookingPage() {
                 placeholder="Your name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+                className={inputClass}
               />
               <input
                 required
                 placeholder="Phone number"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+                className={inputClass}
               />
               <textarea
                 placeholder="Note for the business (optional)"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={2}
-                className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+                className={inputClass}
               />
               {formError && <p className="text-sm text-red-600">{formError}</p>}
               <div className="flex gap-2">
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+                  className={primaryButtonClass}
                 >
                   {submitting ? "Booking..." : "Confirm booking"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setSelectedTime(null)}
-                  className="rounded-full px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                  className={ghostButtonClass}
                 >
                   Cancel
                 </button>

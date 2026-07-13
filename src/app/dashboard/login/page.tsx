@@ -3,9 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Wordmark from "@/components/Wordmark";
-
-const inputClass =
-  "rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200";
+import { inputClass, primaryButtonClass } from "@/lib/ui";
 
 export default function OwnerLoginPage() {
   const [email, setEmail] = useState("");
@@ -62,7 +60,7 @@ export default function OwnerLoginPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+          className={primaryButtonClass}
         >
           {submitting ? "Checking..." : "Log in"}
         </button>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Wordmark from "@/components/Wordmark";
+import { inputClass, primaryButtonClass, ghostButtonClass } from "@/lib/ui";
 
 type Business = {
   id: string;
@@ -113,7 +114,7 @@ export default function AdminPage() {
               await fetch("/api/admin/logout", { method: "POST" });
               window.location.href = "/admin/login";
             }}
-            className="text-sm font-medium text-zinc-600 hover:underline"
+            className={ghostButtonClass}
           >
             Log out
           </button>
@@ -203,13 +204,13 @@ export default function AdminPage() {
             }}
             rows={4}
             placeholder="Bank: ...&#10;Account holder: ...&#10;Account number / IBAN: ..."
-            className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-800"
+            className={inputClass}
           />
           <div className="flex items-center gap-3">
             <button
               type="submit"
               disabled={savingSettings}
-              className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+              className={primaryButtonClass}
             >
               {savingSettings ? "Saving..." : "Save"}
             </button>
