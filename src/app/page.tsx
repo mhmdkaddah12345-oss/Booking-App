@@ -176,31 +176,29 @@ export default function LandingPage() {
             ))}
           </div>
         </section>
-      </main>
+        {/* Photo split */}
+        <section className="mt-24 grid w-full items-center gap-8 text-left sm:grid-cols-2">
+          <div>
+            <h2 className="font-display text-2xl font-semibold text-zinc-800 sm:text-3xl">
+              Built for every kind of business
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed text-zinc-600 sm:text-base">
+              Whether you run a salon, a clinic, or a gym, Maw3ed adapts to how your business actually
+              takes bookings — multiple staff members, different service lengths, and a waitlist that
+              fills itself the moment someone cancels.
+            </p>
+          </div>
+          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
+            <Image
+              src="/images/gym-interior.png"
+              alt="Modern gym interior with exercise equipment"
+              fill
+              className="object-cover"
+              sizes="(min-width: 640px) 50vw, 100vw"
+            />
+          </div>
+        </section>
 
-      {/* Photo section — full-bleed like the hero */}
-      <section className="relative flex min-h-[420px] items-center justify-center overflow-hidden px-6 py-20 text-center sm:min-h-[480px]">
-        <Image
-          src="/images/gym-interior.png"
-          alt=""
-          fill
-          className="object-cover"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-black/65" />
-        <div className="relative z-10 max-w-2xl">
-          <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
-            Built for every kind of business
-          </h2>
-          <p className="mt-4 text-sm leading-relaxed text-zinc-100 sm:text-base">
-            Whether you run a salon, a clinic, or a gym, Maw3ed adapts to how your business actually
-            takes bookings — multiple staff members, different service lengths, and a waitlist that
-            fills itself the moment someone cancels.
-          </p>
-        </div>
-      </section>
-
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center px-6 pb-24 pt-16 text-center">
         {/* Features */}
         <section className="mt-24 w-full text-left">
           <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
