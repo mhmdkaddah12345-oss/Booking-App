@@ -147,7 +147,7 @@ export default function LandingPage() {
 
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center px-6 pb-24 pt-16 text-center">
         {/* Problem */}
-        <section className="mt-24 w-full text-left">
+        <section className="w-full text-left">
           <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
             Still booking over WhatsApp and a notebook?
           </h2>
@@ -176,30 +176,31 @@ export default function LandingPage() {
             ))}
           </div>
         </section>
+      </main>
 
-        {/* Photo split */}
-        <section className="mt-24 grid w-full items-center gap-8 text-left sm:grid-cols-2">
-          <div>
-            <h2 className="font-display text-2xl font-semibold text-zinc-800 sm:text-3xl">
-              Built for every kind of business
-            </h2>
-            <p className="mt-4 text-sm leading-relaxed text-zinc-600 sm:text-base">
-              Whether you run a salon, a clinic, or a gym, Maw3ed adapts to how your business actually
-              takes bookings — multiple staff members, different service lengths, and a waitlist that
-              fills itself the moment someone cancels.
-            </p>
-          </div>
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
-            <Image
-              src="/images/gym-interior.png"
-              alt="Modern gym interior with exercise equipment"
-              fill
-              className="object-cover"
-              sizes="(min-width: 640px) 50vw, 100vw"
-            />
-          </div>
-        </section>
+      {/* Photo section — full-bleed like the hero */}
+      <section className="relative flex min-h-[420px] items-center justify-center overflow-hidden px-6 py-20 text-center sm:min-h-[480px]">
+        <Image
+          src="/images/gym-interior.png"
+          alt=""
+          fill
+          className="object-cover"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-black/65" />
+        <div className="relative z-10 max-w-2xl">
+          <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
+            Built for every kind of business
+          </h2>
+          <p className="mt-4 text-sm leading-relaxed text-zinc-100 sm:text-base">
+            Whether you run a salon, a clinic, or a gym, Maw3ed adapts to how your business actually
+            takes bookings — multiple staff members, different service lengths, and a waitlist that
+            fills itself the moment someone cancels.
+          </p>
+        </div>
+      </section>
 
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center px-6 pb-24 pt-16 text-center">
         {/* Features */}
         <section className="mt-24 w-full text-left">
           <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
@@ -233,34 +234,35 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Closing CTA */}
-        <section className="relative mt-24 w-full overflow-hidden rounded-2xl px-8 py-16 text-center">
-          <Image
-            src="/images/dental-clinic.jpg"
-            alt=""
-            fill
-            className="object-cover"
-            sizes="(min-width: 1024px) 960px, 100vw"
-          />
-          <div className="absolute inset-0 bg-black/70" />
-          <div className="relative z-10">
-            <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
-              Ready to stop losing bookings to a missed message?
-            </h2>
-            <p className="mt-3 text-sm text-zinc-200 sm:text-base">
-              Set up your booking page today — it takes about two minutes.
-            </p>
-            <Link
-              href="/signup"
-              className="mt-6 inline-block rounded-full bg-white px-6 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100"
-            >
-              Create your booking page
-            </Link>
-          </div>
-        </section>
       </main>
 
-      <footer className="mx-auto w-full max-w-5xl px-6 pb-8 text-center text-xs text-zinc-400">
+      {/* Closing CTA — full-bleed like the hero */}
+      <section className="relative flex min-h-[420px] items-center justify-center overflow-hidden px-6 py-20 text-center sm:min-h-[480px]">
+        <Image
+          src="/images/dental-clinic.jpg"
+          alt=""
+          fill
+          className="object-cover"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-black/70" />
+        <div className="relative z-10">
+          <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
+            Ready to stop losing bookings to a missed message?
+          </h2>
+          <p className="mt-3 text-sm text-zinc-200 sm:text-base">
+            Set up your booking page today — it takes about two minutes.
+          </p>
+          <Link
+            href="/signup"
+            className="mt-6 inline-block rounded-full bg-white px-6 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100"
+          >
+            Create your booking page
+          </Link>
+        </div>
+      </section>
+
+      <footer className="mx-auto w-full max-w-5xl px-6 pb-8 pt-16 text-center text-xs text-zinc-400">
         Maw3ed — built for Lebanon&apos;s salons, clinics, and gyms.
       </footer>
     </div>
