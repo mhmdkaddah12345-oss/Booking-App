@@ -47,6 +47,7 @@ function StatusBadge({ business }: { business: Business }) {
 export default function AdminPage() {
   const [businesses, setBusinesses] = useState<Business[] | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirmingCancelId, setConfirmingCancelId] = useState<string | null>(null);
   const [revealedPasswords, setRevealedPasswords] = useState<Record<string, string>>({});
   const [bankInstructions, setBankInstructions] = useState("");
   const [savingSettings, setSavingSettings] = useState(false);
@@ -81,6 +82,17 @@ export default function AdminPage() {
     setBusyId(id);
     try {
       await fetch(`/api/admin/businesses/${id}/mark-paid`, { method: "POST" });
+      load();
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function cancelSubscription(id: string) {
+    setBusyId(id);
+    try {
+      await fetch(`/api/admin/businesses/${id}/cancel`, { method: "POST" });
+      setConfirmingCancelId(null);
       load();
     } finally {
       setBusyId(null);
@@ -152,16 +164,49 @@ export default function AdminPage() {
                           {busyId === b.id ? "..." : "Activate & generate login"}
                         </button>
                       ) : (
-                        <button
-                          onClick={() => markPaid(b.id)}
-                          disabled={busyId === b.id}
-                          className="rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
-                        >
-                          {busyId === b.id ? "..." : "Mark paid (+30d)"}
-                        </button>
+                        <>
+                          <button
+                            onClick={() => markPaid(b.id)}
+                            disabled={busyId === b.id}
+                            className="rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+                          >
+                            {busyId === b.id ? "..." : "Mark paid (+30d)"}
+                          </button>
+                          {b.subscriptionStatus !== "expired" && (
+                            <button
+                              onClick={() => setConfirmingCancelId(b.id)}
+                              disabled={busyId === b.id}
+                              className="rounded-full bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+                            >
+                              Cancel subscription
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
+
+                  {confirmingCancelId === b.id && (
+                    <div className="mt-3 flex items-center gap-3 rounded-lg bg-red-50 px-3 py-2 ring-1 ring-red-200">
+                      <p className="text-xs font-medium text-red-800">
+                        Cancel {b.name}&apos;s subscription? Their dashboard and booking page will lock
+                        immediately.
+                      </p>
+                      <button
+                        onClick={() => cancelSubscription(b.id)}
+                        disabled={busyId === b.id}
+                        className="shrink-0 rounded-full bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                      >
+                        {busyId === b.id ? "..." : "Yes, cancel"}
+                      </button>
+                      <button
+                        onClick={() => setConfirmingCancelId(null)}
+                        className="shrink-0 rounded-full px-3 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-100"
+                      >
+                        Never mind
+                      </button>
+                    </div>
+                  )}
 
                   {revealedPasswords[b.id] && (
                     <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2 ring-1 ring-amber-200">

@@ -749,6 +749,15 @@ export async function markBusinessPaid(businessId: string, extendByDays = 30): P
   if (error) throw new Error(error.message);
 }
 
+/** Immediately locks a business's dashboard and booking page. Reversible — a later "Mark paid" reactivates them. */
+export async function cancelSubscription(businessId: string): Promise<void> {
+  const { error } = await supabase
+    .from("business")
+    .update({ paid_until: new Date().toISOString(), payment_pending_since: null })
+    .eq("id", businessId);
+  if (error) throw new Error(error.message);
+}
+
 export async function getPlatformSettings(): Promise<{ bankTransferInstructions: string | null }> {
   const { data } = await supabase.from("platform_settings").select("*").eq("id", true).maybeSingle();
   return { bankTransferInstructions: data?.bank_transfer_instructions ?? null };
