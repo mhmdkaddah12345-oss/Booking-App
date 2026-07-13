@@ -234,19 +234,29 @@ export default function LandingPage() {
         </section>
 
         {/* Closing CTA */}
-        <section className="mt-24 w-full rounded-2xl bg-zinc-900 px-8 py-12 text-center">
-          <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
-            Ready to stop losing bookings to a missed message?
-          </h2>
-          <p className="mt-3 text-sm text-zinc-300 sm:text-base">
-            Set up your booking page today — it takes about two minutes.
-          </p>
-          <Link
-            href="/signup"
-            className="mt-6 inline-block rounded-full bg-white px-6 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100"
-          >
-            Create your booking page
-          </Link>
+        <section className="relative mt-24 w-full overflow-hidden rounded-2xl px-8 py-16 text-center">
+          <Image
+            src="/images/dental-clinic.jpg"
+            alt=""
+            fill
+            className="object-cover"
+            sizes="(min-width: 1024px) 960px, 100vw"
+          />
+          <div className="absolute inset-0 bg-black/70" />
+          <div className="relative z-10">
+            <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
+              Ready to stop losing bookings to a missed message?
+            </h2>
+            <p className="mt-3 text-sm text-zinc-200 sm:text-base">
+              Set up your booking page today — it takes about two minutes.
+            </p>
+            <Link
+              href="/signup"
+              className="mt-6 inline-block rounded-full bg-white px-6 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100"
+            >
+              Create your booking page
+            </Link>
+          </div>
         </section>
       </main>
 
