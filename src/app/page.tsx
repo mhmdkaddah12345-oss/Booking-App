@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import Wordmark from "@/components/Wordmark";
 import {
   IconAlert,
@@ -107,31 +108,44 @@ export default function LandingPage() {
         </Link>
       </header>
 
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center px-6 pb-24 pt-8 text-center">
-        {/* Hero */}
-        <h1 className="font-display max-w-2xl text-balance text-4xl font-semibold leading-tight text-zinc-800 sm:text-5xl">
-          Booking pages for local businesses
-        </h1>
-        <p className="mt-5 max-w-xl text-balance text-base text-zinc-600 sm:text-lg">
-          A simple, professional booking page for salons, clinics, and gyms — with automatic waitlist
-          promotion the moment someone cancels.
-        </p>
+      {/* Hero */}
+      <section className="relative flex min-h-[560px] items-center justify-center overflow-hidden px-6 py-24 text-center sm:min-h-[640px]">
+        <Image
+          src="/images/hero-salon.jpg"
+          alt=""
+          fill
+          priority
+          className="object-cover"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/45 to-black/25" />
+        <div className="relative z-10 flex flex-col items-center">
+          <h1 className="font-display max-w-2xl text-balance text-4xl font-semibold leading-tight text-white sm:text-5xl">
+            Booking pages for local businesses
+          </h1>
+          <p className="mt-5 max-w-xl text-balance text-base text-zinc-100 sm:text-lg">
+            A simple, professional booking page for salons, clinics, and gyms — with automatic waitlist
+            promotion the moment someone cancels.
+          </p>
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/signup"
-            className="rounded-full bg-zinc-900 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-cedar-deep"
-          >
-            Create your booking page
-          </Link>
-          <Link
-            href="#how-it-works"
-            className="rounded-full px-6 py-3 text-sm font-medium text-zinc-700 ring-1 ring-zinc-300 transition-colors hover:bg-zinc-100"
-          >
-            See how it works
-          </Link>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/signup"
+              className="rounded-full bg-white px-6 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100"
+            >
+              Create your booking page
+            </Link>
+            <Link
+              href="#how-it-works"
+              className="rounded-full px-6 py-3 text-sm font-medium text-white ring-1 ring-white/70 transition-colors hover:bg-white/10"
+            >
+              See how it works
+            </Link>
+          </div>
         </div>
+      </section>
 
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center px-6 pb-24 pt-16 text-center">
         {/* Problem */}
         <section className="mt-24 w-full text-left">
           <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
@@ -160,6 +174,29 @@ export default function LandingPage() {
                 <p className="mt-2 text-sm leading-relaxed text-zinc-600">{s.body}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Photo split */}
+        <section className="mt-24 grid w-full items-center gap-8 text-left sm:grid-cols-2">
+          <div>
+            <h2 className="font-display text-2xl font-semibold text-zinc-800 sm:text-3xl">
+              Built for every kind of business
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed text-zinc-600 sm:text-base">
+              Whether you run a salon, a clinic, or a gym, Maw3ed adapts to how your business actually
+              takes bookings — multiple staff members, different service lengths, and a waitlist that
+              fills itself the moment someone cancels.
+            </p>
+          </div>
+          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
+            <Image
+              src="/images/gym-interior.png"
+              alt="Modern gym interior with exercise equipment"
+              fill
+              className="object-cover"
+              sizes="(min-width: 640px) 50vw, 100vw"
+            />
           </div>
         </section>
 
