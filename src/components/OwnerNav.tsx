@@ -11,9 +11,9 @@ const TABS = [
 
 export default function OwnerNav({ current }: { current: "dashboard" | "settings" | "billing" }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <Wordmark />
-      <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center gap-1">
         {TABS.map((tab) => {
           const isCurrent = tab.href === "/dashboard" ? current === "dashboard" : tab.href.endsWith(current);
           return (
