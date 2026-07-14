@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Wordmark from "@/components/Wordmark";
 import InstallAppButton from "@/components/InstallAppButton";
+import StandaloneLoginRedirect from "@/components/StandaloneLoginRedirect";
 import {
   IconAlert,
   IconBrowser,
@@ -102,6 +103,7 @@ const FAQS = [
 export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50">
+      <StandaloneLoginRedirect />
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-8">
         <Wordmark />
         <div className="flex items-center gap-4">
