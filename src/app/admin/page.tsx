@@ -88,6 +88,17 @@ export default function AdminPage() {
     }
   }
 
+  async function resetPassword(id: string) {
+    setBusyId(id);
+    try {
+      const res = await fetch(`/api/admin/businesses/${id}/reset-password`, { method: "POST" });
+      const data = await res.json();
+      setRevealedPasswords((prev) => ({ ...prev, [id]: data.password }));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   async function cancelSubscription(id: string) {
     setBusyId(id);
     try {
@@ -171,6 +182,13 @@ export default function AdminPage() {
                             className="rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
                           >
                             {busyId === b.id ? "..." : "Mark paid (+30d)"}
+                          </button>
+                          <button
+                            onClick={() => resetPassword(b.id)}
+                            disabled={busyId === b.id}
+                            className="rounded-full px-3 py-1.5 text-xs font-medium text-zinc-600 ring-1 ring-zinc-300 hover:bg-zinc-100 disabled:opacity-50"
+                          >
+                            {busyId === b.id ? "..." : "Reset password"}
                           </button>
                           {b.subscriptionStatus !== "expired" && (
                             <button

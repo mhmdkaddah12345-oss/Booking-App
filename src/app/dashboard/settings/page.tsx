@@ -55,6 +55,13 @@ export default function SettingsPage() {
 
   const [linkCopied, setLinkCopied] = useState(false);
 
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordChanged, setPasswordChanged] = useState(false);
+
   function loadBusiness() {
     fetch("/api/business")
       .then((r) => r.json())
@@ -145,6 +152,41 @@ export default function SettingsPage() {
       loadBusiness();
     } finally {
       setRemovingEmployeeId(null);
+    }
+  }
+
+  async function changePassword(e: React.FormEvent) {
+    e.preventDefault();
+    setPasswordError(null);
+    setPasswordChanged(false);
+    if (newPassword.length < 8) {
+      setPasswordError("New password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New passwords don't match.");
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      const res = await fetch("/api/owner/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setPasswordError(
+          data.error === "incorrect_password" ? "Current password is incorrect." : "Something went wrong."
+        );
+        return;
+      }
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordChanged(true);
+    } finally {
+      setChangingPassword(false);
     }
   }
 
@@ -379,6 +421,68 @@ export default function SettingsPage() {
                 </button>
               </form>
             </div>
+
+            <form
+              onSubmit={changePassword}
+              className="mt-6 flex flex-col gap-3 rounded-xl bg-paper p-4 ring-1 ring-zinc-200"
+            >
+              <h2 className="text-sm font-semibold text-zinc-800">Change password</h2>
+              <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                Current password
+                <input
+                  type="password"
+                  required
+                  value={currentPassword}
+                  onChange={(e) => {
+                    setCurrentPassword(e.target.value);
+                    setPasswordError(null);
+                    setPasswordChanged(false);
+                  }}
+                  className={inputClass}
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                New password
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    setPasswordError(null);
+                    setPasswordChanged(false);
+                  }}
+                  className={inputClass}
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                Confirm new password
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setPasswordError(null);
+                    setPasswordChanged(false);
+                  }}
+                  className={inputClass}
+                />
+              </label>
+              {passwordError && <p className="text-sm text-red-600">{passwordError}</p>}
+              <div className="flex items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={changingPassword}
+                  className={primaryButtonClass}
+                >
+                  {changingPassword ? "Saving..." : "Change password"}
+                </button>
+                {passwordChanged && <span className="text-sm font-medium text-green-700">Password changed.</span>}
+              </div>
+            </form>
           </>
         )}
       </div>

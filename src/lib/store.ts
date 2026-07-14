@@ -286,6 +286,44 @@ export async function activateBusiness(businessId: string, extendByDays = 30): P
   return { password };
 }
 
+/**
+ * Self-service password change from the dashboard — requires knowing the
+ * current password. Returns an error rather than throwing so the route can
+ * show a friendly message instead of a 500.
+ */
+export async function changeOwnPassword(
+  businessId: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<{ success: true } | { success: false; error: string }> {
+  const { data } = await supabase.from("business").select("password_hash").eq("id", businessId).maybeSingle();
+  if (!data?.password_hash || !verifyPassword(currentPassword, data.password_hash)) {
+    return { success: false, error: "incorrect_password" };
+  }
+  const { error } = await supabase
+    .from("business")
+    .update({ password_hash: hashPassword(newPassword) })
+    .eq("id", businessId);
+  if (error) throw new Error(error.message);
+  return { success: true };
+}
+
+/**
+ * Admin-mediated "forgot password" — mirrors activateBusiness's one-time
+ * password generation, but only touches the password (billing/trial dates
+ * are left untouched). The plaintext is returned once so the admin can copy
+ * it and send it to the owner manually.
+ */
+export async function resetBusinessPassword(businessId: string): Promise<{ password: string }> {
+  const password = generateActivationPassword();
+  const { error } = await supabase
+    .from("business")
+    .update({ password_hash: hashPassword(password) })
+    .eq("id", businessId);
+  if (error) throw new Error(error.message);
+  return { password };
+}
+
 export async function updateBusinessConfig(
   businessId: string,
   updates: Partial<Pick<BusinessConfig, "name" | "startHour" | "endHour" | "offDays">>
