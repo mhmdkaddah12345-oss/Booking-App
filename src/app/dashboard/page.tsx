@@ -3,6 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import OwnerNav from "@/components/OwnerNav";
+import {
+  cardClass,
+  cardAccentBarClass,
+  listRowHoverClass,
+  pulsingDotClass,
+  primaryButtonClass,
+  dangerButtonClass,
+  ghostButtonClass,
+} from "@/lib/ui";
 
 type Booking = {
   id: string;
@@ -183,22 +192,23 @@ export default function DashboardPage() {
         {loading ? (
           <p className="mt-6 text-sm text-zinc-500">Loading...</p>
         ) : subscriptionStatus === "expired" ? (
-          <div className="mt-6 rounded-xl bg-paper p-6 text-center ring-1 ring-zinc-200">
-            <p className="text-sm font-medium text-zinc-800">Your subscription has expired.</p>
-            <p className="mt-1 text-sm text-zinc-500">
-              Your dashboard and booking page are locked until you renew.
-            </p>
-            <Link
-              href="/dashboard/billing"
-              className="mt-4 inline-block rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
-            >
-              Go to Billing
-            </Link>
+          <div className={`mt-6 ${cardClass}`}>
+            <div className={cardAccentBarClass} />
+            <div className="p-6 text-center">
+              <p className="text-sm font-medium text-zinc-800">Your subscription has expired.</p>
+              <p className="mt-1 text-sm text-zinc-500">
+                Your dashboard and booking page are locked until you renew.
+              </p>
+              <Link href="/dashboard/billing" className={`mt-4 inline-block ${primaryButtonClass}`}>
+                Go to Billing
+              </Link>
+            </div>
           </div>
         ) : (
           <>
             {subscriptionStatus === "trial" && trialDaysLeft <= 3 && (
-              <div className="mt-6 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 ring-1 ring-amber-200">
+              <div className="mt-6 flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 ring-1 ring-amber-200">
+                <span className={`${pulsingDotClass} bg-amber-500`} />
                 Your free trial ends in {trialDaysLeft} day{trialDaysLeft === 1 ? "" : "s"}.{" "}
                 <Link href="/dashboard/billing" className="underline">
                   Renew now
@@ -208,14 +218,15 @@ export default function DashboardPage() {
 
             {pendingBookings.length > 0 && (
               <div className="mt-6 rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
-                <h2 className="text-sm font-semibold text-amber-900">
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-amber-900">
+                  <span className={`${pulsingDotClass} bg-amber-500`} />
                   Pending Requests ({pendingBookings.length})
                 </h2>
                 <ul className="mt-2 flex flex-col gap-2">
                   {pendingBookings.map((b) => (
                     <li
                       key={b.id}
-                      className="flex flex-col gap-2 rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-amber-200 sm:flex-row sm:items-center sm:justify-between"
+                      className={`flex flex-col gap-2 rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-amber-200 sm:flex-row sm:items-center sm:justify-between ${listRowHoverClass}`}
                     >
                       <span className="text-zinc-700">
                         <span className="font-medium text-zinc-800">
@@ -229,14 +240,14 @@ export default function DashboardPage() {
                         <button
                           onClick={() => handleAccept(b.id)}
                           disabled={busyId === b.id}
-                          className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+                          className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-white transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-700 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                         >
                           {busyId === b.id ? "..." : "Accept"}
                         </button>
                         <button
                           onClick={() => handleDecline(b.id)}
                           disabled={busyId === b.id}
-                          className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+                          className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                         >
                           {busyId === b.id ? "..." : "Decline"}
                         </button>
@@ -247,8 +258,8 @@ export default function DashboardPage() {
               </div>
             )}
 
-            <div className="mt-6 overflow-hidden rounded-2xl bg-paper shadow-sm ring-1 ring-zinc-200">
-              <div className="h-1 bg-gradient-to-r from-zinc-900 via-[#b98b3e] to-cedar" />
+            <div className={`mt-6 ${cardClass}`}>
+              <div className={cardAccentBarClass} />
               <div className="overflow-x-auto p-4">
                 <div className="grid" style={{ gridTemplateColumns: "50px repeat(5, minmax(110px, 1fr))" }}>
                   <div />
@@ -374,63 +385,66 @@ export default function DashboardPage() {
             </div>
 
             {selectedBooking && (
-              <div className="mt-2 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-zinc-800">{selectedBooking.serviceName}</p>
-                  {selectedBooking.status === "pending" && (
-                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                      Awaiting your confirmation
-                    </span>
+              <div className={`mt-2 ${cardClass}`}>
+                <div className={cardAccentBarClass} />
+                <div className="p-4">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-zinc-800">{selectedBooking.serviceName}</p>
+                    {selectedBooking.status === "pending" && (
+                      <span className="flex items-center gap-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                        <span className={`${pulsingDotClass} bg-amber-500`} />
+                        Awaiting your confirmation
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-sm text-zinc-600">
+                    {selectedBooking.date} at {selectedBooking.time} ({selectedBooking.durationMinutes} min) —{" "}
+                    {selectedBooking.employeeName}
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-500">
+                    {selectedBooking.customerName} ({selectedBooking.customerPhone})
+                  </p>
+                  {selectedBooking.note && (
+                    <p className="mt-1 text-sm italic text-zinc-500">&ldquo;{selectedBooking.note}&rdquo;</p>
                   )}
-                </div>
-                <p className="mt-1 text-sm text-zinc-600">
-                  {selectedBooking.date} at {selectedBooking.time} ({selectedBooking.durationMinutes} min) —{" "}
-                  {selectedBooking.employeeName}
-                </p>
-                <p className="mt-1 text-sm text-zinc-500">
-                  {selectedBooking.customerName} ({selectedBooking.customerPhone})
-                </p>
-                {selectedBooking.note && (
-                  <p className="mt-1 text-sm italic text-zinc-500">&ldquo;{selectedBooking.note}&rdquo;</p>
-                )}
-                <div className="mt-3 flex gap-2">
-                  {selectedBooking.status === "pending" ? (
-                    <>
+                  <div className="mt-3 flex gap-2">
+                    {selectedBooking.status === "pending" ? (
+                      <>
+                        <button
+                          onClick={() => handleAccept(selectedBooking.id)}
+                          disabled={busyId === selectedBooking.id}
+                          className={primaryButtonClass}
+                        >
+                          {busyId === selectedBooking.id ? "..." : "Accept"}
+                        </button>
+                        <button
+                          onClick={() => handleDecline(selectedBooking.id)}
+                          disabled={busyId === selectedBooking.id}
+                          className={dangerButtonClass}
+                        >
+                          {busyId === selectedBooking.id ? "..." : "Decline"}
+                        </button>
+                      </>
+                    ) : (
                       <button
-                        onClick={() => handleAccept(selectedBooking.id)}
+                        onClick={() => handleCancel(selectedBooking.id)}
                         disabled={busyId === selectedBooking.id}
-                        className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+                        className={dangerButtonClass}
                       >
-                        {busyId === selectedBooking.id ? "..." : "Accept"}
+                        {busyId === selectedBooking.id ? "Cancelling..." : "Cancel booking"}
                       </button>
-                      <button
-                        onClick={() => handleDecline(selectedBooking.id)}
-                        disabled={busyId === selectedBooking.id}
-                        className="rounded-full bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
-                      >
-                        {busyId === selectedBooking.id ? "..." : "Decline"}
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => handleCancel(selectedBooking.id)}
-                      disabled={busyId === selectedBooking.id}
-                      className="rounded-full bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
-                    >
-                      {busyId === selectedBooking.id ? "Cancelling..." : "Cancel booking"}
+                    )}
+                    <button onClick={() => setSelectedBookingId(null)} className={ghostButtonClass}>
+                      Close
                     </button>
-                  )}
-                  <button
-                    onClick={() => setSelectedBookingId(null)}
-                    className="rounded-full px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                  >
-                    Close
-                  </button>
+                  </div>
                 </div>
               </div>
             )}
 
-            <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
+            <div className={`mt-6 ${cardClass}`}>
+              <div className={cardAccentBarClass} />
+              <div className="p-4">
               <h2 className="text-sm font-semibold text-zinc-800">Waitlist</h2>
               {waitlist.length === 0 ? (
                 <p className="mt-2 text-sm text-zinc-400">No one is waiting.</p>
@@ -439,7 +453,7 @@ export default function DashboardPage() {
                   {waitlist.map((w) => (
                     <li
                       key={w.id}
-                      className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
+                      className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${listRowHoverClass} ${
                         w.status === "notified" ? "bg-amber-50" : "bg-zinc-50"
                       }`}
                     >
@@ -455,7 +469,7 @@ export default function DashboardPage() {
                         <button
                           onClick={() => handleConfirmWaitlist(w.id)}
                           disabled={busyId === w.id}
-                          className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+                          className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-white transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-700 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                         >
                           {busyId === w.id ? "..." : "Confirm into slot"}
                         </button>
@@ -464,9 +478,12 @@ export default function DashboardPage() {
                   ))}
                 </ul>
               )}
+              </div>
             </div>
 
-            <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
+            <div className={`mt-6 ${cardClass}`}>
+              <div className={cardAccentBarClass} />
+              <div className="p-4">
               <h2 className="text-sm font-semibold text-zinc-800">Later Appointments</h2>
               {laterDates.length === 0 ? (
                 <p className="mt-2 text-sm text-zinc-400">Nothing booked beyond the next 5 days.</p>
@@ -479,7 +496,7 @@ export default function DashboardPage() {
                         {bookingsByDate(date).map((b) => (
                           <li
                             key={b.id}
-                            className="flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm"
+                            className={`flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm ${listRowHoverClass}`}
                           >
                             <span>
                               <span className="font-medium text-zinc-800">{b.time}</span>{" "}
@@ -490,7 +507,8 @@ export default function DashboardPage() {
                                 — {b.customerName} ({b.customerPhone})
                               </span>
                               {b.status === "pending" && (
-                                <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                                <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                                  <span className={`${pulsingDotClass} bg-amber-500`} />
                                   Pending
                                 </span>
                               )}
@@ -499,7 +517,7 @@ export default function DashboardPage() {
                             <button
                               onClick={() => handleCancel(b.id)}
                               disabled={busyId === b.id}
-                              className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+                              className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                             >
                               {busyId === b.id ? "..." : "Cancel"}
                             </button>
@@ -510,6 +528,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
               )}
+              </div>
             </div>
           </>
         )}

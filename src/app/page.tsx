@@ -135,13 +135,13 @@ export default function LandingPage() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/signup"
-              className="rounded-full bg-white px-6 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100"
+              className="rounded-full bg-white px-6 py-3 text-sm font-medium text-zinc-900 transition-all duration-150 hover:scale-[1.03] hover:bg-zinc-100 active:scale-[0.97]"
             >
               Create your booking page
             </Link>
             <Link
               href="#how-it-works"
-              className="rounded-full px-6 py-3 text-sm font-medium text-white ring-1 ring-white/70 transition-colors hover:bg-white/10"
+              className="rounded-full px-6 py-3 text-sm font-medium text-white ring-1 ring-white/70 transition-all duration-150 hover:scale-[1.03] hover:bg-white/10 active:scale-[0.97]"
             >
               See how it works
             </Link>
@@ -157,8 +157,11 @@ export default function LandingPage() {
           </h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {PAIN_POINTS.map(({ icon: Icon, body }) => (
-              <div key={body} className="rounded-xl bg-zinc-100 p-5">
-                <Icon className="h-6 w-6 text-zinc-500" />
+              <div
+                key={body}
+                className="group rounded-xl bg-zinc-100 p-5 transition-all duration-200 hover:-translate-y-1 hover:bg-zinc-200/70 hover:shadow-sm"
+              >
+                <Icon className="h-6 w-6 text-zinc-500 transition-transform duration-200 group-hover:scale-110" />
                 <p className="mt-3 text-sm leading-relaxed text-zinc-600">{body}</p>
               </div>
             ))}
@@ -210,8 +213,11 @@ export default function LandingPage() {
           </h2>
           <div className="mt-8 grid w-full gap-6 sm:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, body }) => (
-              <div key={title} className="rounded-xl bg-paper p-6 ring-1 ring-zinc-200">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100">
+              <div
+                key={title}
+                className="group rounded-xl bg-paper p-6 shadow-sm ring-1 ring-zinc-200 transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 transition-transform duration-200 group-hover:scale-110">
                   <Icon className="h-5 w-5 text-zinc-900" />
                 </div>
                 <h3 className="font-display mt-3 text-base font-semibold text-zinc-800">{title}</h3>
@@ -257,7 +263,7 @@ export default function LandingPage() {
           </p>
           <Link
             href="/signup"
-            className="mt-6 inline-block rounded-full bg-white px-6 py-3 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100"
+            className="mt-6 inline-block rounded-full bg-white px-6 py-3 text-sm font-medium text-zinc-900 transition-all duration-150 hover:scale-[1.03] hover:bg-zinc-100 active:scale-[0.97]"
           >
             Create your booking page
           </Link>

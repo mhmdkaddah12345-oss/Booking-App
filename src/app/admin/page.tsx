@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Wordmark from "@/components/Wordmark";
-import { inputClass, primaryButtonClass, ghostButtonClass } from "@/lib/ui";
+import {
+  inputClass,
+  primaryButtonClass,
+  ghostButtonClass,
+  cardClass,
+  cardAccentBarClass,
+  listRowHoverClass,
+  pulsingDotClass,
+} from "@/lib/ui";
 
 type Business = {
   id: string;
@@ -143,14 +151,16 @@ export default function AdminPage() {
           </button>
         </div>
 
-        <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
+        <div className={`mt-6 ${cardClass}`}>
+          <div className={cardAccentBarClass} />
+          <div className="p-4">
           <h2 className="text-sm font-semibold text-zinc-800">Businesses</h2>
           {!businesses ? (
             <p className="mt-3 text-sm text-zinc-500">Loading...</p>
           ) : (
             <ul className="mt-3 flex flex-col gap-2">
               {businesses.map((b) => (
-                <li key={b.id} className="rounded-lg bg-zinc-50 px-3 py-3 text-sm">
+                <li key={b.id} className={`rounded-lg bg-zinc-50 px-3 py-3 text-sm ${listRowHoverClass}`}>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="font-medium text-zinc-800">{b.name}</p>
@@ -159,7 +169,8 @@ export default function AdminPage() {
                         {b.ownerPhone && <> · {b.ownerPhone}</>}
                       </p>
                       {b.paymentPendingSince && (
-                        <p className="mt-1 text-xs font-medium text-amber-700">
+                        <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-amber-700">
+                          <span className={`${pulsingDotClass} bg-amber-500`} />
                           Payment reported {formatDate(b.paymentPendingSince)} — awaiting confirmation
                         </p>
                       )}
@@ -170,7 +181,7 @@ export default function AdminPage() {
                         <button
                           onClick={() => activate(b.id)}
                           disabled={busyId === b.id}
-                          className="rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+                          className="rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-700 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                         >
                           {busyId === b.id ? "..." : "Activate & generate login"}
                         </button>
@@ -179,14 +190,14 @@ export default function AdminPage() {
                           <button
                             onClick={() => markPaid(b.id)}
                             disabled={busyId === b.id}
-                            className="rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+                            className="rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-700 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                           >
                             {busyId === b.id ? "..." : "Mark paid (+30d)"}
                           </button>
                           <button
                             onClick={() => resetPassword(b.id)}
                             disabled={busyId === b.id}
-                            className="rounded-full px-3 py-1.5 text-xs font-medium text-zinc-600 ring-1 ring-zinc-300 hover:bg-zinc-100 disabled:opacity-50"
+                            className="rounded-full px-3 py-1.5 text-xs font-medium text-zinc-600 ring-1 ring-zinc-300 transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                           >
                             {busyId === b.id ? "..." : "Reset password"}
                           </button>
@@ -194,7 +205,7 @@ export default function AdminPage() {
                             <button
                               onClick={() => setConfirmingCancelId(b.id)}
                               disabled={busyId === b.id}
-                              className="rounded-full bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+                              className="rounded-full bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                             >
                               Cancel subscription
                             </button>
@@ -213,7 +224,7 @@ export default function AdminPage() {
                       <button
                         onClick={() => cancelSubscription(b.id)}
                         disabled={busyId === b.id}
-                        className="shrink-0 rounded-full bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                        className="shrink-0 rounded-full bg-red-600 px-3 py-1 text-xs font-medium text-white transition-all duration-150 hover:scale-[1.05] hover:bg-red-700 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                       >
                         {busyId === b.id ? "..." : "Yes, cancel"}
                       </button>
@@ -237,7 +248,7 @@ export default function AdminPage() {
                         </code>
                         <button
                           onClick={() => navigator.clipboard.writeText(`${b.ownerEmail} / ${revealedPasswords[b.id]}`)}
-                          className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-white hover:bg-zinc-700"
+                          className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-white transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-700 active:scale-95"
                         >
                           Copy
                         </button>
@@ -249,12 +260,12 @@ export default function AdminPage() {
               {businesses.length === 0 && <li className="text-sm text-zinc-400">No businesses yet.</li>}
             </ul>
           )}
+          </div>
         </div>
 
-        <form
-          onSubmit={saveSettings}
-          className="mt-6 flex flex-col gap-3 rounded-xl bg-paper p-4 ring-1 ring-zinc-200"
-        >
+        <form onSubmit={saveSettings} className={`mt-6 ${cardClass}`}>
+          <div className={cardAccentBarClass} />
+          <div className="flex flex-col gap-3 p-4">
           <h2 className="text-sm font-semibold text-zinc-800">Bank transfer details</h2>
           <p className="text-xs text-zinc-500">
             Shown to owners on their Billing page. E.g. bank name, account holder, account number/IBAN.
@@ -278,6 +289,7 @@ export default function AdminPage() {
               {savingSettings ? "Saving..." : "Save"}
             </button>
             {settingsSaved && <span className="text-sm font-medium text-green-700">Saved.</span>}
+          </div>
           </div>
         </form>
       </div>

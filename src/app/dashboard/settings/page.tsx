@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import OwnerNav from "@/components/OwnerNav";
-import { inputClass, primaryButtonClass } from "@/lib/ui";
+import { inputClass, primaryButtonClass, cardClass, cardAccentBarClass, listRowHoverClass } from "@/lib/ui";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
@@ -200,40 +200,42 @@ export default function SettingsPage() {
           <p className="mt-6 text-sm text-zinc-500">Loading...</p>
         ) : (
           <>
-            <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
-              <h2 className="text-sm font-semibold text-zinc-800">Your booking page</h2>
-              <p className="mt-1 text-sm text-zinc-600">
-                This is the link to share with customers — send it on WhatsApp, Instagram, or
-                anywhere else. Anyone who opens it can book an appointment directly.
-              </p>
-              <div className="mt-3 flex items-center gap-2">
-                <code className="flex-1 truncate rounded-lg bg-zinc-50 px-3 py-2 text-sm font-medium text-zinc-800 ring-1 ring-zinc-200">
-                  {business.slug}.{ROOT_DOMAIN}
-                </code>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(`https://${business.slug}.${ROOT_DOMAIN}`);
-                    setLinkCopied(true);
-                    setTimeout(() => setLinkCopied(false), 2000);
-                  }}
-                  className={primaryButtonClass}
+            <div className={`mt-6 ${cardClass}`}>
+              <div className={cardAccentBarClass} />
+              <div className="p-4">
+                <h2 className="text-sm font-semibold text-zinc-800">Your booking page</h2>
+                <p className="mt-1 text-sm text-zinc-600">
+                  This is the link to share with customers — send it on WhatsApp, Instagram, or
+                  anywhere else. Anyone who opens it can book an appointment directly.
+                </p>
+                <div className="mt-3 flex items-center gap-2">
+                  <code className="flex-1 truncate rounded-lg bg-zinc-50 px-3 py-2 text-sm font-medium text-zinc-800 ring-1 ring-zinc-200">
+                    {business.slug}.{ROOT_DOMAIN}
+                  </code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`https://${business.slug}.${ROOT_DOMAIN}`);
+                      setLinkCopied(true);
+                      setTimeout(() => setLinkCopied(false), 2000);
+                    }}
+                    className={primaryButtonClass}
+                  >
+                    {linkCopied ? "Copied!" : "Copy link"}
+                  </button>
+                </div>
+                <Link
+                  href={`https://${business.slug}.${ROOT_DOMAIN}`}
+                  target="_blank"
+                  className="mt-2 inline-block text-sm font-medium text-zinc-600 underline"
                 >
-                  {linkCopied ? "Copied!" : "Copy link"}
-                </button>
+                  Open booking page →
+                </Link>
               </div>
-              <Link
-                href={`https://${business.slug}.${ROOT_DOMAIN}`}
-                target="_blank"
-                className="mt-2 inline-block text-sm font-medium text-zinc-600 underline"
-              >
-                Open booking page →
-              </Link>
             </div>
 
-            <form
-              onSubmit={saveDetails}
-              className="mt-6 flex flex-col gap-3 rounded-xl bg-paper p-4 ring-1 ring-zinc-200"
-            >
+            <form onSubmit={saveDetails} className={`mt-6 ${cardClass}`}>
+              <div className={cardAccentBarClass} />
+              <div className="flex flex-col gap-3 p-4">
               <h2 className="text-sm font-semibold text-zinc-800">Business Details</h2>
               <label className="flex flex-col gap-1 text-sm text-zinc-600">
                 Business name
@@ -308,9 +310,12 @@ export default function SettingsPage() {
                 </button>
                 {detailsSaved && <span className="text-sm font-medium text-green-700">Saved.</span>}
               </div>
+              </div>
             </form>
 
-            <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
+            <div className={`mt-6 ${cardClass}`}>
+              <div className={cardAccentBarClass} />
+              <div className="p-4">
               <h2 className="text-sm font-semibold text-zinc-800">Services</h2>
               <p className="mt-1 text-xs text-zinc-500">
                 Each service has its own duration — customers pick one before choosing a time.
@@ -320,7 +325,7 @@ export default function SettingsPage() {
                 {business.services.map((s) => (
                   <li
                     key={s.id}
-                    className="flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm"
+                    className={`flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm ${listRowHoverClass}`}
                   >
                     <span className="text-zinc-700">
                       {s.name} <span className="text-zinc-400">— {s.durationMinutes} min</span>
@@ -328,7 +333,7 @@ export default function SettingsPage() {
                     <button
                       onClick={() => removeService(s.id)}
                       disabled={removingId === s.id}
-                      className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+                      className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                     >
                       {removingId === s.id ? "..." : "Remove"}
                     </button>
@@ -372,9 +377,12 @@ export default function SettingsPage() {
                   {addingService ? "Adding..." : "Add service"}
                 </button>
               </form>
+              </div>
             </div>
 
-            <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
+            <div className={`mt-6 ${cardClass}`}>
+              <div className={cardAccentBarClass} />
+              <div className="p-4">
               <h2 className="text-sm font-semibold text-zinc-800">Employees</h2>
               <p className="mt-1 text-xs text-zinc-500">
                 Bookings are automatically assigned to whichever employee is free at that time.
@@ -384,13 +392,13 @@ export default function SettingsPage() {
                 {business.employees.map((emp) => (
                   <li
                     key={emp.id}
-                    className="flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm"
+                    className={`flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm ${listRowHoverClass}`}
                   >
                     <span className="text-zinc-700">{emp.name}</span>
                     <button
                       onClick={() => removeEmployee(emp.id)}
                       disabled={removingEmployeeId === emp.id}
-                      className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+                      className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                     >
                       {removingEmployeeId === emp.id ? "..." : "Remove"}
                     </button>
@@ -420,12 +428,12 @@ export default function SettingsPage() {
                   {addingEmployee ? "Adding..." : "Add employee"}
                 </button>
               </form>
+              </div>
             </div>
 
-            <form
-              onSubmit={changePassword}
-              className="mt-6 flex flex-col gap-3 rounded-xl bg-paper p-4 ring-1 ring-zinc-200"
-            >
+            <form onSubmit={changePassword} className={`mt-6 ${cardClass}`}>
+              <div className={cardAccentBarClass} />
+              <div className="flex flex-col gap-3 p-4">
               <h2 className="text-sm font-semibold text-zinc-800">Change password</h2>
               <label className="flex flex-col gap-1 text-sm text-zinc-600">
                 Current password
@@ -481,6 +489,7 @@ export default function SettingsPage() {
                   {changingPassword ? "Saving..." : "Change password"}
                 </button>
                 {passwordChanged && <span className="text-sm font-medium text-green-700">Password changed.</span>}
+              </div>
               </div>
             </form>
           </>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { primaryButtonClass, dangerButtonClass, ghostButtonClass } from "@/lib/ui";
+import { primaryButtonClass, dangerButtonClass, ghostButtonClass, cardClass, cardAccentBarClass, pulsingDotClass } from "@/lib/ui";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
@@ -193,11 +193,14 @@ export default function ManageBookingPage() {
           <p className="mt-6 text-sm font-medium text-zinc-800">This booking has already been cancelled.</p>
         ) : (
           booking && (
-            <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
+            <div className={`mt-6 ${cardClass}`}>
+              <div className={cardAccentBarClass} />
+              <div className="p-4">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-medium text-zinc-800">{booking.serviceName}</p>
                 {booking.status === "pending" ? (
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                  <span className="flex items-center gap-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                    <span className={`${pulsingDotClass} bg-amber-500`} />
                     Pending confirmation
                   </span>
                 ) : (
@@ -267,7 +270,7 @@ export default function ManageBookingPage() {
                             setSelectedDate(d.date);
                             setCalendarOpen(false);
                           }}
-                          className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                          className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-150 hover:scale-[1.05] active:scale-95 ${
                             selectedDate === d.date
                               ? "bg-zinc-900 text-white"
                               : d.closed
@@ -282,7 +285,7 @@ export default function ManageBookingPage() {
                     <button
                       onClick={() => setCalendarOpen((open) => !open)}
                       aria-label="Pick another date"
-                      className={`shrink-0 rounded-full p-2 text-lg ring-1 transition-colors ${
+                      className={`shrink-0 rounded-full p-2 text-lg ring-1 transition-all duration-150 hover:scale-[1.05] active:scale-95 ${
                         calendarOpen
                           ? "bg-zinc-900 text-white ring-zinc-900"
                           : "bg-white text-zinc-600 ring-zinc-200 hover:bg-zinc-100"
@@ -337,14 +340,16 @@ export default function ManageBookingPage() {
                                 setSelectedDate(dateStr);
                                 setCalendarOpen(false);
                               }}
-                              className={`aspect-square rounded-lg text-sm font-medium transition-colors ${
+                              className={`aspect-square rounded-lg text-sm font-medium transition-all duration-150 ${
                                 isPast
                                   ? "cursor-not-allowed text-zinc-200"
-                                  : isSelected
-                                  ? "bg-zinc-900 text-white"
-                                  : isClosed
-                                  ? "text-zinc-300 hover:bg-zinc-100"
-                                  : "text-zinc-700 hover:bg-zinc-100"
+                                  : `hover:scale-[1.1] active:scale-95 ${
+                                      isSelected
+                                        ? "bg-zinc-900 text-white"
+                                        : isClosed
+                                        ? "text-zinc-300 hover:bg-zinc-100"
+                                        : "text-zinc-700 hover:bg-zinc-100"
+                                    }`
                               }`}
                             >
                               {day}
@@ -369,10 +374,10 @@ export default function ManageBookingPage() {
                             key={slot.time}
                             disabled={!slot.available}
                             onClick={() => handlePickNewSlot(slot.time)}
-                            className={`rounded-lg px-2 py-2 text-sm font-medium transition-colors ${
+                            className={`rounded-lg px-2 py-2 text-sm font-medium transition-all duration-150 ${
                               !slot.available
                                 ? "cursor-not-allowed bg-zinc-100 text-zinc-300 line-through"
-                                : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-100"
+                                : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:scale-[1.05] hover:bg-zinc-100 active:scale-95"
                             }`}
                           >
                             {slot.time}
@@ -391,6 +396,7 @@ export default function ManageBookingPage() {
                   </button>
                 </div>
               )}
+              </div>
             </div>
           )
         )}

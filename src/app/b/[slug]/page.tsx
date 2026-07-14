@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { inputClass, primaryButtonClass, ghostButtonClass } from "@/lib/ui";
+import { inputClass, primaryButtonClass, ghostButtonClass, cardClass, cardAccentBarClass } from "@/lib/ui";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
@@ -269,7 +269,7 @@ export default function BookingPage() {
                   setSelectedDate(d.date);
                   setCalendarOpen(false);
                 }}
-                className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-150 hover:scale-[1.05] active:scale-95 ${
                   selectedDate === d.date
                     ? "bg-zinc-900 text-white"
                     : d.closed
@@ -284,7 +284,7 @@ export default function BookingPage() {
           <button
             onClick={() => setCalendarOpen((open) => !open)}
             aria-label="Pick another date"
-            className={`shrink-0 rounded-full p-2 text-lg ring-1 transition-colors ${
+            className={`shrink-0 rounded-full p-2 text-lg ring-1 transition-all duration-150 hover:scale-[1.05] active:scale-95 ${
               calendarOpen ? "bg-zinc-900 text-white ring-zinc-900" : "bg-white text-zinc-600 ring-zinc-200 hover:bg-zinc-100"
             }`}
           >
@@ -334,14 +334,16 @@ export default function BookingPage() {
                       setSelectedDate(dateStr);
                       setCalendarOpen(false);
                     }}
-                    className={`aspect-square rounded-lg text-sm font-medium transition-colors ${
+                    className={`aspect-square rounded-lg text-sm font-medium transition-all duration-150 ${
                       isPast
                         ? "cursor-not-allowed text-zinc-200"
-                        : isSelected
-                        ? "bg-zinc-900 text-white"
-                        : isClosed
-                        ? "text-zinc-300 hover:bg-zinc-100"
-                        : "text-zinc-700 hover:bg-zinc-100"
+                        : `hover:scale-[1.1] active:scale-95 ${
+                            isSelected
+                              ? "bg-zinc-900 text-white"
+                              : isClosed
+                              ? "text-zinc-300 hover:bg-zinc-100"
+                              : "text-zinc-700 hover:bg-zinc-100"
+                          }`
                     }`}
                   >
                     {day}
@@ -352,7 +354,9 @@ export default function BookingPage() {
           </div>
         )}
 
-        <div className="mt-6 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
+        <div className={`mt-6 ${cardClass}`}>
+          <div className={cardAccentBarClass} />
+          <div className="p-4">
           {slotsLoading ? (
             <p className="text-sm text-zinc-500">Loading times...</p>
           ) : dayClosed ? (
@@ -429,12 +433,12 @@ export default function BookingPage() {
                     setSuccessMessage(null);
                     setFormError(null);
                   }}
-                  className={`rounded-lg px-2 py-2 text-sm font-medium transition-colors ${
+                  className={`rounded-lg px-2 py-2 text-sm font-medium transition-all duration-150 ${
                     !slot.available
                       ? "cursor-not-allowed bg-zinc-100 text-zinc-300 line-through"
                       : selectedTime === slot.time
-                      ? "bg-zinc-900 text-white"
-                      : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-100"
+                      ? "scale-[1.05] bg-zinc-900 text-white"
+                      : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:scale-[1.05] hover:bg-zinc-100 active:scale-95"
                   }`}
                 >
                   {slot.time}
@@ -499,6 +503,7 @@ export default function BookingPage() {
               )}
             </div>
           )}
+          </div>
         </div>
 
         <p className="mt-8 text-center text-xs text-zinc-400">
