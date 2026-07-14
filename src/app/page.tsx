@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import Wordmark from "@/components/Wordmark";
+import InstallAppButton from "@/components/InstallAppButton";
 import {
   IconAlert,
   IconBrowser,
@@ -103,9 +104,12 @@ export default function LandingPage() {
     <div className="flex min-h-screen flex-col bg-zinc-50">
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-8">
         <Wordmark />
-        <Link href="/dashboard/login" className="text-sm font-medium text-zinc-600 hover:underline">
-          Log in
-        </Link>
+        <div className="flex items-center gap-4">
+          <InstallAppButton />
+          <Link href="/dashboard/login" className="text-sm font-medium text-zinc-600 hover:underline">
+            Log in
+          </Link>
+        </div>
       </header>
 
       {/* Hero */}
