@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Wordmark from "./Wordmark";
 
 const TABS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -11,7 +12,7 @@ const TABS = [
 export default function OwnerNav({ current }: { current: "dashboard" | "settings" | "billing" }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="font-display text-lg font-semibold tracking-tight text-zinc-800">Maw3ed</span>
+      <Wordmark />
       <div className="flex items-center gap-1">
         {TABS.map((tab) => {
           const isCurrent = tab.href === "/dashboard" ? current === "dashboard" : tab.href.endsWith(current);
