@@ -34,6 +34,11 @@ type WaitlistEntry = {
 
 const ROW_HEIGHT_PX = 56;
 
+// Per-employee accent colors — cycles through if there are more employees
+// than colors. Chosen to sit alongside the terracotta/cedar brand palette
+// rather than introducing generic blues/purples.
+const EMPLOYEE_COLORS = ["#b5654f", "#46614f", "#b98b3e", "#8c5b7a"];
+
 function pad2(n: number) {
   return n.toString().padStart(2, "0");
 }
@@ -65,6 +70,12 @@ export default function DashboardPage() {
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>("trial");
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   function loadDashboard() {
     setLoading(true);
@@ -157,6 +168,12 @@ export default function DashboardPage() {
 
   const selectedBooking = bookings.find((b) => b.id === selectedBookingId) ?? null;
 
+  // fiveDays[0] is always today, so the current-time line only ever applies
+  // to the first column.
+  const nowMinutesFromOpen = now.getHours() * 60 + now.getMinutes() - startHour * 60;
+  const showNowLine = nowMinutesFromOpen >= 0 && nowMinutesFromOpen <= (endHour - startHour) * 60;
+  const nowTopPx = (nowMinutesFromOpen / 60) * ROW_HEIGHT_PX;
+
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="mx-auto max-w-4xl">
@@ -230,75 +247,129 @@ export default function DashboardPage() {
               </div>
             )}
 
-            <div className="mt-6 overflow-x-auto rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
-              <div className="grid" style={{ gridTemplateColumns: "50px repeat(5, minmax(110px, 1fr))" }}>
-                <div />
-                {fiveDays.map((d) => (
-                  <div key={d.date} className="pb-2 text-center text-sm font-medium">
-                    <span className={d.closed ? "text-zinc-300" : "text-zinc-800"}>{d.label}</span>
-                    {employees.length > 1 && (
-                      <div className="mt-1 flex">
-                        {employees.map((emp) => (
-                          <span key={emp.id} className="flex-1 truncate text-[10px] font-normal text-zinc-400">
-                            {emp.name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                <div className="relative" style={{ height: gridHeightPx }}>
-                  {hours.map((h, i) => (
-                    <div
-                      key={h}
-                      className="absolute right-1 -translate-y-1/2 text-xs text-zinc-400"
-                      style={{ top: i * ROW_HEIGHT_PX }}
-                    >
-                      {formatHourLabel(h)}
+            <div className="mt-6 overflow-hidden rounded-2xl bg-paper shadow-sm ring-1 ring-zinc-200">
+              <div className="h-1 bg-gradient-to-r from-zinc-900 via-[#b98b3e] to-cedar" />
+              <div className="overflow-x-auto p-4">
+                <div className="grid" style={{ gridTemplateColumns: "50px repeat(5, minmax(110px, 1fr))" }}>
+                  <div />
+                  {fiveDays.map((d, dayIndex) => (
+                    <div key={d.date} className="pb-2 text-center text-sm font-medium">
+                      <span
+                        className={
+                          dayIndex === 0
+                            ? "rounded-full bg-zinc-900 px-2.5 py-1 text-white shadow-sm"
+                            : d.closed
+                            ? "text-zinc-300"
+                            : "text-zinc-800"
+                        }
+                      >
+                        {dayIndex === 0 ? "Today" : d.label}
+                      </span>
+                      {employees.length > 1 && (
+                        <div className="mt-1.5 flex">
+                          {employees.map((emp, empIndex) => (
+                            <span
+                              key={emp.id}
+                              className="flex flex-1 items-center justify-center gap-1 truncate text-[10px] font-normal text-zinc-500"
+                            >
+                              <span
+                                className="inline-block h-1.5 w-1.5 shrink-0 rounded-full"
+                                style={{ backgroundColor: EMPLOYEE_COLORS[empIndex % EMPLOYEE_COLORS.length] }}
+                              />
+                              {emp.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
-                </div>
 
-                {fiveDays.map((day) => (
-                  <div key={day.date} className="relative flex border-l border-zinc-100" style={{ height: gridHeightPx }}>
+                  <div className="relative" style={{ height: gridHeightPx }}>
                     {hours.map((h, i) => (
                       <div
                         key={h}
-                        className="pointer-events-none absolute left-0 right-0 border-t border-zinc-100"
+                        className="absolute right-1 -translate-y-1/2 text-xs font-medium tracking-wide text-zinc-400"
                         style={{ top: i * ROW_HEIGHT_PX }}
-                      />
-                    ))}
-                    {employees.map((emp) => (
-                      <div key={emp.id} className="relative flex-1 border-l border-zinc-50 first:border-l-0">
-                        {bookingsFor(day.date, emp.id).map((b) => {
-                          const startMinutesFromOpen = timeToMinutes(b.time) - startHour * 60;
-                          const topPx = (startMinutesFromOpen / 60) * ROW_HEIGHT_PX;
-                          const heightPx = Math.max((b.durationMinutes / 60) * ROW_HEIGHT_PX, 18);
-                          const isSelected = selectedBookingId === b.id;
-                          const isPending = b.status === "pending";
-                          return (
-                            <button
-                              key={b.id}
-                              onClick={() => setSelectedBookingId(isSelected ? null : b.id)}
-                              className={`absolute left-0.5 right-0.5 overflow-hidden rounded px-1 text-left text-[10px] leading-tight transition-colors ${
-                                isSelected
-                                  ? "bg-amber-500 text-white"
-                                  : isPending
-                                  ? "bg-amber-100 text-amber-800 ring-1 ring-inset ring-amber-300 hover:bg-amber-200"
-                                  : "bg-zinc-900 text-white hover:bg-zinc-700"
-                              }`}
-                              style={{ top: topPx, height: heightPx }}
-                            >
-                              {b.time} {b.customerName}
-                              {isPending && " ⏳"}
-                            </button>
-                          );
-                        })}
+                      >
+                        {formatHourLabel(h)}
                       </div>
                     ))}
                   </div>
-                ))}
+
+                  {fiveDays.map((day, dayIndex) => (
+                    <div
+                      key={day.date}
+                      className={`relative flex border-l border-zinc-100 ${dayIndex === 0 ? "bg-zinc-50/60" : ""}`}
+                      style={{ height: gridHeightPx }}
+                    >
+                      {hours.slice(0, -1).map(
+                        (h, i) =>
+                          i % 2 === 1 && (
+                            <div
+                              key={`zebra-${h}`}
+                              className="pointer-events-none absolute left-0 right-0 bg-zinc-100/40"
+                              style={{ top: i * ROW_HEIGHT_PX, height: ROW_HEIGHT_PX }}
+                            />
+                          )
+                      )}
+                      {hours.map((h, i) => (
+                        <div
+                          key={h}
+                          className="pointer-events-none absolute left-0 right-0 border-t border-zinc-100"
+                          style={{ top: i * ROW_HEIGHT_PX }}
+                        />
+                      ))}
+                      {dayIndex === 0 && showNowLine && (
+                        <div
+                          className="pointer-events-none absolute left-0 right-0 z-20 flex items-center"
+                          style={{ top: nowTopPx }}
+                        >
+                          <span className="-ml-1 h-2.5 w-2.5 shrink-0 rounded-full bg-zinc-900 shadow" />
+                          <span className="h-px flex-1 bg-zinc-900" />
+                        </div>
+                      )}
+                      {employees.map((emp, empIndex) => {
+                        const color = EMPLOYEE_COLORS[empIndex % EMPLOYEE_COLORS.length];
+                        return (
+                          <div key={emp.id} className="relative flex-1 border-l border-zinc-50 first:border-l-0">
+                            {bookingsFor(day.date, emp.id).map((b) => {
+                              const startMinutesFromOpen = timeToMinutes(b.time) - startHour * 60;
+                              const topPx = (startMinutesFromOpen / 60) * ROW_HEIGHT_PX;
+                              const heightPx = Math.max((b.durationMinutes / 60) * ROW_HEIGHT_PX, 18);
+                              const isSelected = selectedBookingId === b.id;
+                              const isPending = b.status === "pending";
+                              return (
+                                <button
+                                  key={b.id}
+                                  onClick={() => setSelectedBookingId(isSelected ? null : b.id)}
+                                  style={{
+                                    top: topPx,
+                                    height: heightPx,
+                                    ...(isSelected || isPending
+                                      ? undefined
+                                      : { backgroundColor: `${color}22`, borderLeftColor: color }),
+                                  }}
+                                  className={`absolute left-0.5 right-0.5 z-10 overflow-hidden rounded-lg border-l-[3px] px-1.5 py-0.5 text-left text-[11px] font-medium leading-tight shadow-sm transition-all duration-150 hover:z-20 hover:scale-[1.03] hover:shadow-md ${
+                                    isSelected
+                                      ? "scale-[1.03] border-zinc-900 bg-zinc-900 text-white shadow-md"
+                                      : isPending
+                                      ? "border-amber-400 bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200 hover:bg-amber-100"
+                                      : "text-zinc-800 hover:brightness-95"
+                                  }`}
+                                >
+                                  {isPending && (
+                                    <span className="mr-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500 align-middle" />
+                                  )}
+                                  {b.time} {b.customerName}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
