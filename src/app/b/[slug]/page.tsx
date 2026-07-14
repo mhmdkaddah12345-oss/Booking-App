@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { inputClass, primaryButtonClass, ghostButtonClass } from "@/lib/ui";
 
+const ROOT_DOMAIN = "maw3edapp.com";
+
 type Slot = { time: string; available: boolean };
 type Service = { id: string; name: string; durationMinutes: number };
 
@@ -501,9 +503,12 @@ export default function BookingPage() {
 
         <p className="mt-8 text-center text-xs text-zinc-400">
           Powered by{" "}
-          <Link href="/" className="font-medium text-zinc-500 hover:underline">
+          <a
+            href={`https://${ROOT_DOMAIN}`}
+            className="font-medium text-zinc-500 hover:underline"
+          >
             Maw3ed
-          </Link>
+          </a>
         </p>
       </div>
     </div>

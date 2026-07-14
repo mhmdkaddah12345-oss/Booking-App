@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import { primaryButtonClass, dangerButtonClass, ghostButtonClass } from "@/lib/ui";
+
+const ROOT_DOMAIN = "maw3edapp.com";
 
 type Booking = {
   id: string;
@@ -396,9 +397,12 @@ export default function ManageBookingPage() {
 
         <p className="mt-8 text-center text-xs text-zinc-400">
           Powered by{" "}
-          <Link href="/" className="font-medium text-zinc-500 hover:underline">
+          <a
+            href={`https://${ROOT_DOMAIN}`}
+            className="font-medium text-zinc-500 hover:underline"
+          >
             Maw3ed
-          </Link>
+          </a>
         </p>
       </div>
     </div>
