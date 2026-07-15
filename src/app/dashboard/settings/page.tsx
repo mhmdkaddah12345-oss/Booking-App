@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import OwnerNav from "@/components/OwnerNav";
+import PushNotificationSettings from "@/components/PushNotificationSettings";
 import { inputClass, primaryButtonClass, cardClass, cardAccentBarClass, listRowHoverClass } from "@/lib/ui";
 
 const ROOT_DOMAIN = "maw3edapp.com";
@@ -230,6 +231,20 @@ export default function SettingsPage() {
                 >
                   Open booking page →
                 </Link>
+              </div>
+            </div>
+
+            <div className={`mt-6 ${cardClass}`}>
+              <div className={cardAccentBarClass} />
+              <div className="p-4">
+                <h2 className="text-sm font-semibold text-zinc-800">Notifications</h2>
+                <p className="mt-1 text-sm text-zinc-600">
+                  Get a notification on this device the moment a new booking request comes in — no need to
+                  keep the dashboard open.
+                </p>
+                <div className="mt-3">
+                  <PushNotificationSettings />
+                </div>
               </div>
             </div>
 

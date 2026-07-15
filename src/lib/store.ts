@@ -8,6 +8,7 @@
 import { randomBytes } from "crypto";
 import { supabase } from "./supabaseClient";
 import { notify } from "./notifications";
+import { notifyOwnerPush } from "./pushNotify";
 import { hashPassword, verifyPassword } from "./passwordHash";
 
 export type Service = {
@@ -532,6 +533,13 @@ export async function createBooking(
       const booking = mapBooking(data);
       const event = initialStatus === "pending" ? "booking_requested" : "booking_confirmed";
       notify(event, { phone: customerPhone, name: customerName, date, time, bookingId: booking.id });
+      if (initialStatus === "pending") {
+        notifyOwnerPush(
+          businessId,
+          "New booking request",
+          `${customerName} — ${date} at ${time} (${service.name})`
+        ).catch((err) => console.error("[push notify error]", err));
+      }
       return { success: true, booking };
     }
     if (error.code !== EXCLUSION_VIOLATION) {
