@@ -86,8 +86,8 @@ export default function DashboardPage() {
     return () => clearInterval(id);
   }, []);
 
-  function loadDashboard() {
-    setLoading(true);
+  function loadDashboard(opts: { silent?: boolean } = {}) {
+    if (!opts.silent) setLoading(true);
     Promise.all([fetch("/api/business").then((r) => r.json()), fetch("/api/dashboard").then((r) => r.json())])
       .then(([businessData, dashboardData]) => {
         setStartHour(businessData.business.startHour);
@@ -99,11 +99,30 @@ export default function DashboardPage() {
         setBookings(dashboardData.bookings);
         setWaitlist(dashboardData.waitlist);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!opts.silent) setLoading(false);
+      });
   }
 
   useEffect(() => {
     loadDashboard();
+  }, []);
+
+  // Keep the board current without a manual refresh: poll periodically, and
+  // refetch immediately whenever the tab/app regains focus or visibility
+  // (e.g. switching back after being away, or reopening the installed app).
+  useEffect(() => {
+    const interval = setInterval(() => loadDashboard({ silent: true }), 30_000);
+    function handleRefocus() {
+      if (document.visibilityState === "visible") loadDashboard({ silent: true });
+    }
+    document.addEventListener("visibilitychange", handleRefocus);
+    window.addEventListener("focus", handleRefocus);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleRefocus);
+      window.removeEventListener("focus", handleRefocus);
+    };
   }, []);
 
   async function handleCancel(id: string) {
