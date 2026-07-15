@@ -10,6 +10,7 @@ import { supabase } from "./supabaseClient";
 import { notify } from "./notifications";
 import { notifyOwnerPush } from "./pushNotify";
 import { hashPassword, verifyPassword } from "./passwordHash";
+import { beirutNow } from "./time";
 
 export type Service = {
   id: string;
@@ -405,10 +406,6 @@ export async function removeEmployee(employeeId: string, businessId: string): Pr
   return { success: !error };
 }
 
-export function formatDateISO(d: Date): string {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
 export async function isDayClosed(businessId: string, date: string): Promise<boolean> {
   const business = await getBusinessRowById(businessId);
   if (!business) return true;
@@ -481,8 +478,7 @@ export async function getSlotsForDay(businessId: string, date: string, serviceId
   const slotGranularityMinutes = business.slot_granularity_minutes as number;
   const closeMinutes = endHour * 60;
 
-  const today = formatDateISO(new Date());
-  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+  const { dateStr: today, minutesSinceMidnight: nowMinutes } = beirutNow();
 
   const slots: SlotInfo[] = [];
   for (let start = startHour * 60; start + service.durationMinutes <= closeMinutes; start += slotGranularityMinutes) {
@@ -643,7 +639,7 @@ export async function findBookingsByPhone(businessId: string, phone: string): Pr
   const normalizedInput = normalizePhone(phone);
   if (normalizedInput.length < 6) return [];
 
-  const today = formatDateISO(new Date());
+  const { dateStr: today } = beirutNow();
   const all = await getAllBookings(businessId);
   return all
     .filter((b) => b.status !== "cancelled" && b.date >= today)
@@ -700,9 +696,22 @@ async function promoteNextWaitlisted(
   return nextInLine;
 }
 
-export async function cancelBooking(id: string): Promise<{ success: boolean; promoted?: WaitlistEntry }> {
+/**
+ * Customers cancel their own booking via their manage link (no login, so
+ * requireBusinessId is omitted). When an owner is logged in on the same
+ * request — the dashboard's Cancel button hits this same endpoint — pass
+ * their businessId so a booking belonging to a different business can't be
+ * touched.
+ */
+export async function cancelBooking(
+  id: string,
+  requireBusinessId?: string
+): Promise<{ success: boolean; promoted?: WaitlistEntry }> {
   const booking = await getBooking(id);
   if (!booking || booking.status === "cancelled") {
+    return { success: false };
+  }
+  if (requireBusinessId && booking.businessId !== requireBusinessId) {
     return { success: false };
   }
 
@@ -767,10 +776,14 @@ export async function declineBooking(
 export async function rescheduleBooking(
   id: string,
   newDate: string,
-  newTime: string
+  newTime: string,
+  requireBusinessId?: string
 ): Promise<{ success: true; booking: Booking } | { success: false; error: string }> {
   const booking = await getBooking(id);
   if (!booking || booking.status === "cancelled") {
+    return { success: false, error: "not_found" };
+  }
+  if (requireBusinessId && booking.businessId !== requireBusinessId) {
     return { success: false, error: "not_found" };
   }
 

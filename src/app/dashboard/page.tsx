@@ -128,7 +128,10 @@ export default function DashboardPage() {
   async function handleCancel(id: string) {
     setBusyId(id);
     try {
-      await fetch(`/api/bookings/${id}/cancel`, { method: "POST" });
+      await fetch(`/api/bookings/${id}/cancel`, {
+        method: "POST",
+        headers: { "x-dashboard-action": "1" },
+      });
       setSelectedBookingId(null);
       loadDashboard();
     } finally {
