@@ -38,7 +38,7 @@ export async function middleware(request: NextRequest) {
   }
 
   const { pathname } = request.nextUrl;
-  if (pathname === "/dashboard/login") {
+  if (pathname === "/dashboard/login" || pathname === "/dashboard/reset-with-code") {
     return NextResponse.next();
   }
   if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) {

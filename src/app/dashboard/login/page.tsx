@@ -10,6 +10,7 @@ export default function OwnerLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showForgotHelp, setShowForgotHelp] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,6 +64,26 @@ export default function OwnerLoginPage() {
           >
             {submitting ? "Checking..." : "Log in"}
           </button>
+          <button
+            type="button"
+            onClick={() => setShowForgotHelp((v) => !v)}
+            className="text-center text-sm font-medium text-zinc-600 underline"
+          >
+            Forgot your password?
+          </button>
+          {showForgotHelp && (
+            <p className="rounded-lg bg-zinc-100 px-3 py-2 text-sm leading-relaxed text-zinc-600">
+              Email us at{" "}
+              <a href="mailto:mhmdkaddah12345@gmail.com" className="font-medium text-zinc-800 underline">
+                mhmdkaddah12345@gmail.com
+              </a>{" "}
+              with your business name and we&apos;ll send you a recovery code. Already have one?{" "}
+              <Link href="/dashboard/reset-with-code" className="font-medium text-zinc-800 underline">
+                Reset your password
+              </Link>
+              .
+            </p>
+          )}
           <p className="text-center text-sm text-zinc-500">
             New business?{" "}
             <Link href="/signup" className="font-medium text-zinc-700 underline">

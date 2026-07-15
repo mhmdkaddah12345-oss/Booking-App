@@ -309,20 +309,55 @@ export async function changeOwnPassword(
   return { success: true };
 }
 
+const RESET_CODE_VALID_MS = 48 * 60 * 60 * 1000; // 48 hours
+
 /**
- * Admin-mediated "forgot password" — mirrors activateBusiness's one-time
- * password generation, but only touches the password (billing/trial dates
- * are left untouched). The plaintext is returned once so the admin can copy
- * it and send it to the owner manually.
+ * Admin-mediated "forgot password" without the admin ever seeing (or
+ * choosing) the owner's new password. Generates a one-time recovery code —
+ * admin copies it and sends it to the owner manually, same relay step as
+ * the original activation password — but the owner uses it themselves via
+ * resetPasswordWithCode to set their own new password.
  */
-export async function resetBusinessPassword(businessId: string): Promise<{ password: string }> {
-  const password = generateActivationPassword();
+export async function generateRecoveryCode(businessId: string): Promise<{ code: string }> {
+  const code = generateActivationPassword();
+  const expiresAt = new Date(Date.now() + RESET_CODE_VALID_MS);
   const { error } = await supabase
     .from("business")
-    .update({ password_hash: hashPassword(password) })
+    .update({ reset_code_hash: hashPassword(code), reset_code_expires_at: expiresAt.toISOString() })
     .eq("id", businessId);
   if (error) throw new Error(error.message);
-  return { password };
+  return { code };
+}
+
+/**
+ * Owner-initiated recovery: verifies the admin-issued code (by email) and
+ * lets the owner set a brand-new password of their own choosing. The code
+ * is single-use — cleared immediately after a successful reset.
+ */
+export async function resetPasswordWithCode(
+  email: string,
+  code: string,
+  newPassword: string
+): Promise<{ success: true } | { success: false; error: string }> {
+  const { data } = await supabase
+    .from("business")
+    .select("id, reset_code_hash, reset_code_expires_at")
+    .eq("owner_email", email.toLowerCase())
+    .maybeSingle();
+
+  if (!data?.reset_code_hash || !verifyPassword(code, data.reset_code_hash)) {
+    return { success: false, error: "invalid_code" };
+  }
+  if (!data.reset_code_expires_at || new Date(data.reset_code_expires_at).getTime() < Date.now()) {
+    return { success: false, error: "code_expired" };
+  }
+
+  const { error } = await supabase
+    .from("business")
+    .update({ password_hash: hashPassword(newPassword), reset_code_hash: null, reset_code_expires_at: null })
+    .eq("id", data.id);
+  if (error) throw new Error(error.message);
+  return { success: true };
 }
 
 export async function updateBusinessConfig(

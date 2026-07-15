@@ -57,6 +57,7 @@ export default function AdminPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmingCancelId, setConfirmingCancelId] = useState<string | null>(null);
   const [revealedPasswords, setRevealedPasswords] = useState<Record<string, string>>({});
+  const [revealedCodes, setRevealedCodes] = useState<Record<string, string>>({});
   const [bankInstructions, setBankInstructions] = useState("");
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
@@ -96,12 +97,12 @@ export default function AdminPage() {
     }
   }
 
-  async function resetPassword(id: string) {
+  async function generateRecoveryCode(id: string) {
     setBusyId(id);
     try {
-      const res = await fetch(`/api/admin/businesses/${id}/reset-password`, { method: "POST" });
+      const res = await fetch(`/api/admin/businesses/${id}/generate-recovery-code`, { method: "POST" });
       const data = await res.json();
-      setRevealedPasswords((prev) => ({ ...prev, [id]: data.password }));
+      setRevealedCodes((prev) => ({ ...prev, [id]: data.code }));
     } finally {
       setBusyId(null);
     }
@@ -195,11 +196,11 @@ export default function AdminPage() {
                             {busyId === b.id ? "..." : "Mark paid (+30d)"}
                           </button>
                           <button
-                            onClick={() => resetPassword(b.id)}
+                            onClick={() => generateRecoveryCode(b.id)}
                             disabled={busyId === b.id}
                             className="rounded-full px-3 py-1.5 text-xs font-medium text-zinc-600 ring-1 ring-zinc-300 transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                           >
-                            {busyId === b.id ? "..." : "Reset password"}
+                            {busyId === b.id ? "..." : "Generate recovery code"}
                           </button>
                           {b.subscriptionStatus !== "expired" && (
                             <button
@@ -248,6 +249,27 @@ export default function AdminPage() {
                         </code>
                         <button
                           onClick={() => navigator.clipboard.writeText(`${b.ownerEmail} / ${revealedPasswords[b.id]}`)}
+                          className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-white transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-700 active:scale-95"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {revealedCodes[b.id] && (
+                    <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2 ring-1 ring-amber-200">
+                      <p className="text-xs font-medium text-amber-800">
+                        One-time recovery code — send it to the owner so they can set their own new
+                        password at maw3edapp.com/dashboard/reset-with-code. Valid for 48 hours, and
+                        it won&apos;t be shown again:
+                      </p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <code className="flex-1 truncate rounded bg-white px-2 py-1 text-sm text-zinc-800 ring-1 ring-amber-200">
+                          {b.ownerEmail} / {revealedCodes[b.id]}
+                        </code>
+                        <button
+                          onClick={() => navigator.clipboard.writeText(`${b.ownerEmail} / ${revealedCodes[b.id]}`)}
                           className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-white transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-700 active:scale-95"
                         >
                           Copy
