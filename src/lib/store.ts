@@ -592,6 +592,30 @@ export async function getAllBookings(businessId: string): Promise<Booking[]> {
   return (data ?? []).map(mapBooking);
 }
 
+// Compares only the last 8 digits so "+961 70 123456", "70123456", and
+// "03/70123456" all match each other regardless of how a customer or the
+// business happened to type the number in.
+function normalizePhone(phone: string): string {
+  return phone.replace(/\D/g, "").slice(-8);
+}
+
+/**
+ * Lets a customer who lost their manage-booking link find it again by phone
+ * number — scoped to a single business (by slug) so it can never leak a
+ * customer's bookings at other businesses.
+ */
+export async function findBookingsByPhone(businessId: string, phone: string): Promise<Booking[]> {
+  const normalizedInput = normalizePhone(phone);
+  if (normalizedInput.length < 6) return [];
+
+  const today = formatDateISO(new Date());
+  const all = await getAllBookings(businessId);
+  return all
+    .filter((b) => b.status !== "cancelled" && b.date >= today)
+    .filter((b) => normalizePhone(b.customerPhone) === normalizedInput)
+    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+}
+
 export async function getBooking(id: string): Promise<Booking | undefined> {
   const { data } = await supabase.from("bookings").select("*").eq("id", id).maybeSingle();
   return data ? mapBooking(data) : undefined;

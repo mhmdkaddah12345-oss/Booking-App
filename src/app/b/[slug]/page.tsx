@@ -9,6 +9,14 @@ const ROOT_DOMAIN = "maw3edapp.com";
 
 type Slot = { time: string; available: boolean };
 type Service = { id: string; name: string; durationMinutes: number };
+type FoundBooking = {
+  id: string;
+  date: string;
+  time: string;
+  serviceName: string;
+  durationMinutes: number;
+  status: "pending" | "booked";
+};
 
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -61,6 +69,34 @@ export default function BookingPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [bookedId, setBookedId] = useState<string | null>(null);
   const [joiningWaitlist, setJoiningWaitlist] = useState(false);
+
+  const [findOpen, setFindOpen] = useState(false);
+  const [findPhone, setFindPhone] = useState("");
+  const [findLoading, setFindLoading] = useState(false);
+  const [findError, setFindError] = useState<string | null>(null);
+  const [foundBookings, setFoundBookings] = useState<FoundBooking[] | null>(null);
+
+  async function handleFindBookings(e: React.FormEvent) {
+    e.preventDefault();
+    setFindLoading(true);
+    setFindError(null);
+    setFoundBookings(null);
+    try {
+      const res = await fetch(`/api/bookings/find?slug=${slug}&phone=${encodeURIComponent(findPhone)}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setFindError("Something went wrong. Please try again.");
+        return;
+      }
+      if (data.bookings.length === 0) {
+        setFindError("No upcoming appointments found for that phone number.");
+        return;
+      }
+      setFoundBookings(data.bookings);
+    } finally {
+      setFindLoading(false);
+    }
+  }
 
   useEffect(() => {
     fetch(`/api/business?slug=${slug}`)
@@ -244,6 +280,63 @@ export default function BookingPage() {
       <div className="mx-auto max-w-xl">
         <h1 className="text-2xl font-semibold text-zinc-900">{businessName || "Loading..."}</h1>
         <p className="mt-1 text-sm text-zinc-500">Choose a service, then pick a day and time.</p>
+
+        <button
+          type="button"
+          onClick={() => setFindOpen((v) => !v)}
+          className="mt-3 text-sm font-medium text-zinc-600 underline"
+        >
+          Already booked? Find your appointment
+        </button>
+
+        {findOpen && (
+          <div className={`mt-2 ${cardClass}`}>
+            <div className={cardAccentBarClass} />
+            <div className="p-4">
+              <form onSubmit={handleFindBookings} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
+                  Phone number
+                  <input
+                    required
+                    placeholder="Phone number you booked with"
+                    value={findPhone}
+                    onChange={(e) => setFindPhone(e.target.value)}
+                    className={inputClass}
+                  />
+                </label>
+                <button type="submit" disabled={findLoading} className={primaryButtonClass}>
+                  {findLoading ? "Searching..." : "Find"}
+                </button>
+              </form>
+              {findError && <p className="mt-3 text-sm text-red-600">{findError}</p>}
+              {foundBookings && (
+                <ul className="mt-3 flex flex-col gap-2">
+                  {foundBookings.map((b) => (
+                    <li
+                      key={b.id}
+                      className="flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm"
+                    >
+                      <span className="text-zinc-700">
+                        <span className="font-medium text-zinc-800">
+                          {b.date} at {b.time}
+                        </span>{" "}
+                        — {b.serviceName} ({b.durationMinutes} min)
+                        {b.status === "pending" && (
+                          <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                            Pending
+                          </span>
+                        )}
+                      </span>
+                      <Link href={`/manage/${b.id}`} className="font-medium text-zinc-700 underline">
+                        Manage →
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
 
         <label className="mt-6 flex flex-col gap-1 text-sm text-zinc-600">
           Service
