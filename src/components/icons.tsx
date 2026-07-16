@@ -88,3 +88,69 @@ export function IconAlert({ className }: IconProps) {
     </svg>
   );
 }
+
+export function IconChartBar({ className }: IconProps) {
+  return (
+    <svg {...common} className={className}>
+      <path d="M5 20V10M12 20V4M19 20v-7" {...strokeProps} />
+      <path d="M3.5 20.5h17" {...strokeProps} />
+    </svg>
+  );
+}
+
+export function IconCalendar({ className }: IconProps) {
+  return (
+    <svg {...common} className={className}>
+      <rect x="3.5" y="5" width="17" height="15" rx="2" {...strokeProps} />
+      <path d="M3.5 9.5h17M8 3v3.5M16 3v3.5" {...strokeProps} />
+      <path d="M8 13.5h.01M12 13.5h.01M16 13.5h.01M8 17h.01M12 17h.01" {...strokeProps} />
+    </svg>
+  );
+}
+
+export function IconBell({ className }: IconProps) {
+  return (
+    <svg {...common} className={className}>
+      <path d="M6 10.5a6 6 0 1 1 12 0c0 4 1.3 5.5 1.3 5.5H4.7S6 14.5 6 10.5Z" {...strokeProps} />
+      <path d="M10 19a2 2 0 0 0 4 0" {...strokeProps} />
+    </svg>
+  );
+}
+
+export function IconLock({ className }: IconProps) {
+  return (
+    <svg {...common} className={className}>
+      <rect x="5" y="11" width="14" height="9" rx="1.5" {...strokeProps} />
+      <path d="M8 11V7.5a4 4 0 0 1 8 0V11" {...strokeProps} />
+    </svg>
+  );
+}
+
+export function IconBuilding({ className }: IconProps) {
+  return (
+    <svg {...common} className={className}>
+      <rect x="5" y="3.5" width="14" height="17" rx="1.5" {...strokeProps} />
+      <path d="M8.5 7.5h.01M12 7.5h.01M15.5 7.5h.01M8.5 11h.01M12 11h.01M15.5 11h.01M8.5 14.5h.01M15.5 14.5h.01" {...strokeProps} />
+      <path d="M10 20.5V17h4v3.5" {...strokeProps} />
+    </svg>
+  );
+}
+
+export function IconCreditCard({ className }: IconProps) {
+  return (
+    <svg {...common} className={className}>
+      <rect x="3" y="5.5" width="18" height="13" rx="2" {...strokeProps} />
+      <path d="M3 9.5h18" {...strokeProps} />
+      <path d="M6 14h4" {...strokeProps} />
+    </svg>
+  );
+}
+
+export function IconTag({ className }: IconProps) {
+  return (
+    <svg {...common} className={className}>
+      <path d="M12 3.5h6a1.5 1.5 0 0 1 1.5 1.5v6L10 20.5 3.5 14 12 3.5Z" {...strokeProps} />
+      <path d="M16.3 8.3h.01" {...strokeProps} />
+    </svg>
+  );
+}

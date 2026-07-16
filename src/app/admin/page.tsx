@@ -11,6 +11,7 @@ import {
   listRowHoverClass,
   pulsingDotClass,
 } from "@/lib/ui";
+import { IconBuilding, IconCreditCard } from "@/components/icons";
 
 type Business = {
   id: string;
@@ -155,7 +156,10 @@ export default function AdminPage() {
         <div className={`mt-6 ${cardClass}`}>
           <div className={cardAccentBarClass} />
           <div className="p-4">
-          <h2 className="text-sm font-semibold text-zinc-800">Businesses</h2>
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+            <IconBuilding className="h-4 w-4 text-zinc-500" />
+            Businesses
+          </h2>
           {!businesses ? (
             <p className="mt-3 text-sm text-zinc-500">Loading...</p>
           ) : (
@@ -288,7 +292,10 @@ export default function AdminPage() {
         <form onSubmit={saveSettings} className={`mt-6 ${cardClass}`}>
           <div className={cardAccentBarClass} />
           <div className="flex flex-col gap-3 p-4">
-          <h2 className="text-sm font-semibold text-zinc-800">Bank transfer details</h2>
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+            <IconCreditCard className="h-4 w-4 text-zinc-500" />
+            Bank transfer details
+          </h2>
           <p className="text-xs text-zinc-500">
             Shown to owners on their Billing page. E.g. bank name, account holder, account number/IBAN.
           </p>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import OwnerNav from "@/components/OwnerNav";
 import { primaryButtonClass, cardClass, cardAccentBarClass, pulsingDotClass } from "@/lib/ui";
+import { IconShieldCheck, IconCreditCard } from "@/components/icons";
 
 type BillingInfo = {
   subscriptionStatus: "trial" | "active" | "expired";
@@ -57,7 +58,10 @@ export default function BillingPage() {
             <div className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="p-4">
-                <h2 className="text-sm font-semibold text-zinc-800">Your plan</h2>
+                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                  <IconShieldCheck className="h-4 w-4 text-zinc-500" />
+                  Your plan
+                </h2>
                 {billing.subscriptionStatus === "trial" && (
                   <p className="mt-1 text-sm text-zinc-600">
                     Free trial — <span className="font-medium">{billing.trialDaysLeft} day(s) left</span> (ends{" "}
@@ -87,7 +91,10 @@ export default function BillingPage() {
             <div className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="p-4">
-                <h2 className="text-sm font-semibold text-zinc-800">Renew via bank transfer</h2>
+                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                  <IconCreditCard className="h-4 w-4 text-zinc-500" />
+                  Renew via bank transfer
+                </h2>
                 {billing.bankTransferInstructions ? (
                   <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
                     {billing.bankTransferInstructions}
@@ -113,7 +120,10 @@ export default function BillingPage() {
             <div className={`mt-6 ${cardClass} opacity-60`}>
               <div className={cardAccentBarClass} />
               <div className="p-4">
-                <h2 className="text-sm font-semibold text-zinc-800">Whish Money / OMT</h2>
+                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                  <IconCreditCard className="h-4 w-4 text-zinc-500" />
+                  Whish Money / OMT
+                </h2>
                 <p className="mt-1 text-sm text-zinc-500">Coming soon.</p>
               </div>
             </div>

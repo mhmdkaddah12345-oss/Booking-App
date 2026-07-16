@@ -5,6 +5,7 @@ import Link from "next/link";
 import OwnerNav from "@/components/OwnerNav";
 import PushNotificationSettings from "@/components/PushNotificationSettings";
 import { inputClass, primaryButtonClass, cardClass, cardAccentBarClass, listRowHoverClass } from "@/lib/ui";
+import { IconLink, IconBell, IconBuilding, IconTag, IconUsers, IconLock } from "@/components/icons";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
@@ -204,7 +205,10 @@ export default function SettingsPage() {
             <div className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="p-4">
-                <h2 className="text-sm font-semibold text-zinc-800">Your booking page</h2>
+                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                  <IconLink className="h-4 w-4 text-zinc-500" />
+                  Your booking page
+                </h2>
                 <p className="mt-1 text-sm text-zinc-600">
                   This is the link to share with customers — send it on WhatsApp, Instagram, or
                   anywhere else. Anyone who opens it can book an appointment directly.
@@ -237,7 +241,10 @@ export default function SettingsPage() {
             <div className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="p-4">
-                <h2 className="text-sm font-semibold text-zinc-800">Notifications</h2>
+                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                  <IconBell className="h-4 w-4 text-zinc-500" />
+                  Notifications
+                </h2>
                 <p className="mt-1 text-sm text-zinc-600">
                   Get a notification on this device the moment a new booking request comes in — no need to
                   keep the dashboard open.
@@ -251,7 +258,10 @@ export default function SettingsPage() {
             <form onSubmit={saveDetails} className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="flex flex-col gap-3 p-4">
-              <h2 className="text-sm font-semibold text-zinc-800">Business Details</h2>
+              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                <IconBuilding className="h-4 w-4 text-zinc-500" />
+                Business Details
+              </h2>
               <label className="flex flex-col gap-1 text-sm text-zinc-600">
                 Business name
                 <input
@@ -331,7 +341,10 @@ export default function SettingsPage() {
             <div className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="p-4">
-              <h2 className="text-sm font-semibold text-zinc-800">Services</h2>
+              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                <IconTag className="h-4 w-4 text-zinc-500" />
+                Services
+              </h2>
               <p className="mt-1 text-xs text-zinc-500">
                 Each service has its own duration — customers pick one before choosing a time.
               </p>
@@ -398,7 +411,10 @@ export default function SettingsPage() {
             <div className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="p-4">
-              <h2 className="text-sm font-semibold text-zinc-800">Employees</h2>
+              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                <IconUsers className="h-4 w-4 text-zinc-500" />
+                Employees
+              </h2>
               <p className="mt-1 text-xs text-zinc-500">
                 Bookings are automatically assigned to whichever employee is free at that time.
               </p>
@@ -449,7 +465,10 @@ export default function SettingsPage() {
             <form onSubmit={changePassword} className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="flex flex-col gap-3 p-4">
-              <h2 className="text-sm font-semibold text-zinc-800">Change password</h2>
+              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                <IconLock className="h-4 w-4 text-zinc-500" />
+                Change password
+              </h2>
               <label className="flex flex-col gap-1 text-sm text-zinc-600">
                 Current password
                 <input

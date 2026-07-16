@@ -12,6 +12,7 @@ import {
   dangerButtonClass,
   ghostButtonClass,
 } from "@/lib/ui";
+import { IconChartBar, IconClock, IconUsers, IconCalendar } from "@/components/icons";
 
 type Booking = {
   id: string;
@@ -260,7 +261,10 @@ export default function DashboardPage() {
               <div className={`mt-6 ${cardClass}`}>
                 <div className={cardAccentBarClass} />
                 <div className="p-4">
-                  <h2 className="text-sm font-semibold text-zinc-800">This week at a glance</h2>
+                  <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                    <IconChartBar className="h-4 w-4 text-zinc-500" />
+                    This week at a glance
+                  </h2>
                   <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <StatTile label="Appointments" value={stats.appointmentsThisWeek} />
                     <StatTile label="Pending" value={stats.pendingCount} accent={stats.pendingCount > 0} />
@@ -273,7 +277,8 @@ export default function DashboardPage() {
 
             {pendingBookings.length > 0 && (
               <div className="mt-6 rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
-                <h2 className="flex items-center gap-2 text-sm font-semibold text-amber-900">
+                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-amber-900">
+                  <IconClock className="h-4 w-4 text-amber-600" />
                   <span className={`${pulsingDotClass} bg-amber-500`} />
                   Pending Requests ({pendingBookings.length})
                 </h2>
@@ -500,7 +505,10 @@ export default function DashboardPage() {
             <div className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="p-4">
-              <h2 className="text-sm font-semibold text-zinc-800">Waitlist</h2>
+              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                <IconUsers className="h-4 w-4 text-zinc-500" />
+                Waitlist
+              </h2>
               {waitlist.length === 0 ? (
                 <p className="mt-2 text-sm text-zinc-400">No one is waiting.</p>
               ) : (
@@ -539,7 +547,10 @@ export default function DashboardPage() {
             <div className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="p-4">
-              <h2 className="text-sm font-semibold text-zinc-800">Later Appointments</h2>
+              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                <IconCalendar className="h-4 w-4 text-zinc-500" />
+                Later Appointments
+              </h2>
               {laterDates.length === 0 ? (
                 <p className="mt-2 text-sm text-zinc-400">Nothing booked beyond the next 5 days.</p>
               ) : (
