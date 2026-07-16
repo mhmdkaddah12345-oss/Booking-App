@@ -154,3 +154,11 @@ export function IconTag({ className }: IconProps) {
     </svg>
   );
 }
+
+export function IconPlus({ className }: IconProps) {
+  return (
+    <svg {...common} className={className}>
+      <path d="M12 5v14M5 12h14" {...strokeProps} />
+    </svg>
+  );
+}

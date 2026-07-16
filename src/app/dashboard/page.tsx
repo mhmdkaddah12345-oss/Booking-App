@@ -9,10 +9,11 @@ import {
   listRowHoverClass,
   pulsingDotClass,
   primaryButtonClass,
-  dangerButtonClass,
   ghostButtonClass,
+  dangerButtonClass,
+  inputClass,
 } from "@/lib/ui";
-import { IconChartBar, IconClock, IconUsers, IconCalendar } from "@/components/icons";
+import { IconChartBar, IconClock, IconUsers, IconCalendar, IconPlus } from "@/components/icons";
 
 type Booking = {
   id: string;
@@ -29,6 +30,8 @@ type Booking = {
 };
 
 type Employee = { id: string; name: string };
+type Service = { id: string; name: string; durationMinutes: number };
+type Slot = { time: string; available: boolean };
 
 type DashboardStats = {
   appointmentsThisWeek: number;
@@ -89,6 +92,7 @@ export default function DashboardPage() {
   const [endHour, setEndHour] = useState(18);
   const [offDays, setOffDays] = useState<number[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [waitlist, setWaitlist] = useState<WaitlistEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,6 +102,8 @@ export default function DashboardPage() {
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [now, setNow] = useState(() => new Date());
+
+  const [reserveOpen, setReserveOpen] = useState(false);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
@@ -112,6 +118,7 @@ export default function DashboardPage() {
         setEndHour(businessData.business.endHour);
         setOffDays(businessData.business.offDays);
         setEmployees(businessData.business.employees);
+        setServices(businessData.business.services);
         setSubscriptionStatus(businessData.business.subscriptionStatus);
         setTrialDaysLeft(businessData.business.trialDaysLeft);
         setBookings(dashboardData.bookings);
@@ -228,7 +235,18 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="mx-auto max-w-4xl">
         <OwnerNav current="dashboard" />
-        <h1 className="mt-6 text-2xl font-semibold text-zinc-900">Dashboard</h1>
+        <div className="mt-6 flex items-center justify-between">
+          <h1 className="text-2xl font-semibold text-zinc-900">Dashboard</h1>
+          {!loading && subscriptionStatus !== "expired" && (
+            <button
+              onClick={() => setReserveOpen(true)}
+              className={`flex items-center gap-1.5 ${primaryButtonClass}`}
+            >
+              <IconPlus className="h-4 w-4" />
+              Reserve for a customer
+            </button>
+          )}
+        </div>
 
         {loading ? (
           <p className="mt-6 text-sm text-zinc-500">Loading...</p>
@@ -598,6 +616,256 @@ export default function DashboardPage() {
             </div>
           </>
         )}
+      </div>
+
+      {reserveOpen && (
+        <ReserveModal
+          services={services}
+          onClose={() => setReserveOpen(false)}
+          onCreated={() => {
+            setReserveOpen(false);
+            loadDashboard({ silent: true });
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function ReserveModal({
+  services,
+  onClose,
+  onCreated,
+}: {
+  services: Service[];
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const todayStr = (() => {
+    const d = new Date();
+    return toDateStr(d.getFullYear(), d.getMonth(), d.getDate());
+  })();
+
+  const [date, setDate] = useState(todayStr);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [serviceMenuOpen, setServiceMenuOpen] = useState(false);
+  const serviceIdsKey = selectedServiceIds.join(",");
+  const selectedServices = services.filter((s) => selectedServiceIds.includes(s.id));
+  const totalDurationMinutes = selectedServices.reduce((sum, s) => sum + s.durationMinutes, 0);
+
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [fullyBooked, setFullyBooked] = useState(false);
+  const [dayClosed, setDayClosed] = useState(false);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [note, setNote] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!date || !serviceIdsKey) {
+      setSlots([]);
+      return;
+    }
+    setSlotsLoading(true);
+    setSelectedTime(null);
+    setError(null);
+    fetch(`/api/dashboard/slots?date=${date}&serviceIds=${serviceIdsKey}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setSlots(data.slots ?? []);
+        setFullyBooked(data.fullyBooked);
+        setDayClosed(data.closed);
+      })
+      .finally(() => setSlotsLoading(false));
+  }, [date, serviceIdsKey]);
+
+  function toggleService(id: string) {
+    setSelectedServiceIds((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]));
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedTime || selectedServiceIds.length === 0 || !customerName || !customerPhone) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/dashboard/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date,
+          time: selectedTime,
+          serviceIds: selectedServiceIds,
+          customerName,
+          customerPhone,
+          note: note || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(
+          data.error === "slot_taken"
+            ? "That time was just taken — pick another slot."
+            : "Something went wrong. Please try again."
+        );
+        return;
+      }
+      onCreated();
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4 py-8">
+      <div className={`w-full max-w-md ${cardClass} max-h-full overflow-y-auto`}>
+        <div className={cardAccentBarClass} />
+        <div className="p-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-zinc-900">Reserve for a customer</h2>
+            <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600" aria-label="Close">
+              ✕
+            </button>
+          </div>
+
+          <form onSubmit={submit} className="mt-4 flex flex-col gap-3">
+            <label className="flex flex-col gap-1 text-sm text-zinc-600">
+              Date
+              <input
+                type="date"
+                min={todayStr}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className={inputClass}
+              />
+            </label>
+
+            <div className="relative">
+              <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                Services
+                <button
+                  type="button"
+                  onClick={() => setServiceMenuOpen((v) => !v)}
+                  className={`${inputClass} flex items-center justify-between bg-white text-left`}
+                >
+                  <span className={selectedServices.length === 0 ? "text-zinc-400" : "text-zinc-800"}>
+                    {selectedServices.length === 0
+                      ? "Select services"
+                      : `${selectedServices.map((s) => s.name).join(" + ")} — ${totalDurationMinutes} min`}
+                  </span>
+                  <span className="ml-2 shrink-0 text-zinc-400">{serviceMenuOpen ? "▲" : "▼"}</span>
+                </button>
+              </label>
+
+              {serviceMenuOpen && (
+                <div className="absolute z-20 mt-1 w-full rounded-lg bg-white p-2 shadow-lg ring-1 ring-zinc-200">
+                  {services.map((s) => (
+                    <label
+                      key={s.id}
+                      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedServiceIds.includes(s.id)}
+                        onChange={() => toggleService(s.id)}
+                        className="h-4 w-4 rounded border-zinc-300"
+                      />
+                      {s.name} <span className="text-zinc-400">— {s.durationMinutes} min</span>
+                    </label>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setServiceMenuOpen(false)}
+                    className="mt-1 w-full rounded-md px-2 py-1.5 text-center text-xs font-medium text-zinc-500 hover:bg-zinc-50"
+                  >
+                    Done
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {selectedServiceIds.length > 0 && (
+              <div>
+                <p className="text-sm text-zinc-600">Time</p>
+                {slotsLoading ? (
+                  <p className="mt-1 text-sm text-zinc-400">Loading times...</p>
+                ) : dayClosed ? (
+                  <p className="mt-1 text-sm text-zinc-400">Closed that day.</p>
+                ) : fullyBooked ? (
+                  <p className="mt-1 text-sm text-zinc-400">Fully booked that day.</p>
+                ) : slots.length === 0 ? (
+                  <p className="mt-1 text-sm text-zinc-400">No times available.</p>
+                ) : (
+                  <div className="mt-1 grid grid-cols-4 gap-2">
+                    {slots.map((slot) => (
+                      <button
+                        key={slot.time}
+                        type="button"
+                        disabled={!slot.available}
+                        onClick={() => setSelectedTime(slot.time)}
+                        className={`rounded-lg px-2 py-2 text-sm font-medium transition-all duration-150 ${
+                          !slot.available
+                            ? "cursor-not-allowed bg-zinc-100 text-zinc-300 line-through"
+                            : selectedTime === slot.time
+                            ? "scale-[1.05] bg-zinc-900 text-white"
+                            : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:scale-[1.05] hover:bg-zinc-100 active:scale-95"
+                        }`}
+                      >
+                        {slot.time}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <label className="flex flex-col gap-1 text-sm text-zinc-600">
+              Customer name
+              <input
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                required
+                className={inputClass}
+              />
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm text-zinc-600">
+              Customer phone
+              <input
+                type="tel"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                required
+                className={inputClass}
+              />
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm text-zinc-600">
+              Note (optional)
+              <input type="text" value={note} onChange={(e) => setNote(e.target.value)} className={inputClass} />
+            </label>
+
+            {error && <p className="text-sm text-red-600">{error}</p>}
+
+            <div className="mt-1 flex gap-2">
+              <button
+                type="submit"
+                disabled={submitting || !selectedTime || selectedServiceIds.length === 0 || !customerName || !customerPhone}
+                className={primaryButtonClass}
+              >
+                {submitting ? "Reserving..." : "Reserve"}
+              </button>
+              <button type="button" onClick={onClose} className={ghostButtonClass}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
