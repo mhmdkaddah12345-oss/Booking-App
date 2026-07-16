@@ -46,10 +46,10 @@ export default function BookingPage() {
   const [offDays, setOffDays] = useState<number[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [serviceMenuOpen, setServiceMenuOpen] = useState(false);
   const serviceIdsKey = selectedServiceIds.join(",");
-  const totalDurationMinutes = services
-    .filter((s) => selectedServiceIds.includes(s.id))
-    .reduce((sum, s) => sum + s.durationMinutes, 0);
+  const selectedServices = services.filter((s) => selectedServiceIds.includes(s.id));
+  const totalDurationMinutes = selectedServices.reduce((sum, s) => sum + s.durationMinutes, 0);
 
   const today = new Date();
   const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
@@ -346,27 +346,50 @@ export default function BookingPage() {
           </div>
         )}
 
-        <div className="mt-6">
-          <p className="text-sm text-zinc-600">Services</p>
-          <p className="mt-0.5 text-xs text-zinc-400">Pick one or more — they&apos;ll be booked back-to-back in one visit.</p>
-          <div className="mt-2 flex flex-col gap-1.5 rounded-lg bg-white p-3 ring-1 ring-zinc-300">
-            {services.map((s) => (
-              <label key={s.id} className="flex items-center gap-2 text-sm text-zinc-700">
-                <input
-                  type="checkbox"
-                  checked={selectedServiceIds.includes(s.id)}
-                  onChange={() => toggleService(s.id)}
-                  className="h-4 w-4 rounded border-zinc-300"
-                />
-                {s.name} <span className="text-zinc-400">— {s.durationMinutes} min</span>
-              </label>
-            ))}
-          </div>
-          {selectedServiceIds.length > 0 ? (
-            <p className="mt-1.5 text-xs font-medium text-zinc-500">Total: {totalDurationMinutes} min</p>
-          ) : (
-            <p className="mt-1.5 text-xs text-red-600">Pick at least one service.</p>
+        <div className="relative mt-6">
+          <label className="flex flex-col gap-1 text-sm text-zinc-600">
+            Services
+            <button
+              type="button"
+              onClick={() => setServiceMenuOpen((v) => !v)}
+              className={`${inputClass} flex items-center justify-between bg-white text-left`}
+            >
+              <span className={selectedServices.length === 0 ? "text-zinc-400" : "text-zinc-800"}>
+                {selectedServices.length === 0
+                  ? "Select services"
+                  : `${selectedServices.map((s) => s.name).join(" + ")} — ${totalDurationMinutes} min`}
+              </span>
+              <span className="ml-2 shrink-0 text-zinc-400">{serviceMenuOpen ? "▲" : "▼"}</span>
+            </button>
+          </label>
+
+          {serviceMenuOpen && (
+            <div className="absolute z-20 mt-1 w-full rounded-lg bg-white p-2 shadow-lg ring-1 ring-zinc-200">
+              {services.map((s) => (
+                <label
+                  key={s.id}
+                  className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedServiceIds.includes(s.id)}
+                    onChange={() => toggleService(s.id)}
+                    className="h-4 w-4 rounded border-zinc-300"
+                  />
+                  {s.name} <span className="text-zinc-400">— {s.durationMinutes} min</span>
+                </label>
+              ))}
+              <button
+                type="button"
+                onClick={() => setServiceMenuOpen(false)}
+                className="mt-1 w-full rounded-md px-2 py-1.5 text-center text-xs font-medium text-zinc-500 hover:bg-zinc-50"
+              >
+                Done
+              </button>
+            </div>
           )}
+
+          {selectedServiceIds.length === 0 && <p className="mt-1.5 text-xs text-red-600">Pick at least one service.</p>}
         </div>
 
         <div className="mt-6 flex items-center gap-2">
