@@ -46,6 +46,12 @@ export default function SignupPage() {
             <p className="text-sm text-zinc-600">
               We&apos;ll be in touch shortly to set up your account and share your login details.
             </p>
+            <Link href="/dashboard/login" className={primaryButtonClass}>
+              Go to login
+            </Link>
+            <Link href="/" className="text-sm font-medium text-zinc-600 underline">
+              Back to homepage
+            </Link>
           </div>
         </div>
       </div>
