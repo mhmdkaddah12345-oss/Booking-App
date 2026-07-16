@@ -49,7 +49,7 @@ export default function BillingPage() {
     <div className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="mx-auto max-w-xl">
         <OwnerNav current="billing" />
-        <h1 className="mt-6 text-2xl font-semibold text-zinc-900">Billing</h1>
+        <h1 className="mt-6 text-2xl font-semibold text-zinc-900">Plan</h1>
 
         {!billing ? (
           <p className="mt-6 text-sm text-zinc-500">Loading...</p>

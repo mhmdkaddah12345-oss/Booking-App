@@ -228,7 +228,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-zinc-50 px-4 py-8">
       <div className="mx-auto max-w-4xl">
         <OwnerNav current="dashboard" />
-        <h1 className="mt-6 text-2xl font-semibold text-zinc-900">Owner Dashboard</h1>
+        <h1 className="mt-6 text-2xl font-semibold text-zinc-900">Dashboard</h1>
 
         {loading ? (
           <p className="mt-6 text-sm text-zinc-500">Loading...</p>
@@ -241,7 +241,7 @@ export default function DashboardPage() {
                 Your dashboard and booking page are locked until you renew.
               </p>
               <Link href="/dashboard/billing" className={`mt-4 inline-block ${primaryButtonClass}`}>
-                Go to Billing
+                Go to Plan
               </Link>
             </div>
           </div>

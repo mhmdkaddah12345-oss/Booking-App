@@ -297,7 +297,7 @@ export default function AdminPage() {
             Bank transfer details
           </h2>
           <p className="text-xs text-zinc-500">
-            Shown to owners on their Billing page. E.g. bank name, account holder, account number/IBAN.
+            Shown to owners on their Plan page. E.g. bank name, account holder, account number/IBAN.
           </p>
           <textarea
             value={bankInstructions}

@@ -6,7 +6,7 @@ import Wordmark from "./Wordmark";
 const TABS = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/dashboard/settings", label: "Settings" },
-  { href: "/dashboard/billing", label: "Billing" },
+  { href: "/dashboard/billing", label: "Plan" },
 ] as const;
 
 export default function OwnerNav({ current }: { current: "dashboard" | "settings" | "billing" }) {
