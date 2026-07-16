@@ -52,7 +52,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-    if (hasValidAdminSession(request)) {
+    if (await hasValidAdminSession(request)) {
       return NextResponse.next();
     }
     return NextResponse.redirect(new URL("/admin/login", request.url));

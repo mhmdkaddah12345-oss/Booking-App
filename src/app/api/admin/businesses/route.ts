@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/adminAuth";
 import { listAllBusinessesForAdmin } from "@/lib/store";
 
 export async function GET(request: NextRequest) {
-  const auth = requireAdmin(request);
+  const auth = await requireAdmin(request);
   if (auth !== true) return auth;
 
   const businesses = await listAllBusinessesForAdmin();

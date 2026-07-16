@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAdminPassword, setAdminSessionCookie } from "@/lib/adminAuth";
+import { verifyAdminPassword, createAdminSession, setAdminSessionCookie } from "@/lib/adminAuth";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -9,7 +9,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });
   }
 
+  const sessionId = await createAdminSession();
   const res = NextResponse.json({ success: true });
-  setAdminSessionCookie(res);
+  setAdminSessionCookie(res, sessionId);
   return res;
 }

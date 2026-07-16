@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/adminAuth";
 import { getPlatformSettings, updatePlatformSettings } from "@/lib/store";
 
 export async function GET(request: NextRequest) {
-  const auth = requireAdmin(request);
+  const auth = await requireAdmin(request);
   if (auth !== true) return auth;
 
   const settings = await getPlatformSettings();
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const auth = requireAdmin(request);
+  const auth = await requireAdmin(request);
   if (auth !== true) return auth;
 
   const body = await request.json();
