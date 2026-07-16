@@ -10,7 +10,7 @@ import { supabase } from "./supabaseClient";
 import { notify } from "./notifications";
 import { notifyOwnerPush } from "./pushNotify";
 import { hashPassword, verifyPassword } from "./passwordHash";
-import { beirutNow } from "./time";
+import { beirutNow, beirutWeekRange } from "./time";
 
 export type Service = {
   id: string;
@@ -719,6 +719,44 @@ export async function getBooking(id: string): Promise<Booking | undefined> {
 export async function getAllWaitlist(businessId: string): Promise<WaitlistEntry[]> {
   const { data } = await supabase.from("waitlist").select("*").eq("business_id", businessId);
   return (data ?? []).map(mapWaitlist);
+}
+
+export type DashboardStats = {
+  appointmentsThisWeek: number;
+  pendingCount: number;
+  cancelledThisWeek: number;
+  waitlistCount: number;
+};
+
+/** Cheap "at a glance" counters for the dashboard — computed with count-only queries rather than fetching full rows. */
+export async function getDashboardStats(businessId: string): Promise<DashboardStats> {
+  const { weekStart, weekEnd } = beirutWeekRange();
+
+  const [appointments, pending, cancelled, waitlist] = await Promise.all([
+    supabase
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("business_id", businessId)
+      .eq("status", "booked")
+      .gte("date", weekStart)
+      .lte("date", weekEnd),
+    supabase.from("bookings").select("id", { count: "exact", head: true }).eq("business_id", businessId).eq("status", "pending"),
+    supabase
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("business_id", businessId)
+      .eq("status", "cancelled")
+      .gte("date", weekStart)
+      .lte("date", weekEnd),
+    supabase.from("waitlist").select("id", { count: "exact", head: true }).eq("business_id", businessId).eq("status", "waiting"),
+  ]);
+
+  return {
+    appointmentsThisWeek: appointments.count ?? 0,
+    pendingCount: pending.count ?? 0,
+    cancelledThisWeek: cancelled.count ?? 0,
+    waitlistCount: waitlist.count ?? 0,
+  };
 }
 
 // Only promote someone whose service fits inside the freed time — starting

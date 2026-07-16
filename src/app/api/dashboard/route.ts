@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllBookings, getAllWaitlist } from "@/lib/store";
+import { getAllBookings, getAllWaitlist, getDashboardStats } from "@/lib/store";
 import { requireOwner } from "@/lib/ownerAuth";
 
 export async function GET(request: NextRequest) {
   const auth = await requireOwner(request);
   if (auth instanceof NextResponse) return auth;
 
-  const [allBookings, allWaitlist] = await Promise.all([
+  const [allBookings, allWaitlist, stats] = await Promise.all([
     getAllBookings(auth.businessId),
     getAllWaitlist(auth.businessId),
+    getDashboardStats(auth.businessId),
   ]);
 
   const bookings = allBookings
@@ -18,5 +19,5 @@ export async function GET(request: NextRequest) {
     .filter((w) => w.status === "waiting" || w.status === "notified")
     .sort((a, b) => (a.date + a.createdAt).localeCompare(b.date + b.createdAt));
 
-  return NextResponse.json({ bookings, waitlist });
+  return NextResponse.json({ bookings, waitlist, stats });
 }

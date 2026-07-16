@@ -24,3 +24,24 @@ export function beirutNow(): { dateStr: string; minutesSinceMidnight: number } {
   const minute = Number(get("minute"));
   return { dateStr, minutesSinceMidnight: hour * 60 + minute };
 }
+
+function pad(n: number): string {
+  return n.toString().padStart(2, "0");
+}
+
+/** Monday–Sunday range (as date strings) containing "today" in Beirut time — used for "this week" dashboard stats. */
+export function beirutWeekRange(): { weekStart: string; weekEnd: string } {
+  const { dateStr } = beirutNow();
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const current = new Date(Date.UTC(y, m - 1, d));
+  const dayOfWeek = current.getUTCDay(); // 0=Sun..6=Sat
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+
+  const monday = new Date(current);
+  monday.setUTCDate(current.getUTCDate() + diffToMonday);
+  const sunday = new Date(monday);
+  sunday.setUTCDate(monday.getUTCDate() + 6);
+
+  const fmt = (dt: Date) => `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`;
+  return { weekStart: fmt(monday), weekEnd: fmt(sunday) };
+}

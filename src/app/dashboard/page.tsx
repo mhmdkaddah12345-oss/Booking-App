@@ -29,6 +29,13 @@ type Booking = {
 
 type Employee = { id: string; name: string };
 
+type DashboardStats = {
+  appointmentsThisWeek: number;
+  pendingCount: number;
+  cancelledThisWeek: number;
+  waitlistCount: number;
+};
+
 type WaitlistEntry = {
   id: string;
   date: string;
@@ -67,6 +74,15 @@ function formatHourLabel(h: number) {
 
 type SubscriptionStatus = "trial" | "active" | "expired";
 
+function StatTile({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
+  return (
+    <div className="rounded-lg bg-zinc-50 px-3 py-2.5 text-center">
+      <p className={`text-2xl font-semibold ${accent ? "text-amber-600" : "text-zinc-900"}`}>{value}</p>
+      <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-zinc-500">{label}</p>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [startHour, setStartHour] = useState(9);
   const [endHour, setEndHour] = useState(18);
@@ -79,6 +95,7 @@ export default function DashboardPage() {
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>("trial");
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -98,6 +115,7 @@ export default function DashboardPage() {
         setTrialDaysLeft(businessData.business.trialDaysLeft);
         setBookings(dashboardData.bookings);
         setWaitlist(dashboardData.waitlist);
+        setStats(dashboardData.stats);
       })
       .finally(() => {
         if (!opts.silent) setLoading(false);
@@ -235,6 +253,21 @@ export default function DashboardPage() {
                 <Link href="/dashboard/billing" className="underline">
                   Renew now
                 </Link>
+              </div>
+            )}
+
+            {stats && (
+              <div className={`mt-6 ${cardClass}`}>
+                <div className={cardAccentBarClass} />
+                <div className="p-4">
+                  <h2 className="text-sm font-semibold text-zinc-800">This week at a glance</h2>
+                  <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <StatTile label="Appointments" value={stats.appointmentsThisWeek} />
+                    <StatTile label="Pending" value={stats.pendingCount} accent={stats.pendingCount > 0} />
+                    <StatTile label="Cancelled" value={stats.cancelledThisWeek} />
+                    <StatTile label="Waitlist" value={stats.waitlistCount} />
+                  </div>
+                </div>
               </div>
             )}
 
