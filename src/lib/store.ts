@@ -461,11 +461,13 @@ async function getBookedBookingsForDate(businessId: string, date: string): Promi
 
 export type SlotInfo = { time: string; available: boolean };
 
-export async function getSlotsForDay(businessId: string, date: string, serviceId: string): Promise<SlotInfo[]> {
+async function getSlotsForDurationCore(
+  businessId: string,
+  date: string,
+  durationMinutes: number
+): Promise<SlotInfo[]> {
   const business = await getBusinessRowById(businessId);
   if (!business) return [];
-  const service = await getServiceForBusiness(serviceId, businessId);
-  if (!service) return [];
   const [y, m, d] = date.split("-").map(Number);
   const closed = (business.off_days as number[]).includes(new Date(y, m - 1, d).getDay());
   if (closed) return [];
@@ -481,19 +483,40 @@ export async function getSlotsForDay(businessId: string, date: string, serviceId
   const { dateStr: today, minutesSinceMidnight: nowMinutes } = beirutNow();
 
   const slots: SlotInfo[] = [];
-  for (let start = startHour * 60; start + service.durationMinutes <= closeMinutes; start += slotGranularityMinutes) {
+  for (let start = startHour * 60; start + durationMinutes <= closeMinutes; start += slotGranularityMinutes) {
     if (date === today && start <= nowMinutes) continue;
     const available = (employees ?? []).some((emp) =>
-      isEmployeeRangeFreeLocal(bookingsThatDay, emp.id, start, service.durationMinutes)
+      isEmployeeRangeFreeLocal(bookingsThatDay, emp.id, start, durationMinutes)
     );
     slots.push({ time: minutesToTime(start), available });
   }
   return slots;
 }
 
-export async function isDayFullyBooked(businessId: string, date: string, serviceId: string): Promise<boolean> {
-  const slots = await getSlotsForDay(businessId, date, serviceId);
+/** Used by the reschedule flow, which already knows the booking's total duration and doesn't need to re-derive it from service ids. */
+export async function getSlotsForDuration(businessId: string, date: string, durationMinutes: number): Promise<SlotInfo[]> {
+  return getSlotsForDurationCore(businessId, date, durationMinutes);
+}
+
+export async function isDayFullyBookedForDuration(
+  businessId: string,
+  date: string,
+  durationMinutes: number
+): Promise<boolean> {
+  const slots = await getSlotsForDurationCore(businessId, date, durationMinutes);
   return slots.length > 0 && slots.every((s) => !s.available);
+}
+
+export async function getSlotsForDay(businessId: string, date: string, serviceIds: string[]): Promise<SlotInfo[]> {
+  const combined = await resolveCombinedService(serviceIds, businessId);
+  if (!combined) return [];
+  return getSlotsForDurationCore(businessId, date, combined.durationMinutes);
+}
+
+export async function isDayFullyBooked(businessId: string, date: string, serviceIds: string[]): Promise<boolean> {
+  const combined = await resolveCombinedService(serviceIds, businessId);
+  if (!combined) return false;
+  return isDayFullyBookedForDuration(businessId, date, combined.durationMinutes);
 }
 
 type BookingResult =
@@ -512,11 +535,57 @@ async function getServiceForBusiness(serviceId: string, businessId: string): Pro
   return data ? { id: data.id, name: data.name, durationMinutes: data.duration_minutes } : undefined;
 }
 
+/**
+ * Lets a customer pick more than one service for a single visit (e.g.
+ * Haircut + Beard Trim) — they're combined into one appointment handled
+ * back-to-back by whichever employee is free for the whole block, rather
+ * than modeling parallel multi-staff visits. Combined name/duration are
+ * stored directly on the booking row, same denormalized-snapshot pattern
+ * already used for service_name/employee_name elsewhere.
+ */
+async function resolveCombinedService(
+  serviceIds: string[],
+  businessId: string
+): Promise<{ id: string; name: string; durationMinutes: number } | undefined> {
+  if (serviceIds.length === 0) return undefined;
+  const services = await Promise.all(serviceIds.map((id) => getServiceForBusiness(id, businessId)));
+  if (services.some((s) => !s)) return undefined;
+  const resolved = services as Service[];
+  return {
+    id: resolved[0].id,
+    name: resolved.map((s) => s.name).join(" + "),
+    durationMinutes: resolved.reduce((sum, s) => sum + s.durationMinutes, 0),
+  };
+}
+
 export async function createBooking(
   businessId: string,
   date: string,
   time: string,
-  serviceId: string,
+  serviceIds: string[],
+  customerName: string,
+  customerPhone: string,
+  note?: string,
+  initialStatus: "pending" | "booked" = "pending"
+): Promise<BookingResult> {
+  const service = await resolveCombinedService(serviceIds, businessId);
+  if (!service) {
+    return { success: false, error: "unknown_service" };
+  }
+  return insertBookingForService(businessId, date, time, service, customerName, customerPhone, note, initialStatus);
+}
+
+/**
+ * Shared by createBooking (resolves serviceIds first) and
+ * confirmWaitlistPromotion (already has the combined name/duration stored
+ * on the waitlist entry, so it skips straight here instead of re-resolving
+ * from a single leftover service id and losing the rest of the combo).
+ */
+async function insertBookingForService(
+  businessId: string,
+  date: string,
+  time: string,
+  service: { id: string; name: string; durationMinutes: number },
   customerName: string,
   customerPhone: string,
   note?: string,
@@ -525,11 +594,6 @@ export async function createBooking(
   const business = await getBusinessRowById(businessId);
   if (!business || isBusinessLocked(business)) {
     return { success: false, error: "business_locked" };
-  }
-
-  const service = await getServiceForBusiness(serviceId, businessId);
-  if (!service) {
-    return { success: false, error: "unknown_service" };
   }
 
   const { data: employees } = await supabase.from("employees").select("*").eq("business_id", businessId);
@@ -584,7 +648,7 @@ export async function createBooking(
 export async function joinWaitlist(
   businessId: string,
   date: string,
-  serviceId: string,
+  serviceIds: string[],
   customerName: string,
   customerPhone: string,
   note?: string
@@ -594,7 +658,7 @@ export async function joinWaitlist(
     return { error: "business_locked" };
   }
 
-  const service = await getServiceForBusiness(serviceId, businessId);
+  const service = await resolveCombinedService(serviceIds, businessId);
   if (!service) return { error: "unknown_service" };
 
   const { data, error } = await supabase
@@ -899,11 +963,11 @@ export async function confirmWaitlistPromotion(
     return { success: false, error: "not_eligible" };
   }
 
-  const result = await createBooking(
+  const result = await insertBookingForService(
     businessId,
     entry.date,
     entry.notifiedTime,
-    entry.serviceId,
+    { id: entry.serviceId, name: entry.serviceName, durationMinutes: entry.durationMinutes },
     entry.customerName,
     entry.customerPhone,
     entry.note,

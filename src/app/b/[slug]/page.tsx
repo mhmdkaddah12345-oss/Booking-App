@@ -45,7 +45,11 @@ export default function BookingPage() {
   const [locked, setLocked] = useState(false);
   const [offDays, setOffDays] = useState<number[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [selectedServiceId, setSelectedServiceId] = useState<string>("");
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const serviceIdsKey = selectedServiceIds.join(",");
+  const totalDurationMinutes = services
+    .filter((s) => selectedServiceIds.includes(s.id))
+    .reduce((sum, s) => sum + s.durationMinutes, 0);
 
   const today = new Date();
   const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
@@ -113,19 +117,23 @@ export default function BookingPage() {
         setLocked(data.business.subscriptionStatus === "expired");
         setOffDays(data.business.offDays);
         setServices(data.business.services);
-        setSelectedServiceId(data.business.services[0]?.id ?? "");
+        setSelectedServiceIds(data.business.services[0] ? [data.business.services[0].id] : []);
       });
   }, [slug]);
 
+  function toggleService(id: string) {
+    setSelectedServiceIds((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]));
+  }
+
   useEffect(() => {
-    if (!selectedDate || !selectedServiceId) return;
+    if (!selectedDate || !serviceIdsKey) return;
     setSlotsLoading(true);
     setSelectedTime(null);
     setFormError(null);
     setSuccessMessage(null);
     setBookedId(null);
     setJoiningWaitlist(false);
-    fetch(`/api/slots?slug=${slug}&date=${selectedDate}&serviceId=${selectedServiceId}`)
+    fetch(`/api/slots?slug=${slug}&date=${selectedDate}&serviceIds=${serviceIdsKey}`)
       .then((r) => r.json())
       .then((data) => {
         setSlots(data.slots);
@@ -133,10 +141,10 @@ export default function BookingPage() {
         setDayClosed(data.closed);
       })
       .finally(() => setSlotsLoading(false));
-  }, [slug, selectedDate, selectedServiceId]);
+  }, [slug, selectedDate, serviceIdsKey]);
 
   function refreshSlots() {
-    fetch(`/api/slots?slug=${slug}&date=${selectedDate}&serviceId=${selectedServiceId}`)
+    fetch(`/api/slots?slug=${slug}&date=${selectedDate}&serviceIds=${serviceIdsKey}`)
       .then((r) => r.json())
       .then((data) => {
         setSlots(data.slots);
@@ -158,7 +166,7 @@ export default function BookingPage() {
           slug,
           date: selectedDate,
           time: selectedTime,
-          serviceId: selectedServiceId,
+          serviceIds: selectedServiceIds,
           customerName: name,
           customerPhone: phone,
           note,
@@ -200,7 +208,7 @@ export default function BookingPage() {
         body: JSON.stringify({
           slug,
           date: selectedDate,
-          serviceId: selectedServiceId,
+          serviceIds: selectedServiceIds,
           customerName: name,
           customerPhone: phone,
           note,
@@ -338,20 +346,28 @@ export default function BookingPage() {
           </div>
         )}
 
-        <label className="mt-6 flex flex-col gap-1 text-sm text-zinc-600">
-          Service
-          <select
-            value={selectedServiceId}
-            onChange={(e) => setSelectedServiceId(e.target.value)}
-            className={`${inputClass} bg-white`}
-          >
+        <div className="mt-6">
+          <p className="text-sm text-zinc-600">Services</p>
+          <p className="mt-0.5 text-xs text-zinc-400">Pick one or more — they&apos;ll be booked back-to-back in one visit.</p>
+          <div className="mt-2 flex flex-col gap-1.5 rounded-lg bg-white p-3 ring-1 ring-zinc-300">
             {services.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name} — {s.durationMinutes} min
-              </option>
+              <label key={s.id} className="flex items-center gap-2 text-sm text-zinc-700">
+                <input
+                  type="checkbox"
+                  checked={selectedServiceIds.includes(s.id)}
+                  onChange={() => toggleService(s.id)}
+                  className="h-4 w-4 rounded border-zinc-300"
+                />
+                {s.name} <span className="text-zinc-400">— {s.durationMinutes} min</span>
+              </label>
             ))}
-          </select>
-        </label>
+          </div>
+          {selectedServiceIds.length > 0 ? (
+            <p className="mt-1.5 text-xs font-medium text-zinc-500">Total: {totalDurationMinutes} min</p>
+          ) : (
+            <p className="mt-1.5 text-xs text-red-600">Pick at least one service.</p>
+          )}
+        </div>
 
         <div className="mt-6 flex items-center gap-2">
           <div className="flex flex-1 gap-2 overflow-x-auto pb-2">

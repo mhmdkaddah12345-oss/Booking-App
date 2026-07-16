@@ -93,7 +93,7 @@ export default function ManageBookingPage() {
   useEffect(() => {
     if (!rescheduling || !selectedDate || !booking || !slug) return;
     setSlotsLoading(true);
-    fetch(`/api/slots?slug=${slug}&date=${selectedDate}&serviceId=${booking.serviceId}`)
+    fetch(`/api/slots?slug=${slug}&date=${selectedDate}&durationMinutes=${booking.durationMinutes}`)
       .then((r) => r.json())
       .then((data) => {
         setSlots(data.slots);
