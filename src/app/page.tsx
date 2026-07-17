@@ -3,6 +3,9 @@ import Image from "next/image";
 import Wordmark from "@/components/Wordmark";
 import InstallAppButton from "@/components/InstallAppButton";
 import StandaloneLoginRedirect from "@/components/StandaloneLoginRedirect";
+import Reveal from "@/components/Reveal";
+import FaqAccordion from "@/components/FaqAccordion";
+import BookingPreviewMockup from "@/components/BookingPreviewMockup";
 import {
   IconAlert,
   IconBrowser,
@@ -14,6 +17,17 @@ import {
   IconShieldCheck,
   IconUsers,
 } from "@/components/icons";
+
+const BUSINESS_TYPES = ["Salons", "Barbershops", "Clinics", "Gyms", "Spas", "Nail studios"];
+
+// Cycles feature-card icon tints through the brand's three accent notes
+// (terracotta, gold, cedar — the same trio in cardAccentBarClass) so the
+// grid reads as lively rather than six identical grey circles.
+const ICON_TINTS = [
+  "bg-[#b5654f]/10 text-[#b5654f]",
+  "bg-[#b98b3e]/15 text-[#8a692f]",
+  "bg-cedar/10 text-cedar",
+];
 
 const PAIN_POINTS = [
   {
@@ -104,18 +118,20 @@ export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50">
       <StandaloneLoginRedirect />
-      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-8">
-        <Wordmark />
-        <div className="flex items-center gap-4">
-          <InstallAppButton />
-          <Link href="/dashboard/login" className="text-sm font-medium text-zinc-600 hover:underline">
-            Log in
-          </Link>
+      <header className="sticky top-0 z-30 border-b border-zinc-200/0 bg-zinc-50/80 backdrop-blur-md transition-colors">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
+          <Wordmark />
+          <div className="flex items-center gap-4">
+            <InstallAppButton />
+            <Link href="/dashboard/login" className="text-sm font-medium text-zinc-600 hover:underline">
+              Log in
+            </Link>
+          </div>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="relative flex min-h-[560px] items-center justify-center overflow-hidden px-6 py-24 text-center sm:min-h-[640px]">
+      <section className="relative flex min-h-[600px] items-center justify-center overflow-hidden px-6 py-24 text-center sm:min-h-[680px]">
         <Image
           src="/images/hero-salon.jpg"
           alt=""
@@ -125,8 +141,25 @@ export default function LandingPage() {
           sizes="100vw"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/45 to-black/25" />
+        {/* Soft drifting color glows in the brand's terracotta/cedar tones,
+            layered above the photo darkening but below the copy — reads as
+            depth rather than a flat overlay. */}
+        <div
+          aria-hidden
+          className="animate-drift pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-[#b5654f]/40 blur-[90px]"
+        />
+        <div
+          aria-hidden
+          className="animate-drift pointer-events-none absolute -right-16 bottom-0 h-80 w-80 rounded-full bg-cedar/30 blur-[100px]"
+          style={{ animationDelay: "-9s" }}
+        />
         <div className="relative z-10 flex flex-col items-center">
-          <h1 className="font-display max-w-2xl text-balance text-4xl font-semibold leading-tight text-white sm:text-5xl">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium text-zinc-100 ring-1 ring-white/30 backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#e8a86f]" />
+            Built for Lebanon&apos;s salons, clinics &amp; gyms
+          </span>
+
+          <h1 className="font-display mt-6 max-w-2xl text-balance text-4xl font-semibold leading-tight text-white sm:text-5xl">
             Booking pages for local businesses
           </h1>
           <p className="mt-5 max-w-xl text-balance text-base text-zinc-100 sm:text-lg">
@@ -148,12 +181,24 @@ export default function LandingPage() {
               See how it works
             </Link>
           </div>
+
+          {/* Business-type strip — a quiet, continuous reminder of who this
+              is for, without claiming customer counts we don't have. */}
+          <div className="mt-10 w-full max-w-xs overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_15%,black_85%,transparent)] sm:max-w-md">
+            <div className="animate-marquee flex w-max gap-8 text-xs font-medium uppercase tracking-wide text-zinc-200/80">
+              {[...BUSINESS_TYPES, ...BUSINESS_TYPES].map((type, i) => (
+                <span key={i} className="whitespace-nowrap">
+                  {type}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center px-6 pb-24 pt-16 text-center">
         {/* Problem */}
-        <section className="w-full text-left">
+        <Reveal className="w-full text-left">
           <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
             Still booking over WhatsApp and a notebook?
           </h2>
@@ -168,25 +213,29 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-        </section>
+        </Reveal>
 
         {/* How it works */}
-        <section id="how-it-works" className="mt-24 w-full scroll-mt-8 text-left">
+        <Reveal id="how-it-works" className="mt-24 w-full scroll-mt-8 text-left">
           <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
             How Maw3ed works
           </h2>
-          <div className="mt-8 grid gap-8 sm:grid-cols-3">
+          <div className="relative mt-10 grid gap-10 sm:grid-cols-3 sm:gap-8">
+            <div aria-hidden className="absolute left-0 right-0 top-6 hidden h-px bg-zinc-200 sm:block" />
             {STEPS.map((s) => (
-              <div key={s.step}>
-                <span className="font-display text-3xl font-semibold text-zinc-300">{s.step}</span>
-                <h3 className="font-display mt-2 text-base font-semibold text-zinc-800">{s.title}</h3>
+              <div key={s.step} className="relative">
+                <span className="font-display relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-900 text-base font-semibold text-white shadow-sm">
+                  {s.step}
+                </span>
+                <h3 className="font-display mt-4 text-base font-semibold text-zinc-800">{s.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-zinc-600">{s.body}</p>
               </div>
             ))}
           </div>
-        </section>
+        </Reveal>
+
         {/* Photo split */}
-        <section className="mt-24 grid w-full items-center gap-8 text-left sm:grid-cols-2">
+        <Reveal className="mt-24 grid w-full items-center gap-8 text-left sm:grid-cols-2">
           <div>
             <h2 className="font-display text-2xl font-semibold text-zinc-800 sm:text-3xl">
               Built for every kind of business
@@ -206,43 +255,55 @@ export default function LandingPage() {
               sizes="(min-width: 640px) 50vw, 100vw"
             />
           </div>
-        </section>
+        </Reveal>
+
+        {/* Product preview */}
+        <Reveal className="mt-24 grid w-full items-center gap-10 text-left sm:grid-cols-2">
+          <div className="order-2 sm:order-1">
+            <BookingPreviewMockup />
+          </div>
+          <div className="order-1 sm:order-2">
+            <h2 className="font-display text-2xl font-semibold text-zinc-800 sm:text-3xl">
+              What your customers actually see
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed text-zinc-600 sm:text-base">
+              A clean page with your services, open time slots, and instant confirmation — the moment
+              someone books, it&apos;s locked into your calendar. No app, no account, no confusion about
+              which times are actually free.
+            </p>
+          </div>
+        </Reveal>
 
         {/* Features */}
-        <section className="mt-24 w-full text-left">
+        <Reveal className="mt-24 w-full text-left">
           <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
             Everything your booking page needs
           </h2>
           <div className="mt-8 grid w-full gap-6 sm:grid-cols-3">
-            {FEATURES.map(({ icon: Icon, title, body }) => (
+            {FEATURES.map(({ icon: Icon, title, body }, i) => (
               <div
                 key={title}
                 className="group rounded-xl bg-paper p-6 shadow-sm ring-1 ring-zinc-200 transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 transition-transform duration-200 group-hover:scale-110">
-                  <Icon className="h-5 w-5 text-zinc-900" />
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200 group-hover:scale-110 ${ICON_TINTS[i % ICON_TINTS.length]}`}
+                >
+                  <Icon className="h-5 w-5" />
                 </div>
                 <h3 className="font-display mt-3 text-base font-semibold text-zinc-800">{title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-zinc-600">{body}</p>
               </div>
             ))}
           </div>
-        </section>
+        </Reveal>
 
         {/* FAQ */}
-        <section className="mt-24 w-full max-w-2xl text-left">
+        <Reveal className="mt-24 w-full max-w-2xl text-left">
           <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
             Questions business owners ask
           </h2>
-          <div className="mt-8 flex flex-col gap-6">
-            {FAQS.map((f) => (
-              <div key={f.q} className="border-b border-zinc-200 pb-6 last:border-0">
-                <h3 className="text-sm font-semibold text-zinc-800">{f.q}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-zinc-600">{f.a}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+          <FaqAccordion faqs={FAQS} />
+        </Reveal>
 
       </main>
 
@@ -256,6 +317,10 @@ export default function LandingPage() {
           sizes="100vw"
         />
         <div className="absolute inset-0 bg-black/70" />
+        <div
+          aria-hidden
+          className="animate-drift pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#b98b3e]/25 blur-[100px]"
+        />
         <div className="relative z-10">
           <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
             Ready to stop losing bookings to a missed message?

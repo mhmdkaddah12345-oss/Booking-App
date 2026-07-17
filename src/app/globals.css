@@ -52,3 +52,31 @@ body {
   color: var(--foreground);
   font-family: Cambria, Georgia, "Times New Roman", serif;
 }
+
+/* Landing page decorative motion: a slow drifting glow behind the hero/CTA
+   panels, and an infinite-scroll strip of business types. Both pause under
+   reduced-motion so they never become the reason someone feels seasick. */
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(3%, -4%) scale(1.05); }
+}
+
+.animate-drift {
+  animation: drift 18s ease-in-out infinite;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 28s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift,
+  .animate-marquee {
+    animation: none;
+  }
+}
