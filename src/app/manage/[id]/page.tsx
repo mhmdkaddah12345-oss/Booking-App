@@ -137,8 +137,13 @@ export default function ManageBookingPage() {
       setRescheduleError("Something went wrong. Please try again.");
       return;
     }
+    const data = await res.json();
     setRescheduling(false);
-    setStatusMessage("Your appointment has been rescheduled.");
+    setStatusMessage(
+      data.booking?.status === "pending"
+        ? "Your new time has been requested — the business needs to confirm it."
+        : "Your appointment has been rescheduled."
+    );
     loadBooking();
   }
 

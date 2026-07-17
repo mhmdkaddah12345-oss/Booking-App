@@ -891,10 +891,23 @@ export async function rescheduleBooking(
 
   const { data: employees } = await supabase.from("employees").select("*").eq("business_id", booking.businessId);
 
+  // A confirmed booking that actually moves to a new date/time needs the
+  // owner to re-approve it, same as a fresh request — otherwise a customer
+  // could shift a shift-covering appointment to a time the owner never
+  // agreed to without them ever seeing it.
+  const isActualChange = booking.date !== newDate || booking.time !== newTime;
+  const needsReconfirmation = booking.status === "booked" && isActualChange;
+
   for (const emp of employees ?? []) {
     const { data, error } = await supabase
       .from("bookings")
-      .update({ date: newDate, time: newTime, employee_id: emp.id, employee_name: emp.name })
+      .update({
+        date: newDate,
+        time: newTime,
+        employee_id: emp.id,
+        employee_name: emp.name,
+        ...(needsReconfirmation ? { status: "pending" } : {}),
+      })
       .eq("id", id)
       .select()
       .single();
@@ -909,8 +922,16 @@ export async function rescheduleBooking(
         bookingId: updated.id,
       });
 
-      if (booking.date !== newDate || booking.time !== newTime) {
+      if (isActualChange) {
         await promoteNextWaitlisted(booking.businessId, booking.date, booking.time, booking.durationMinutes);
+      }
+
+      if (needsReconfirmation) {
+        notifyOwnerPush(
+          booking.businessId,
+          "Reschedule request",
+          `${updated.customerName} moved their appointment to ${newDate} at ${newTime} — needs your confirmation`
+        ).catch((err) => console.error("[push notify error]", err));
       }
 
       return { success: true, booking: updated };
