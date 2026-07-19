@@ -580,49 +580,60 @@ export default function BookingPage() {
           )}
 
           {selectedTime && !fullyBooked && (
-            <form onSubmit={submitBooking} className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4">
-              <p className="text-sm font-medium text-zinc-800">
-                Booking {selectedDate} at {selectedTime}
-              </p>
-              <input
-                required
-                placeholder="Your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className={inputClass}
-              />
-              <input
-                required
-                placeholder="Phone number"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className={inputClass}
-              />
-              <textarea
-                placeholder="Note for the business (optional)"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                rows={2}
-                className={inputClass}
-              />
-              {formError && <p className="text-sm text-red-600">{formError}</p>}
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className={primaryButtonClass}
-                >
-                  {submitting ? "Booking..." : "Confirm booking"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedTime(null)}
-                  className={ghostButtonClass}
-                >
-                  Cancel
-                </button>
+            <div
+              className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4 py-8"
+              onClick={() => setSelectedTime(null)}
+            >
+              <div
+                className={`w-full max-w-md ${cardClass} max-h-full overflow-y-auto`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className={cardAccentBarClass} />
+                <form onSubmit={submitBooking} className="flex flex-col gap-3 p-5">
+                  <p className="text-sm font-medium text-zinc-800">
+                    Booking {selectedDate} at {selectedTime}
+                  </p>
+                  <input
+                    required
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className={inputClass}
+                  />
+                  <input
+                    required
+                    placeholder="Phone number"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className={inputClass}
+                  />
+                  <textarea
+                    placeholder="Note for the business (optional)"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    rows={2}
+                    className={inputClass}
+                  />
+                  {formError && <p className="text-sm text-red-600">{formError}</p>}
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className={primaryButtonClass}
+                    >
+                      {submitting ? "Booking..." : "Confirm booking"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTime(null)}
+                      className={ghostButtonClass}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
               </div>
-            </form>
+            </div>
           )}
 
           {successMessage && (
