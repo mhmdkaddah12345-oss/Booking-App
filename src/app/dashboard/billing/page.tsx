@@ -118,7 +118,18 @@ export default function BillingPage() {
                       }`}
                     >
                       <p className="text-sm font-semibold">{plan.label}</p>
-                      <p className="mt-1 text-lg font-semibold">${plan.priceUsd}</p>
+                      <p className="mt-1 flex items-baseline gap-1.5">
+                        {plan.compareAtUsd && (
+                          <span
+                            className={`text-sm line-through ${
+                              selectedPlan === planId ? "text-zinc-400" : "text-zinc-300"
+                            }`}
+                          >
+                            ${plan.compareAtUsd}
+                          </span>
+                        )}
+                        <span className="text-lg font-semibold">${plan.priceUsd}</span>
+                      </p>
                       <p className={`text-xs ${selectedPlan === planId ? "text-zinc-300" : "text-zinc-500"}`}>
                         ${plan.perMonthUsd}/mo{plan.discountLabel ? ` — ${plan.discountLabel}` : ""}
                       </p>

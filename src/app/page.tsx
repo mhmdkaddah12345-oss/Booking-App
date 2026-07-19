@@ -327,7 +327,12 @@ export default function LandingPage() {
                   <p className={`font-display text-sm font-semibold ${isHighlighted ? "text-zinc-200" : "text-zinc-500"}`}>
                     {plan.label}
                   </p>
-                  <p className="mt-2 flex items-baseline gap-1">
+                  <p className="mt-2 flex items-baseline gap-2">
+                    {plan.compareAtUsd && (
+                      <span className={`text-lg line-through ${isHighlighted ? "text-zinc-400" : "text-zinc-300"}`}>
+                        ${plan.compareAtUsd}
+                      </span>
+                    )}
                     <span className="font-display text-3xl font-semibold">${plan.priceUsd}</span>
                     <span className={`text-sm ${isHighlighted ? "text-zinc-300" : "text-zinc-500"}`}>
                       / {plan.days === 30 ? "month" : plan.days === 182 ? "6 months" : "year"}
