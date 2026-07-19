@@ -12,6 +12,7 @@ import {
   pulsingDotClass,
 } from "@/lib/ui";
 import { IconBuilding, IconCreditCard } from "@/components/icons";
+import { PLANS, PlanId } from "@/lib/plans";
 
 type Business = {
   id: string;
@@ -25,6 +26,7 @@ type Business = {
   paidUntil: string | null;
   trialDaysLeft: number;
   paymentPendingSince: string | null;
+  paymentPendingPlan: string | null;
 };
 
 function formatDate(iso: string | null) {
@@ -88,10 +90,14 @@ export default function AdminPage() {
     }
   }
 
-  async function markPaid(id: string) {
+  async function markPaid(id: string, plan: PlanId) {
     setBusyId(id);
     try {
-      await fetch(`/api/admin/businesses/${id}/mark-paid`, { method: "POST" });
+      await fetch(`/api/admin/businesses/${id}/mark-paid`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
       load();
     } finally {
       setBusyId(null);
@@ -176,7 +182,11 @@ export default function AdminPage() {
                       {b.paymentPendingSince && (
                         <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-amber-700">
                           <span className={`${pulsingDotClass} bg-amber-500`} />
-                          Payment reported {formatDate(b.paymentPendingSince)} — awaiting confirmation
+                          Payment reported {formatDate(b.paymentPendingSince)}
+                          {b.paymentPendingPlan && PLANS[b.paymentPendingPlan as PlanId]
+                            ? ` — ${PLANS[b.paymentPendingPlan as PlanId].label} plan`
+                            : ""}{" "}
+                          — awaiting confirmation
                         </p>
                       )}
                     </div>
@@ -192,13 +202,24 @@ export default function AdminPage() {
                         </button>
                       ) : (
                         <>
-                          <button
-                            onClick={() => markPaid(b.id)}
-                            disabled={busyId === b.id}
-                            className="rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-700 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
-                          >
-                            {busyId === b.id ? "..." : "Mark paid (+30d)"}
-                          </button>
+                          {(Object.entries(PLANS) as [PlanId, (typeof PLANS)[PlanId]][]).map(([planId, plan]) => {
+                            const isReportedPlan = b.paymentPendingPlan === planId;
+                            return (
+                              <button
+                                key={planId}
+                                onClick={() => markPaid(b.id, planId)}
+                                disabled={busyId === b.id}
+                                title={`Extend by ${plan.days} days ($${plan.priceUsd})`}
+                                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-150 hover:scale-[1.05] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 ${
+                                  isReportedPlan
+                                    ? "bg-zinc-900 text-white hover:bg-zinc-700"
+                                    : "text-zinc-600 ring-1 ring-zinc-300 hover:bg-zinc-100"
+                                }`}
+                              >
+                                {busyId === b.id ? "..." : `Mark paid — ${plan.label}`}
+                              </button>
+                            );
+                          })}
                           <button
                             onClick={() => generateRecoveryCode(b.id)}
                             disabled={busyId === b.id}

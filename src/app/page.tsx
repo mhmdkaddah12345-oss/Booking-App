@@ -6,6 +6,7 @@ import StandaloneLoginRedirect from "@/components/StandaloneLoginRedirect";
 import Reveal from "@/components/Reveal";
 import FaqAccordion from "@/components/FaqAccordion";
 import BookingPreviewMockup from "@/components/BookingPreviewMockup";
+import { PLANS, PlanId } from "@/lib/plans";
 import {
   IconAlert,
   IconBrowser,
@@ -110,7 +111,7 @@ const FAQS = [
   },
   {
     q: "How much does it cost?",
-    a: "Sign up below and we'll be in touch to set up a plan that fits your business.",
+    a: "$30/month, or save by paying for 6 months ($150) or a full year ($240). Every business starts with a free trial — see Pricing above for the full breakdown.",
   },
 ];
 
@@ -294,6 +295,50 @@ export default function LandingPage() {
                 <p className="mt-2 text-sm leading-relaxed text-zinc-600">{body}</p>
               </div>
             ))}
+          </div>
+        </Reveal>
+
+        {/* Pricing */}
+        <Reveal id="pricing" className="mt-24 w-full scroll-mt-8">
+          <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
+            Simple, honest pricing
+          </h2>
+          <p className="mt-3 text-center text-sm text-zinc-500">
+            Every business starts with a free trial. Pay by bank transfer, Whish Money, or OMT — LBP
+            equivalent to market rate at time of payment.
+          </p>
+          <div className="mt-8 grid w-full gap-6 text-left sm:grid-cols-3">
+            {(Object.entries(PLANS) as [PlanId, (typeof PLANS)[PlanId]][]).map(([planId, plan]) => {
+              const isHighlighted = planId === "yearly";
+              return (
+                <div
+                  key={planId}
+                  className={`relative overflow-hidden rounded-2xl p-6 transition-all duration-200 hover:-translate-y-1 ${
+                    isHighlighted
+                      ? "bg-zinc-900 text-white shadow-lg"
+                      : "bg-paper shadow-sm ring-1 ring-zinc-200 hover:shadow-md"
+                  }`}
+                >
+                  {isHighlighted && (
+                    <span className="absolute right-4 top-4 rounded-full bg-[#e8a86f] px-2.5 py-0.5 text-xs font-medium text-zinc-900">
+                      Best value
+                    </span>
+                  )}
+                  <p className={`font-display text-sm font-semibold ${isHighlighted ? "text-zinc-200" : "text-zinc-500"}`}>
+                    {plan.label}
+                  </p>
+                  <p className="mt-2 flex items-baseline gap-1">
+                    <span className="font-display text-3xl font-semibold">${plan.priceUsd}</span>
+                    <span className={`text-sm ${isHighlighted ? "text-zinc-300" : "text-zinc-500"}`}>
+                      / {plan.days === 30 ? "month" : plan.days === 182 ? "6 months" : "year"}
+                    </span>
+                  </p>
+                  <p className={`mt-1 text-sm ${isHighlighted ? "text-zinc-300" : "text-zinc-500"}`}>
+                    ${plan.perMonthUsd}/mo{plan.discountLabel ? ` — ${plan.discountLabel}` : ""}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </Reveal>
 

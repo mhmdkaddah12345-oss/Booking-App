@@ -40,6 +40,7 @@ export type BusinessConfig = {
   paidUntil: string | null;
   trialDaysLeft: number;
   paymentPendingSince: string | null;
+  paymentPendingPlan: string | null;
 };
 
 export type BookingStatus = "pending" | "booked" | "cancelled";
@@ -137,6 +138,7 @@ function computeSubscriptionFields(business: Record<string, unknown>) {
     paidUntil,
     trialDaysLeft,
     paymentPendingSince: (business.payment_pending_since as string | null) ?? null,
+    paymentPendingPlan: (business.payment_pending_plan as string | null) ?? null,
   };
 }
 
@@ -944,10 +946,10 @@ export async function rescheduleBooking(
   return { success: false, error: "slot_taken" };
 }
 
-export async function markPaymentPending(businessId: string): Promise<void> {
+export async function markPaymentPending(businessId: string, plan: string | null): Promise<void> {
   const { error } = await supabase
     .from("business")
-    .update({ payment_pending_since: new Date().toISOString() })
+    .update({ payment_pending_since: new Date().toISOString(), payment_pending_plan: plan })
     .eq("id", businessId);
   if (error) throw new Error(error.message);
 }
@@ -959,7 +961,10 @@ export type AdminBusinessSummary = {
   ownerEmail: string;
   ownerPhone: string | null;
   activated: boolean;
-} & Pick<BusinessConfig, "subscriptionStatus" | "trialEndsAt" | "paidUntil" | "trialDaysLeft" | "paymentPendingSince">;
+} & Pick<
+  BusinessConfig,
+  "subscriptionStatus" | "trialEndsAt" | "paidUntil" | "trialDaysLeft" | "paymentPendingSince" | "paymentPendingPlan"
+>;
 
 export async function listAllBusinessesForAdmin(): Promise<AdminBusinessSummary[]> {
   const { data, error } = await supabase.from("business").select("*").order("name");
@@ -985,7 +990,7 @@ export async function markBusinessPaid(businessId: string, extendByDays = 30): P
 
   const { error } = await supabase
     .from("business")
-    .update({ paid_until: newPaidUntil.toISOString(), payment_pending_since: null })
+    .update({ paid_until: newPaidUntil.toISOString(), payment_pending_since: null, payment_pending_plan: null })
     .eq("id", businessId);
   if (error) throw new Error(error.message);
 }
