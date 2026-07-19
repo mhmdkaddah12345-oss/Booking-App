@@ -463,58 +463,66 @@ export default function DashboardPage() {
             </div>
 
             {selectedBooking && (
-              <div className={`mt-2 ${cardClass}`}>
-                <div className={cardAccentBarClass} />
-                <div className="p-4">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-zinc-800">{selectedBooking.serviceName}</p>
-                    {selectedBooking.status === "pending" && (
-                      <span className="flex items-center gap-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                        <span className={`${pulsingDotClass} bg-amber-500`} />
-                        Awaiting your confirmation
-                      </span>
+              <div
+                className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4 py-8"
+                onClick={() => setSelectedBookingId(null)}
+              >
+                <div
+                  className={`w-full max-w-md ${cardClass} max-h-full overflow-y-auto`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className={cardAccentBarClass} />
+                  <div className="p-5">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-zinc-800">{selectedBooking.serviceName}</p>
+                      {selectedBooking.status === "pending" && (
+                        <span className="flex items-center gap-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                          <span className={`${pulsingDotClass} bg-amber-500`} />
+                          Awaiting your confirmation
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-sm text-zinc-600">
+                      {selectedBooking.date} at {selectedBooking.time} ({selectedBooking.durationMinutes} min) —{" "}
+                      {selectedBooking.employeeName}
+                    </p>
+                    <p className="mt-1 text-sm text-zinc-500">
+                      {selectedBooking.customerName} ({selectedBooking.customerPhone})
+                    </p>
+                    {selectedBooking.note && (
+                      <p className="mt-1 text-sm italic text-zinc-500">&ldquo;{selectedBooking.note}&rdquo;</p>
                     )}
-                  </div>
-                  <p className="mt-1 text-sm text-zinc-600">
-                    {selectedBooking.date} at {selectedBooking.time} ({selectedBooking.durationMinutes} min) —{" "}
-                    {selectedBooking.employeeName}
-                  </p>
-                  <p className="mt-1 text-sm text-zinc-500">
-                    {selectedBooking.customerName} ({selectedBooking.customerPhone})
-                  </p>
-                  {selectedBooking.note && (
-                    <p className="mt-1 text-sm italic text-zinc-500">&ldquo;{selectedBooking.note}&rdquo;</p>
-                  )}
-                  <div className="mt-3 flex gap-2">
-                    {selectedBooking.status === "pending" ? (
-                      <>
+                    <div className="mt-3 flex gap-2">
+                      {selectedBooking.status === "pending" ? (
+                        <>
+                          <button
+                            onClick={() => handleAccept(selectedBooking.id)}
+                            disabled={busyId === selectedBooking.id}
+                            className={primaryButtonClass}
+                          >
+                            {busyId === selectedBooking.id ? "..." : "Accept"}
+                          </button>
+                          <button
+                            onClick={() => handleDecline(selectedBooking.id)}
+                            disabled={busyId === selectedBooking.id}
+                            className={dangerButtonClass}
+                          >
+                            {busyId === selectedBooking.id ? "..." : "Decline"}
+                          </button>
+                        </>
+                      ) : (
                         <button
-                          onClick={() => handleAccept(selectedBooking.id)}
-                          disabled={busyId === selectedBooking.id}
-                          className={primaryButtonClass}
-                        >
-                          {busyId === selectedBooking.id ? "..." : "Accept"}
-                        </button>
-                        <button
-                          onClick={() => handleDecline(selectedBooking.id)}
+                          onClick={() => handleCancel(selectedBooking.id)}
                           disabled={busyId === selectedBooking.id}
                           className={dangerButtonClass}
                         >
-                          {busyId === selectedBooking.id ? "..." : "Decline"}
+                          {busyId === selectedBooking.id ? "Cancelling..." : "Cancel booking"}
                         </button>
-                      </>
-                    ) : (
-                      <button
-                        onClick={() => handleCancel(selectedBooking.id)}
-                        disabled={busyId === selectedBooking.id}
-                        className={dangerButtonClass}
-                      >
-                        {busyId === selectedBooking.id ? "Cancelling..." : "Cancel booking"}
+                      )}
+                      <button onClick={() => setSelectedBookingId(null)} className={ghostButtonClass}>
+                        Close
                       </button>
-                    )}
-                    <button onClick={() => setSelectedBookingId(null)} className={ghostButtonClass}>
-                      Close
-                    </button>
+                    </div>
                   </div>
                 </div>
               </div>
