@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     trialDaysLeft: business.trialDaysLeft,
     paymentPendingSince: business.paymentPendingSince,
     paymentPendingPlan: business.paymentPendingPlan,
-    bankTransferInstructions: settings.bankTransferInstructions,
+    paymentInstructions: settings.paymentInstructions,
   });
 }
 

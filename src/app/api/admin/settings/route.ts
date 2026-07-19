@@ -15,11 +15,11 @@ export async function PATCH(request: NextRequest) {
   if (auth !== true) return auth;
 
   const body = await request.json();
-  const { bankTransferInstructions } = body ?? {};
-  if (typeof bankTransferInstructions !== "string") {
+  const { paymentInstructions } = body ?? {};
+  if (typeof paymentInstructions !== "string") {
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
 
-  await updatePlatformSettings(bankTransferInstructions);
+  await updatePlatformSettings(paymentInstructions);
   return NextResponse.json({ success: true });
 }

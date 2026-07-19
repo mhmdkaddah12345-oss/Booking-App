@@ -13,7 +13,7 @@ type BillingInfo = {
   trialDaysLeft: number;
   paymentPendingSince: string | null;
   paymentPendingPlan: string | null;
-  bankTransferInstructions: string | null;
+  paymentInstructions: string | null;
 };
 
 function formatDate(iso: string | null) {
@@ -145,14 +145,14 @@ export default function BillingPage() {
               <div className="p-4">
                 <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconCreditCard className="h-4 w-4 text-zinc-500" />
-                  Renew via bank transfer
+                  Pay via OMT or Whish Money
                 </h2>
-                {billing.bankTransferInstructions ? (
+                {billing.paymentInstructions ? (
                   <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
-                    {billing.bankTransferInstructions}
+                    {billing.paymentInstructions}
                   </pre>
                 ) : (
-                  <p className="mt-1 text-sm text-zinc-500">Bank transfer details will be added soon.</p>
+                  <p className="mt-1 text-sm text-zinc-500">Payment details will be added soon.</p>
                 )}
                 <p className="mt-2 text-sm text-zinc-600">
                   Sending for the <span className="font-medium">{PLANS[selectedPlan].label}</span> plan — $
@@ -163,24 +163,13 @@ export default function BillingPage() {
                   disabled={reporting}
                   className={`mt-3 ${primaryButtonClass}`}
                 >
-                  {reporting ? "Reporting..." : "I've sent the transfer"}
+                  {reporting ? "Reporting..." : "I've sent the payment"}
                 </button>
                 {reported && (
                   <p className="mt-2 text-sm text-zinc-500">
                     Thanks — we&apos;ll confirm your payment and extend your access shortly.
                   </p>
                 )}
-              </div>
-            </div>
-
-            <div className={`mt-6 ${cardClass} opacity-60`}>
-              <div className={cardAccentBarClass} />
-              <div className="p-4">
-                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
-                  <IconCreditCard className="h-4 w-4 text-zinc-500" />
-                  Whish Money / OMT
-                </h2>
-                <p className="mt-1 text-sm text-zinc-500">Coming soon.</p>
               </div>
             </div>
           </>

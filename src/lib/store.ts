@@ -1004,15 +1004,15 @@ export async function cancelSubscription(businessId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-export async function getPlatformSettings(): Promise<{ bankTransferInstructions: string | null }> {
+export async function getPlatformSettings(): Promise<{ paymentInstructions: string | null }> {
   const { data } = await supabase.from("platform_settings").select("*").eq("id", true).maybeSingle();
-  return { bankTransferInstructions: data?.bank_transfer_instructions ?? null };
+  return { paymentInstructions: data?.payment_instructions ?? null };
 }
 
-export async function updatePlatformSettings(bankTransferInstructions: string): Promise<void> {
+export async function updatePlatformSettings(paymentInstructions: string): Promise<void> {
   const { error } = await supabase
     .from("platform_settings")
-    .update({ bank_transfer_instructions: bankTransferInstructions })
+    .update({ payment_instructions: paymentInstructions })
     .eq("id", true);
   if (error) throw new Error(error.message);
 }

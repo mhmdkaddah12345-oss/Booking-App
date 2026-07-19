@@ -304,8 +304,8 @@ export default function LandingPage() {
             Simple, honest pricing
           </h2>
           <p className="mt-3 text-center text-sm text-zinc-500">
-            Every business starts with a free trial. Pay by bank transfer, Whish Money, or OMT — LBP
-            equivalent to market rate at time of payment.
+            Every business starts with a free trial. Pay via OMT or Whish Money — LBP equivalent to
+            market rate at time of payment.
           </p>
           <div className="mt-8 grid w-full gap-6 text-left sm:grid-cols-3">
             {(Object.entries(PLANS) as [PlanId, (typeof PLANS)[PlanId]][]).map(([planId, plan]) => {

@@ -61,7 +61,7 @@ export default function AdminPage() {
   const [confirmingCancelId, setConfirmingCancelId] = useState<string | null>(null);
   const [revealedPasswords, setRevealedPasswords] = useState<Record<string, string>>({});
   const [revealedCodes, setRevealedCodes] = useState<Record<string, string>>({});
-  const [bankInstructions, setBankInstructions] = useState("");
+  const [paymentInstructions, setPaymentInstructions] = useState("");
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
 
@@ -71,7 +71,7 @@ export default function AdminPage() {
       .then((data) => setBusinesses(data.businesses));
     fetch("/api/admin/settings")
       .then((r) => r.json())
-      .then((data) => setBankInstructions(data.settings.bankTransferInstructions ?? ""));
+      .then((data) => setPaymentInstructions(data.settings.paymentInstructions ?? ""));
   }
 
   useEffect(() => {
@@ -134,7 +134,7 @@ export default function AdminPage() {
       await fetch("/api/admin/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bankTransferInstructions: bankInstructions }),
+        body: JSON.stringify({ paymentInstructions }),
       });
       setSettingsSaved(true);
     } finally {
@@ -315,19 +315,19 @@ export default function AdminPage() {
           <div className="flex flex-col gap-3 p-4">
           <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
             <IconCreditCard className="h-4 w-4 text-zinc-500" />
-            Bank transfer details
+            OMT / Whish Money details
           </h2>
           <p className="text-xs text-zinc-500">
-            Shown to owners on their Plan page. E.g. bank name, account holder, account number/IBAN.
+            Shown to owners on their Plan page. E.g. OMT account name/number, Whish Money phone number.
           </p>
           <textarea
-            value={bankInstructions}
+            value={paymentInstructions}
             onChange={(e) => {
-              setBankInstructions(e.target.value);
+              setPaymentInstructions(e.target.value);
               setSettingsSaved(false);
             }}
             rows={4}
-            placeholder="Bank: ...&#10;Account holder: ...&#10;Account number / IBAN: ..."
+            placeholder="OMT: ...&#10;Whish Money: ..."
             className={inputClass}
           />
           <div className="flex items-center gap-3">
