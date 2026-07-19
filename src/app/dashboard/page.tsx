@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import OwnerNav from "@/components/OwnerNav";
+import Reveal from "@/components/Reveal";
 import {
   cardClass,
   cardAccentBarClass,
@@ -14,6 +15,38 @@ import {
   inputClass,
 } from "@/lib/ui";
 import { IconChartBar, IconClock, IconUsers, IconCalendar, IconPlus } from "@/components/icons";
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+// Counts a stat tile up from 0 to its real value on first paint instead of
+// popping straight to the number — a small, cheap way to make the "at a
+// glance" numbers feel alive rather than static. Skips the animation (jumps
+// straight to the target) under reduced-motion.
+function useCountUp(target: number, durationMs = 700) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setValue(target);
+      return;
+    }
+    let start: number | null = null;
+    let raf: number;
+    function step(ts: number) {
+      if (start === null) start = ts;
+      const progress = Math.min((ts - start) / durationMs, 1);
+      setValue(Math.round(progress * target));
+      if (progress < 1) raf = requestAnimationFrame(step);
+    }
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, durationMs]);
+  return value;
+}
 
 type Booking = {
   id: string;
@@ -79,9 +112,12 @@ function formatHourLabel(h: number) {
 type SubscriptionStatus = "trial" | "active" | "expired";
 
 function StatTile({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
+  const displayValue = useCountUp(value);
   return (
-    <div className="rounded-lg bg-zinc-50 px-3 py-2.5 text-center">
-      <p className={`text-2xl font-semibold ${accent ? "text-amber-600" : "text-zinc-900"}`}>{value}</p>
+    <div className="rounded-lg bg-zinc-50 px-3 py-2.5 text-center transition-all duration-150 hover:-translate-y-0.5 hover:bg-zinc-100">
+      <p className={`text-2xl font-semibold tabular-nums ${accent ? "text-amber-600" : "text-zinc-900"}`}>
+        {displayValue}
+      </p>
       <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-zinc-500">{label}</p>
     </div>
   );
@@ -101,6 +137,7 @@ export default function DashboardPage() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>("trial");
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [businessName, setBusinessName] = useState("");
   const [now, setNow] = useState(() => new Date());
 
   const [reserveOpen, setReserveOpen] = useState(false);
@@ -119,6 +156,7 @@ export default function DashboardPage() {
         setOffDays(businessData.business.offDays);
         setEmployees(businessData.business.employees);
         setServices(businessData.business.services);
+        setBusinessName(businessData.business.name);
         setSubscriptionStatus(businessData.business.subscriptionStatus);
         setTrialDaysLeft(businessData.business.trialDaysLeft);
         setBookings(dashboardData.bookings);
@@ -236,7 +274,26 @@ export default function DashboardPage() {
       <div className="mx-auto max-w-4xl">
         <OwnerNav current="dashboard" />
         <div className="mt-6 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-zinc-900">Dashboard</h1>
+          <div>
+            {!loading && (
+              <p className="text-sm font-medium text-zinc-500">
+                {greeting()}
+                {businessName ? `, ${businessName}` : ""}
+              </p>
+            )}
+            <h1 className="flex items-center gap-2 text-2xl font-semibold text-zinc-900">
+              Dashboard
+              {!loading && (
+                <span
+                  className="flex items-center gap-1 text-xs font-medium text-cedar"
+                  title="Refreshes automatically"
+                >
+                  <span className={`${pulsingDotClass} bg-cedar`} />
+                  Live
+                </span>
+              )}
+            </h1>
+          </div>
           {!loading && subscriptionStatus !== "expired" && (
             <button
               onClick={() => setReserveOpen(true)}
@@ -276,7 +333,7 @@ export default function DashboardPage() {
             )}
 
             {stats && (
-              <div className={`mt-6 ${cardClass}`}>
+              <Reveal className={`mt-6 ${cardClass}`}>
                 <div className={cardAccentBarClass} />
                 <div className="p-4">
                   <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
@@ -290,11 +347,11 @@ export default function DashboardPage() {
                     <StatTile label="Waitlist" value={stats.waitlistCount} />
                   </div>
                 </div>
-              </div>
+              </Reveal>
             )}
 
             {pendingBookings.length > 0 && (
-              <div className="mt-6 rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
+              <Reveal delayMs={60} className="mt-6 rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
                 <h2 className="flex items-center gap-1.5 text-sm font-semibold text-amber-900">
                   <IconClock className="h-4 w-4 text-amber-600" />
                   <span className={`${pulsingDotClass} bg-amber-500`} />
@@ -333,10 +390,10 @@ export default function DashboardPage() {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </Reveal>
             )}
 
-            <div className={`mt-6 ${cardClass}`}>
+            <Reveal delayMs={120} className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="overflow-x-auto p-4">
                 <div className="grid" style={{ gridTemplateColumns: "50px repeat(5, minmax(110px, 1fr))" }}>
@@ -460,7 +517,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
               </div>
-            </div>
+            </Reveal>
 
             {selectedBooking && (
               <div
@@ -528,7 +585,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            <div className={`mt-6 ${cardClass}`}>
+            <Reveal delayMs={180} className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="p-4">
               <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
@@ -536,7 +593,10 @@ export default function DashboardPage() {
                 Waitlist
               </h2>
               {waitlist.length === 0 ? (
-                <p className="mt-2 text-sm text-zinc-400">No one is waiting.</p>
+                <p className="mt-2 flex items-center gap-2 text-sm text-zinc-400">
+                  <IconUsers className="h-4 w-4 text-zinc-300" />
+                  No one is waiting.
+                </p>
               ) : (
                 <ul className="mt-2 flex flex-col gap-2">
                   {waitlist.map((w) => (
@@ -568,9 +628,9 @@ export default function DashboardPage() {
                 </ul>
               )}
               </div>
-            </div>
+            </Reveal>
 
-            <div className={`mt-6 ${cardClass}`}>
+            <Reveal delayMs={240} className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="p-4">
               <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
@@ -578,7 +638,10 @@ export default function DashboardPage() {
                 Later Appointments
               </h2>
               {laterDates.length === 0 ? (
-                <p className="mt-2 text-sm text-zinc-400">Nothing booked beyond the next 5 days.</p>
+                <p className="mt-2 flex items-center gap-2 text-sm text-zinc-400">
+                  <IconCalendar className="h-4 w-4 text-zinc-300" />
+                  Nothing booked beyond the next 5 days.
+                </p>
               ) : (
                 <div className="mt-2 flex flex-col gap-4">
                   {laterDates.map((date) => (
@@ -621,7 +684,7 @@ export default function DashboardPage() {
                 </div>
               )}
               </div>
-            </div>
+            </Reveal>
           </>
         )}
       </div>
