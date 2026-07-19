@@ -2,11 +2,10 @@
 
 import { useEffect } from "react";
 
-// The landing page is only ever server-rendered for a logged-out visitor
-// (middleware already redirects logged-in owners to /dashboard). But an
-// installed PWA opening cold should feel like opening an app, not a
-// website — so if we detect standalone display mode, skip the marketing
-// page and go straight to the login form.
+// The landing page is always shown at maw3edapp.com, even to a logged-in
+// owner browsing normally. But an installed PWA opening cold should still
+// feel like opening an app, not a website — so if we detect standalone
+// display mode, skip the marketing page and go straight to the login form.
 export default function StandaloneLoginRedirect() {
   useEffect(() => {
     const isStandalone =

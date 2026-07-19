@@ -28,15 +28,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  // Root domain landing page: a returning owner who's already logged in
-  // skips the marketing page and goes straight to their dashboard — the
-  // installed-app icon should feel like opening the app, not a website.
-  if (!slug && request.nextUrl.pathname === "/") {
-    if (await hasValidSession(request)) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
-  }
-
   const { pathname } = request.nextUrl;
   if (pathname === "/dashboard/login" || pathname === "/dashboard/reset-with-code") {
     return NextResponse.next();
