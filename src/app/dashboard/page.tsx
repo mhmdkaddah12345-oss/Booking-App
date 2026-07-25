@@ -14,11 +14,15 @@ import {
   dangerButtonClass,
   inputClass,
 } from "@/lib/ui";
-import { IconChartBar, IconClock, IconUsers, IconCalendar, IconPlus, IconChat } from "@/components/icons";
+import { IconChartBar, IconClock, IconUsers, IconCalendar, IconPlus } from "@/components/icons";
 import { whatsappLink } from "@/lib/whatsapp";
 
 function acceptedMessage(b: { customerName: string; date: string; time: string; serviceName: string }) {
   return `Hi ${b.customerName}! Your appointment on ${b.date} at ${b.time} for ${b.serviceName} is confirmed. See you soon!`;
+}
+
+function declinedMessage(b: { customerName: string; date: string; time: string; serviceName: string }) {
+  return `Hi ${b.customerName}, we're sorry but we can't accommodate your appointment on ${b.date} at ${b.time} for ${b.serviceName}. Apologies for the inconvenience — feel free to book another time that works for you.`;
 }
 
 function greeting() {
@@ -209,6 +213,12 @@ export default function DashboardPage() {
   }
 
   async function handleAccept(id: string) {
+    const booking = bookings.find((b) => b.id === id);
+    // Must open before the first await — browsers only allow window.open
+    // without popup-blocking while it's still inside the synchronous click
+    // gesture, and the booking data needed for the message is already in
+    // hand, so there's no need to wait for the confirm call to finish.
+    if (booking) window.open(whatsappLink(booking.customerPhone, acceptedMessage(booking)), "_blank");
     setBusyId(id);
     try {
       await fetch(`/api/bookings/${id}/confirm`, { method: "POST" });
@@ -220,6 +230,8 @@ export default function DashboardPage() {
   }
 
   async function handleDecline(id: string) {
+    const booking = bookings.find((b) => b.id === id);
+    if (booking) window.open(whatsappLink(booking.customerPhone, declinedMessage(booking)), "_blank");
     setBusyId(id);
     try {
       await fetch(`/api/bookings/${id}/decline`, { method: "POST" });
@@ -391,15 +403,6 @@ export default function DashboardPage() {
                         >
                           {busyId === b.id ? "..." : "Decline"}
                         </button>
-                        <a
-                          href={whatsappLink(b.customerPhone, acceptedMessage(b))}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 rounded-full bg-[#e7f7ee] px-3 py-1 text-xs font-medium text-[#1f7a4d] transition-all duration-150 hover:scale-[1.05] hover:bg-[#d5f2e2] active:scale-95"
-                        >
-                          <IconChat className="h-3.5 w-3.5" />
-                          WhatsApp
-                        </a>
                       </div>
                     </li>
                   ))}
@@ -590,20 +593,6 @@ export default function DashboardPage() {
                           {busyId === selectedBooking.id ? "Cancelling..." : "Cancel booking"}
                         </button>
                       )}
-                      <a
-                        href={whatsappLink(
-                          selectedBooking.customerPhone,
-                          selectedBooking.status === "pending"
-                            ? acceptedMessage(selectedBooking)
-                            : `Hi ${selectedBooking.customerName}! Just confirming your appointment on ${selectedBooking.date} at ${selectedBooking.time} for ${selectedBooking.serviceName}. See you soon!`
-                        )}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 rounded-full bg-[#e7f7ee] px-4 py-2 text-sm font-medium text-[#1f7a4d] transition-all duration-150 hover:scale-[1.03] hover:bg-[#d5f2e2] active:scale-[0.97]"
-                      >
-                        <IconChat className="h-4 w-4" />
-                        WhatsApp
-                      </a>
                       <button onClick={() => setSelectedBookingId(null)} className={ghostButtonClass}>
                         Close
                       </button>
