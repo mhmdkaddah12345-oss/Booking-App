@@ -25,6 +25,22 @@ function declinedMessage(b: { customerName: string; date: string; time: string; 
   return `Hi ${b.customerName}, we're sorry but we can't accommodate your appointment on ${b.date} at ${b.time} for ${b.serviceName}. Apologies for the inconvenience — feel free to book another time that works for you.`;
 }
 
+function cancelledMessage(b: { customerName: string; date: string; time: string; serviceName: string }) {
+  return `Hi ${b.customerName}, we're sorry but your appointment on ${b.date} at ${b.time} for ${b.serviceName} has had to be cancelled. Apologies for the inconvenience — feel free to book another time that works for you.`;
+}
+
+function reservedMessage(b: { customerName: string; date: string; time: string; serviceName: string }) {
+  return `Hi ${b.customerName}! We've booked you in on ${b.date} at ${b.time} for ${b.serviceName}. See you soon!`;
+}
+
+function waitlistSlotOpenMessage(w: { customerName: string; date: string; notifiedTime?: string; serviceName: string }) {
+  return `Hi ${w.customerName}! A spot just opened up on ${w.date} at ${w.notifiedTime} for ${w.serviceName} — reply if you'd like it and we'll lock it in for you.`;
+}
+
+function waitlistConfirmedMessage(w: { customerName: string; date: string; notifiedTime?: string; serviceName: string }) {
+  return `Hi ${w.customerName}! You're confirmed for ${w.date} at ${w.notifiedTime} for ${w.serviceName}. See you soon!`;
+}
+
 function greeting() {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
@@ -199,6 +215,8 @@ export default function DashboardPage() {
   }, []);
 
   async function handleCancel(id: string) {
+    const booking = bookings.find((b) => b.id === id);
+    if (booking) window.open(whatsappLink(booking.customerPhone, cancelledMessage(booking)), "_blank");
     setBusyId(id);
     try {
       await fetch(`/api/bookings/${id}/cancel`, {
@@ -243,6 +261,8 @@ export default function DashboardPage() {
   }
 
   async function handleConfirmWaitlist(id: string) {
+    const entry = waitlist.find((w) => w.id === id);
+    if (entry) window.open(whatsappLink(entry.customerPhone, waitlistConfirmedMessage(entry)), "_blank");
     setBusyId(id);
     try {
       await fetch(`/api/waitlist/${id}/confirm`, { method: "POST" });
@@ -632,13 +652,24 @@ export default function DashboardPage() {
                         {w.note && <span className="ml-2 italic text-zinc-500">&ldquo;{w.note}&rdquo;</span>}
                       </span>
                       {w.status === "notified" && (
-                        <button
-                          onClick={() => handleConfirmWaitlist(w.id)}
-                          disabled={busyId === w.id}
-                          className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-white transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-700 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
-                        >
-                          {busyId === w.id ? "..." : "Confirm into slot"}
-                        </button>
+                        <div className="flex shrink-0 gap-2">
+                          <a
+                            href={whatsappLink(w.customerPhone, waitlistSlotOpenMessage(w))}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="A slot just opened up — no action has been taken yet, this only lets the customer know so they can reply."
+                            className="flex items-center rounded-full bg-[#e7f7ee] px-3 py-1 text-xs font-medium text-[#1f7a4d] transition-all duration-150 hover:scale-[1.05] hover:bg-[#d5f2e2] active:scale-95"
+                          >
+                            Tell them
+                          </a>
+                          <button
+                            onClick={() => handleConfirmWaitlist(w.id)}
+                            disabled={busyId === w.id}
+                            className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-white transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-700 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                          >
+                            {busyId === w.id ? "..." : "Confirm into slot"}
+                          </button>
+                        </div>
                       )}
                     </li>
                   ))}
@@ -778,6 +809,12 @@ function ReserveModal({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedTime || selectedServiceIds.length === 0 || !customerName || !customerPhone) return;
+    // Reserving can genuinely fail (the slot just got taken), so we can't
+    // open the wa.me URL directly before knowing the result — that would
+    // send a false "you're booked in" if the reserve fails. Instead open a
+    // blank tab now (still inside the click gesture, so not popup-blocked)
+    // and only point it at WhatsApp once the booking actually succeeds.
+    const waWindow = window.open("", "_blank");
     setSubmitting(true);
     setError(null);
     try {
@@ -795,12 +832,24 @@ function ReserveModal({
       });
       const data = await res.json();
       if (!res.ok) {
+        waWindow?.close();
         setError(
           data.error === "slot_taken"
             ? "That time was just taken — pick another slot."
             : "Something went wrong. Please try again."
         );
         return;
+      }
+      if (waWindow) {
+        waWindow.location.href = whatsappLink(
+          customerPhone,
+          reservedMessage({
+            customerName,
+            date,
+            time: selectedTime,
+            serviceName: selectedServices.map((s) => s.name).join(" + "),
+          })
+        );
       }
       onCreated();
     } finally {
