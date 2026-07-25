@@ -14,7 +14,12 @@ import {
   dangerButtonClass,
   inputClass,
 } from "@/lib/ui";
-import { IconChartBar, IconClock, IconUsers, IconCalendar, IconPlus } from "@/components/icons";
+import { IconChartBar, IconClock, IconUsers, IconCalendar, IconPlus, IconChat } from "@/components/icons";
+import { whatsappLink } from "@/lib/whatsapp";
+
+function acceptedMessage(b: { customerName: string; date: string; time: string; serviceName: string }) {
+  return `Hi ${b.customerName}! Your appointment on ${b.date} at ${b.time} for ${b.serviceName} is confirmed. See you soon!`;
+}
 
 function greeting() {
   const h = new Date().getHours();
@@ -386,6 +391,15 @@ export default function DashboardPage() {
                         >
                           {busyId === b.id ? "..." : "Decline"}
                         </button>
+                        <a
+                          href={whatsappLink(b.customerPhone, acceptedMessage(b))}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 rounded-full bg-[#e7f7ee] px-3 py-1 text-xs font-medium text-[#1f7a4d] transition-all duration-150 hover:scale-[1.05] hover:bg-[#d5f2e2] active:scale-95"
+                        >
+                          <IconChat className="h-3.5 w-3.5" />
+                          WhatsApp
+                        </a>
                       </div>
                     </li>
                   ))}
@@ -576,6 +590,20 @@ export default function DashboardPage() {
                           {busyId === selectedBooking.id ? "Cancelling..." : "Cancel booking"}
                         </button>
                       )}
+                      <a
+                        href={whatsappLink(
+                          selectedBooking.customerPhone,
+                          selectedBooking.status === "pending"
+                            ? acceptedMessage(selectedBooking)
+                            : `Hi ${selectedBooking.customerName}! Just confirming your appointment on ${selectedBooking.date} at ${selectedBooking.time} for ${selectedBooking.serviceName}. See you soon!`
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 rounded-full bg-[#e7f7ee] px-4 py-2 text-sm font-medium text-[#1f7a4d] transition-all duration-150 hover:scale-[1.03] hover:bg-[#d5f2e2] active:scale-[0.97]"
+                      >
+                        <IconChat className="h-4 w-4" />
+                        WhatsApp
+                      </a>
                       <button onClick={() => setSelectedBookingId(null)} className={ghostButtonClass}>
                         Close
                       </button>
