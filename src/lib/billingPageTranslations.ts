@@ -1,0 +1,48 @@
+export type Lang = "en" | "ar";
+
+export const billingCopy = {
+  en: {
+    title: "Plan",
+    loading: "Loading...",
+    yourPlan: "Your plan",
+    freeTrial: (days: number, endsDate: string) => `Free trial — ${days} day(s) left (ends ${endsDate}).`,
+    active: (paidUntilDate: string) => `Active — paid through ${paidUntilDate}.`,
+    expired: "Your subscription has expired. Your booking page and dashboard are locked until you renew.",
+    paymentNoted: (date: string, planLabel: string) =>
+      `We've noted your payment (${date}${planLabel ? ` — ${planLabel} plan` : ""}) — it'll be confirmed shortly.`,
+    choosePlan: "Choose a plan",
+    perMonth: (price: number) => `$${price}/mo`,
+    lbpNote: "LBP equivalent to market rate at time of payment.",
+    payVia: "Pay via OMT or Whish Money",
+    paymentDetailsSoon: "Payment details will be added soon.",
+    sendingFor: (planLabel: string, price: number) => `Sending for the ${planLabel} plan — $${price}.`,
+    reporting: "Reporting...",
+    sentPayment: "I've sent the payment",
+    thanksReported: "Thanks — we'll confirm your payment and extend your access shortly.",
+    planNames: { monthly: "Monthly", half_year: "6 Months", yearly: "Yearly" } as Record<string, string>,
+    langToggle: "العربية",
+    localeTag: undefined as string | undefined,
+  },
+  ar: {
+    title: "الاشتراك",
+    loading: "عم يحمّل...",
+    yourPlan: "اشتراكك",
+    freeTrial: (days: number, endsDate: string) => `فترة مجانية — بقي ${days} يوم (بتخلص ${endsDate}).`,
+    active: (paidUntilDate: string) => `فعّال — مدفوع لحد ${paidUntilDate}.`,
+    expired: "اشتراكك خلص. صفحة الحجز ولوحة التحكم مقفولين لحد ما تجدد.",
+    paymentNoted: (date: string, planLabel: string) =>
+      `سجّلنا دفعتك (${date}${planLabel ? ` — اشتراك ${planLabel}` : ""}) — رح تتأكد قريباً.`,
+    choosePlan: "اختار اشتراك",
+    perMonth: (price: number) => `$${price}/شهر`,
+    lbpNote: "المعادل بالليرة اللبنانية حسب سعر الصرف وقت الدفع.",
+    payVia: "ادفع عبر أوإم تي أو ويش موني",
+    paymentDetailsSoon: "تفاصيل الدفع رح تنضاف قريباً.",
+    sendingFor: (planLabel: string, price: number) => `عم تبعت لاشتراك ${planLabel} — $${price}.`,
+    reporting: "عم يسجّل...",
+    sentPayment: "بعتّ الدفعة",
+    thanksReported: "شكراً — رح نأكد دفعتك ونمدد وصولك قريباً.",
+    planNames: { monthly: "شهري", half_year: "6 أشهر", yearly: "سنوي" } as Record<string, string>,
+    langToggle: "English",
+    localeTag: "ar-u-nu-latn" as string | undefined,
+  },
+} as const;

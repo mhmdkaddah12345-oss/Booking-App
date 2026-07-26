@@ -5,6 +5,8 @@ import OwnerNav from "@/components/OwnerNav";
 import { primaryButtonClass, cardClass, cardAccentBarClass, pulsingDotClass } from "@/lib/ui";
 import { IconShieldCheck, IconCreditCard } from "@/components/icons";
 import { PLANS, PlanId } from "@/lib/plans";
+import { useOwnerLang } from "@/lib/useOwnerLang";
+import { billingCopy } from "@/lib/billingPageTranslations";
 
 type BillingInfo = {
   subscriptionStatus: "trial" | "active" | "expired";
@@ -16,12 +18,16 @@ type BillingInfo = {
   paymentInstructions: string | null;
 };
 
-function formatDate(iso: string | null) {
+function formatDate(iso: string | null, locale: string | undefined) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  return new Date(iso).toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" });
 }
 
 export default function BillingPage() {
+  const [lang, setLang] = useOwnerLang();
+  const t = billingCopy[lang];
+  const dir = lang === "ar" ? "rtl" : "ltr";
+
   const [billing, setBilling] = useState<BillingInfo | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("monthly");
   const [reporting, setReporting] = useState(false);
@@ -53,13 +59,13 @@ export default function BillingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 px-4 py-8">
+    <div dir={dir} className={`min-h-screen bg-zinc-50 px-4 py-8 ${lang === "ar" ? "lang-ar" : ""}`}>
       <div className="mx-auto max-w-xl">
-        <OwnerNav current="billing" />
-        <h1 className="mt-6 text-2xl font-semibold text-zinc-900">Plan</h1>
+        <OwnerNav current="billing" lang={lang} onToggleLang={() => setLang(lang === "en" ? "ar" : "en")} />
+        <h1 className="mt-6 text-2xl font-semibold text-zinc-900">{t.title}</h1>
 
         {!billing ? (
-          <p className="mt-6 text-sm text-zinc-500">Loading...</p>
+          <p className="mt-6 text-sm text-zinc-500">{t.loading}</p>
         ) : (
           <>
             <div className={`mt-6 ${cardClass}`}>
@@ -67,32 +73,28 @@ export default function BillingPage() {
               <div className="p-4">
                 <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconShieldCheck className="h-4 w-4 text-zinc-500" />
-                  Your plan
+                  {t.yourPlan}
                 </h2>
                 {billing.subscriptionStatus === "trial" && (
                   <p className="mt-1 text-sm text-zinc-600">
-                    Free trial — <span className="font-medium">{billing.trialDaysLeft} day(s) left</span> (ends{" "}
-                    {formatDate(billing.trialEndsAt)}).
+                    {t.freeTrial(billing.trialDaysLeft, formatDate(billing.trialEndsAt, t.localeTag))}
                   </p>
                 )}
                 {billing.subscriptionStatus === "active" && (
-                  <p className="mt-1 text-sm text-zinc-600">
-                    Active — paid through <span className="font-medium">{formatDate(billing.paidUntil)}</span>.
-                  </p>
+                  <p className="mt-1 text-sm text-zinc-600">{t.active(formatDate(billing.paidUntil, t.localeTag))}</p>
                 )}
                 {billing.subscriptionStatus === "expired" && (
-                  <p className="mt-1 text-sm font-medium text-red-600">
-                    Your subscription has expired. Your booking page and dashboard are locked until you renew.
-                  </p>
+                  <p className="mt-1 text-sm font-medium text-red-600">{t.expired}</p>
                 )}
                 {billing.paymentPendingSince && (
                   <p className="mt-2 flex items-center gap-1.5 text-sm font-medium text-amber-700">
                     <span className={`${pulsingDotClass} bg-amber-500`} />
-                    We&apos;ve noted your payment ({formatDate(billing.paymentPendingSince)}
-                    {billing.paymentPendingPlan && PLANS[billing.paymentPendingPlan as PlanId]
-                      ? ` — ${PLANS[billing.paymentPendingPlan as PlanId].label} plan`
-                      : ""}
-                    ) — it&apos;ll be confirmed shortly.
+                    {t.paymentNoted(
+                      formatDate(billing.paymentPendingSince, t.localeTag),
+                      billing.paymentPendingPlan && PLANS[billing.paymentPendingPlan as PlanId]
+                        ? t.planNames[billing.paymentPendingPlan] ?? PLANS[billing.paymentPendingPlan as PlanId].label
+                        : ""
+                    )}
                   </p>
                 )}
               </div>
@@ -103,7 +105,7 @@ export default function BillingPage() {
               <div className="p-4">
                 <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconCreditCard className="h-4 w-4 text-zinc-500" />
-                  Choose a plan
+                  {t.choosePlan}
                 </h2>
                 <div className="mt-3 grid gap-2 sm:grid-cols-3">
                   {(Object.entries(PLANS) as [PlanId, (typeof PLANS)[PlanId]][]).map(([planId, plan]) => (
@@ -111,13 +113,13 @@ export default function BillingPage() {
                       key={planId}
                       type="button"
                       onClick={() => setSelectedPlan(planId)}
-                      className={`rounded-xl px-3 py-3 text-left transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] ${
+                      className={`rounded-xl px-3 py-3 text-start transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] ${
                         selectedPlan === planId
                           ? "bg-zinc-900 text-white shadow-sm"
                           : "bg-zinc-50 text-zinc-800 ring-1 ring-zinc-200 hover:bg-zinc-100"
                       }`}
                     >
-                      <p className="text-sm font-semibold">{plan.label}</p>
+                      <p className="text-sm font-semibold">{t.planNames[planId] ?? plan.label}</p>
                       <p className="mt-1 flex items-baseline gap-1.5">
                         {plan.compareAtUsd && (
                           <span
@@ -131,12 +133,15 @@ export default function BillingPage() {
                         <span className="text-lg font-semibold">${plan.priceUsd}</span>
                       </p>
                       <p className={`text-xs ${selectedPlan === planId ? "text-zinc-300" : "text-zinc-500"}`}>
-                        ${plan.perMonthUsd}/mo{plan.discountLabel ? ` — ${plan.discountLabel}` : ""}
+                        {t.perMonth(plan.perMonthUsd)}
+                        {plan.discountLabel
+                          ? ` — ${lang === "ar" ? `وفّر ${plan.discountLabel.replace(/\D/g, "")}٪` : plan.discountLabel}`
+                          : ""}
                       </p>
                     </button>
                   ))}
                 </div>
-                <p className="mt-2 text-xs text-zinc-400">LBP equivalent to market rate at time of payment.</p>
+                <p className="mt-2 text-xs text-zinc-400">{t.lbpNote}</p>
               </div>
             </div>
 
@@ -145,31 +150,26 @@ export default function BillingPage() {
               <div className="p-4">
                 <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconCreditCard className="h-4 w-4 text-zinc-500" />
-                  Pay via OMT or Whish Money
+                  {t.payVia}
                 </h2>
                 {billing.paymentInstructions ? (
                   <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
                     {billing.paymentInstructions}
                   </pre>
                 ) : (
-                  <p className="mt-1 text-sm text-zinc-500">Payment details will be added soon.</p>
+                  <p className="mt-1 text-sm text-zinc-500">{t.paymentDetailsSoon}</p>
                 )}
                 <p className="mt-2 text-sm text-zinc-600">
-                  Sending for the <span className="font-medium">{PLANS[selectedPlan].label}</span> plan — $
-                  {PLANS[selectedPlan].priceUsd}.
+                  {t.sendingFor(t.planNames[selectedPlan] ?? PLANS[selectedPlan].label, PLANS[selectedPlan].priceUsd)}
                 </p>
                 <button
                   onClick={reportPayment}
                   disabled={reporting}
                   className={`mt-3 ${primaryButtonClass}`}
                 >
-                  {reporting ? "Reporting..." : "I've sent the payment"}
+                  {reporting ? t.reporting : t.sentPayment}
                 </button>
-                {reported && (
-                  <p className="mt-2 text-sm text-zinc-500">
-                    Thanks — we&apos;ll confirm your payment and extend your access shortly.
-                  </p>
-                )}
+                {reported && <p className="mt-2 text-sm text-zinc-500">{t.thanksReported}</p>}
               </div>
             </div>
           </>

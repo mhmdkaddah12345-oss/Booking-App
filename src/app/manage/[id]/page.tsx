@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { primaryButtonClass, dangerButtonClass, ghostButtonClass, cardClass, cardAccentBarClass, pulsingDotClass } from "@/lib/ui";
+import { manageCopy, type Lang } from "@/lib/managePageTranslations";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
@@ -20,8 +21,6 @@ type Booking = {
 };
 
 type Slot = { time: string; available: boolean };
-
-const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function pad2(n: number) {
   return n.toString().padStart(2, "0");
@@ -42,6 +41,10 @@ function firstWeekdayOfMonth(year: number, month: number) {
 export default function ManageBookingPage() {
   const params = useParams<{ id: string }>();
   const bookingId = params.id;
+
+  const [lang, setLang] = useState<Lang>("en");
+  const t = manageCopy[lang];
+  const dir = lang === "ar" ? "rtl" : "ltr";
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [slug, setSlug] = useState<string>("");
@@ -88,6 +91,7 @@ export default function ManageBookingPage() {
 
   useEffect(() => {
     loadBooking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
 
   useEffect(() => {
@@ -107,7 +111,7 @@ export default function ManageBookingPage() {
     setCancelling(true);
     try {
       await fetch(`/api/bookings/${bookingId}/cancel`, { method: "POST" });
-      setStatusMessage("Your appointment has been cancelled.");
+      setStatusMessage(t.statusCancelled);
       loadBooking();
     } finally {
       setCancelling(false);
@@ -130,19 +134,17 @@ export default function ManageBookingPage() {
       body: JSON.stringify({ date: selectedDate, time }),
     });
     if (res.status === 409) {
-      setRescheduleError("Sorry, that slot was just taken. Please pick another time.");
+      setRescheduleError(t.slotTaken);
       return;
     }
     if (!res.ok) {
-      setRescheduleError("Something went wrong. Please try again.");
+      setRescheduleError(t.genericError);
       return;
     }
     const data = await res.json();
     setRescheduling(false);
     setStatusMessage(
-      data.booking?.status === "pending"
-        ? "Your new time has been requested — the business needs to confirm it."
-        : "Your appointment has been rescheduled."
+      data.booking?.status === "pending" ? t.statusReschedulePending : t.statusRescheduled
     );
     loadBooking();
   }
@@ -175,27 +177,37 @@ export default function ManageBookingPage() {
     ...Array.from({ length: numDays }, (_, i) => i + 1),
   ];
 
+  const dateLocale = t.localeTag;
   const quickDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
     return {
       date: toDateStr(d.getFullYear(), d.getMonth(), d.getDate()),
-      label: d.toLocaleDateString(undefined, { weekday: "short", day: "numeric" }),
+      label: d.toLocaleDateString(dateLocale, { weekday: "short", day: "numeric" }),
       closed: offDays.includes(d.getDay()),
     };
   });
 
   return (
-    <div className="min-h-screen bg-zinc-50 px-4 py-8">
+    <div dir={dir} className={`min-h-screen bg-zinc-50 px-4 py-8 ${lang === "ar" ? "lang-ar" : ""}`}>
       <div className="mx-auto max-w-xl">
-        <h1 className="text-2xl font-semibold text-zinc-900">Manage Your Appointment</h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-2xl font-semibold text-zinc-900">{t.title}</h1>
+          <button
+            type="button"
+            onClick={() => setLang(lang === "en" ? "ar" : "en")}
+            className="shrink-0 rounded-full px-3 py-1.5 text-sm font-medium text-zinc-600 ring-1 ring-zinc-300 transition-colors hover:bg-zinc-100"
+          >
+            {t.langToggle}
+          </button>
+        </div>
 
         {loading ? (
-          <p className="mt-6 text-sm text-zinc-500">Loading...</p>
+          <p className="mt-6 text-sm text-zinc-500">{t.loading}</p>
         ) : notFound ? (
-          <p className="mt-6 text-sm text-zinc-500">We couldn&apos;t find that booking.</p>
+          <p className="mt-6 text-sm text-zinc-500">{t.notFound}</p>
         ) : booking?.status === "cancelled" ? (
-          <p className="mt-6 text-sm font-medium text-zinc-800">This booking has already been cancelled.</p>
+          <p className="mt-6 text-sm font-medium text-zinc-800">{t.alreadyCancelled}</p>
         ) : (
           booking && (
             <div className={`mt-6 ${cardClass}`}>
@@ -206,19 +218,19 @@ export default function ManageBookingPage() {
                 {booking.status === "pending" ? (
                   <span className="flex items-center gap-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
                     <span className={`${pulsingDotClass} bg-amber-500`} />
-                    Pending confirmation
+                    {t.pendingConfirmation}
                   </span>
                 ) : (
                   <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
-                    Confirmed
+                    {t.confirmed}
                   </span>
                 )}
               </div>
               <p className="mt-1 text-sm text-zinc-600">
-                {booking.date} at {booking.time} ({booking.durationMinutes} min)
+                {t.dateTime(booking.date, booking.time, booking.durationMinutes)}
               </p>
               <p className="mt-1 text-sm text-zinc-500">
-                Booked under {booking.customerName} ({booking.customerPhone})
+                {t.bookedUnder(booking.customerName, booking.customerPhone)}
               </p>
               {booking.note && <p className="mt-1 text-sm italic text-zinc-500">&ldquo;{booking.note}&rdquo;</p>}
 
@@ -234,32 +246,32 @@ export default function ManageBookingPage() {
                     onClick={startReschedule}
                     className={primaryButtonClass}
                   >
-                    Reschedule
+                    {t.reschedule}
                   </button>
                   <button
                     onClick={() => setConfirmingCancel(true)}
                     className={dangerButtonClass}
                   >
-                    Cancel appointment
+                    {t.cancelAppointment}
                   </button>
                 </div>
               )}
 
               {confirmingCancel && (
                 <div className="mt-4 flex items-center gap-3 border-t border-zinc-100 pt-4">
-                  <p className="text-sm text-zinc-700">Are you sure you want to cancel?</p>
+                  <p className="text-sm text-zinc-700">{t.confirmCancelPrompt}</p>
                   <button
                     onClick={handleCancel}
                     disabled={cancelling}
                     className="rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
                   >
-                    {cancelling ? "Cancelling..." : "Yes, cancel it"}
+                    {cancelling ? t.cancelling : t.yesCancelIt}
                   </button>
                   <button
                     onClick={() => setConfirmingCancel(false)}
                     className={ghostButtonClass}
                   >
-                    No, keep it
+                    {t.noKeepIt}
                   </button>
                 </div>
               )}
@@ -289,7 +301,7 @@ export default function ManageBookingPage() {
                     </div>
                     <button
                       onClick={() => setCalendarOpen((open) => !open)}
-                      aria-label="Pick another date"
+                      aria-label={t.pickAnotherDate}
                       className={`shrink-0 rounded-full p-2 text-lg ring-1 transition-all duration-150 hover:scale-[1.05] active:scale-95 ${
                         calendarOpen
                           ? "bg-zinc-900 text-white ring-zinc-900"
@@ -311,7 +323,7 @@ export default function ManageBookingPage() {
                           ‹
                         </button>
                         <p className="text-sm font-semibold text-zinc-800">
-                          {new Date(viewYear, viewMonth, 1).toLocaleDateString(undefined, {
+                          {new Date(viewYear, viewMonth, 1).toLocaleDateString(dateLocale, {
                             month: "long",
                             year: "numeric",
                           })}
@@ -325,7 +337,7 @@ export default function ManageBookingPage() {
                       </div>
 
                       <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs font-medium text-zinc-400">
-                        {WEEKDAY_LABELS.map((w) => (
+                        {t.weekdayLabels.map((w) => (
                           <div key={w}>{w}</div>
                         ))}
                       </div>
@@ -367,13 +379,13 @@ export default function ManageBookingPage() {
 
                   <div className="mt-3">
                     {slotsLoading ? (
-                      <p className="text-sm text-zinc-500">Loading times...</p>
+                      <p className="text-sm text-zinc-500">{t.loadingTimes}</p>
                     ) : dayClosed ? (
-                      <p className="text-sm text-zinc-600">We&apos;re closed on this day.</p>
+                      <p className="text-sm text-zinc-600">{t.closedDay}</p>
                     ) : fullyBooked ? (
-                      <p className="text-sm text-zinc-600">This day is fully booked for this service.</p>
+                      <p className="text-sm text-zinc-600">{t.fullyBookedDay}</p>
                     ) : (
-                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                      <div dir="ltr" className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                         {slots.map((slot) => (
                           <button
                             key={slot.time}
@@ -397,7 +409,7 @@ export default function ManageBookingPage() {
                     onClick={() => setRescheduling(false)}
                     className={`mt-3 ${ghostButtonClass}`}
                   >
-                    Cancel reschedule
+                    {t.cancelReschedule}
                   </button>
                 </div>
               )}
@@ -407,7 +419,7 @@ export default function ManageBookingPage() {
         )}
 
         <p className="mt-8 text-center text-xs text-zinc-400">
-          Powered by{" "}
+          {t.poweredBy}{" "}
           <a
             href={`https://${ROOT_DOMAIN}`}
             className="font-medium text-zinc-500 hover:underline"

@@ -16,36 +16,14 @@ import {
 } from "@/lib/ui";
 import { IconChartBar, IconClock, IconUsers, IconCalendar, IconPlus } from "@/components/icons";
 import { whatsappLink } from "@/lib/whatsapp";
+import { useOwnerLang } from "@/lib/useOwnerLang";
+import { dashboardCopy, type Lang } from "@/lib/dashboardTranslations";
 
-function acceptedMessage(b: { customerName: string; date: string; time: string; serviceName: string }) {
-  return `Hi ${b.customerName}! Your appointment on ${b.date} at ${b.time} for ${b.serviceName} is confirmed. See you soon!`;
-}
-
-function declinedMessage(b: { customerName: string; date: string; time: string; serviceName: string }) {
-  return `Hi ${b.customerName}, we're sorry but we can't accommodate your appointment on ${b.date} at ${b.time} for ${b.serviceName}. Apologies for the inconvenience — feel free to book another time that works for you.`;
-}
-
-function cancelledMessage(b: { customerName: string; date: string; time: string; serviceName: string }) {
-  return `Hi ${b.customerName}, we're sorry but your appointment on ${b.date} at ${b.time} for ${b.serviceName} has had to be cancelled. Apologies for the inconvenience — feel free to book another time that works for you.`;
-}
-
-function reservedMessage(b: { customerName: string; date: string; time: string; serviceName: string }) {
-  return `Hi ${b.customerName}! We've booked you in on ${b.date} at ${b.time} for ${b.serviceName}. See you soon!`;
-}
-
-function waitlistSlotOpenMessage(w: { customerName: string; date: string; notifiedTime?: string; serviceName: string }) {
-  return `Hi ${w.customerName}! A spot just opened up on ${w.date} at ${w.notifiedTime} for ${w.serviceName} — reply if you'd like it and we'll lock it in for you.`;
-}
-
-function waitlistConfirmedMessage(w: { customerName: string; date: string; notifiedTime?: string; serviceName: string }) {
-  return `Hi ${w.customerName}! You're confirmed for ${w.date} at ${w.notifiedTime} for ${w.serviceName}. See you soon!`;
-}
-
-function greeting() {
+function greeting(t: { greetingMorning: string; greetingAfternoon: string; greetingEvening: string }) {
   const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
+  if (h < 12) return t.greetingMorning;
+  if (h < 18) return t.greetingAfternoon;
+  return t.greetingEvening;
 }
 
 // Counts a stat tile up from 0 to its real value on first paint instead of
@@ -149,6 +127,11 @@ function StatTile({ label, value, accent }: { label: string; value: number; acce
 }
 
 export default function DashboardPage() {
+  const [lang, setLang] = useOwnerLang();
+  const t = dashboardCopy[lang];
+  const dir = lang === "ar" ? "rtl" : "ltr";
+  const dateLocale = lang === "ar" ? "ar-u-nu-latn" : undefined;
+
   const [startHour, setStartHour] = useState(9);
   const [endHour, setEndHour] = useState(18);
   const [offDays, setOffDays] = useState<number[]>([]);
@@ -216,7 +199,7 @@ export default function DashboardPage() {
 
   async function handleCancel(id: string) {
     const booking = bookings.find((b) => b.id === id);
-    if (booking) window.open(whatsappLink(booking.customerPhone, cancelledMessage(booking)), "_blank");
+    if (booking) window.open(whatsappLink(booking.customerPhone, t.message.cancelled(booking)), "_blank");
     setBusyId(id);
     try {
       await fetch(`/api/bookings/${id}/cancel`, {
@@ -236,7 +219,7 @@ export default function DashboardPage() {
     // without popup-blocking while it's still inside the synchronous click
     // gesture, and the booking data needed for the message is already in
     // hand, so there's no need to wait for the confirm call to finish.
-    if (booking) window.open(whatsappLink(booking.customerPhone, acceptedMessage(booking)), "_blank");
+    if (booking) window.open(whatsappLink(booking.customerPhone, t.message.accepted(booking)), "_blank");
     setBusyId(id);
     try {
       await fetch(`/api/bookings/${id}/confirm`, { method: "POST" });
@@ -249,7 +232,7 @@ export default function DashboardPage() {
 
   async function handleDecline(id: string) {
     const booking = bookings.find((b) => b.id === id);
-    if (booking) window.open(whatsappLink(booking.customerPhone, declinedMessage(booking)), "_blank");
+    if (booking) window.open(whatsappLink(booking.customerPhone, t.message.declined(booking)), "_blank");
     setBusyId(id);
     try {
       await fetch(`/api/bookings/${id}/decline`, { method: "POST" });
@@ -262,7 +245,7 @@ export default function DashboardPage() {
 
   async function handleConfirmWaitlist(id: string) {
     const entry = waitlist.find((w) => w.id === id);
-    if (entry) window.open(whatsappLink(entry.customerPhone, waitlistConfirmedMessage(entry)), "_blank");
+    if (entry) window.open(whatsappLink(entry.customerPhone, t.message.waitlistConfirmed(entry)), "_blank");
     setBusyId(id);
     try {
       await fetch(`/api/waitlist/${id}/confirm`, { method: "POST" });
@@ -279,7 +262,7 @@ export default function DashboardPage() {
     const date = toDateStr(d.getFullYear(), d.getMonth(), d.getDate());
     return {
       date,
-      label: d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }),
+      label: d.toLocaleDateString(dateLocale, { weekday: "short", month: "short", day: "numeric" }),
       closed: offDays.includes(d.getDay()),
     };
   });
@@ -307,26 +290,26 @@ export default function DashboardPage() {
   const nowTopPx = (nowMinutesFromOpen / 60) * ROW_HEIGHT_PX;
 
   return (
-    <div className="min-h-screen bg-zinc-50 px-4 py-8">
+    <div dir={dir} className={`min-h-screen bg-zinc-50 px-4 py-8 ${lang === "ar" ? "lang-ar" : ""}`}>
       <div className="mx-auto max-w-4xl">
-        <OwnerNav current="dashboard" />
+        <OwnerNav current="dashboard" lang={lang} onToggleLang={() => setLang(lang === "en" ? "ar" : "en")} />
         <div className="mt-6 flex items-center justify-between">
           <div>
             {!loading && (
               <p className="text-sm font-medium text-zinc-500">
-                {greeting()}
+                {greeting(t)}
                 {businessName ? `, ${businessName}` : ""}
               </p>
             )}
             <h1 className="flex items-center gap-2 text-2xl font-semibold text-zinc-900">
-              Dashboard
+              {t.dashboard}
               {!loading && (
                 <span
                   className="flex items-center gap-1 text-xs font-medium text-cedar"
                   title="Refreshes automatically"
                 >
                   <span className={`${pulsingDotClass} bg-cedar`} />
-                  Live
+                  {t.live}
                 </span>
               )}
             </h1>
@@ -337,23 +320,21 @@ export default function DashboardPage() {
               className={`flex items-center gap-1.5 ${primaryButtonClass}`}
             >
               <IconPlus className="h-4 w-4" />
-              Reserve for a customer
+              {t.reserveForCustomer}
             </button>
           )}
         </div>
 
         {loading ? (
-          <p className="mt-6 text-sm text-zinc-500">Loading...</p>
+          <p className="mt-6 text-sm text-zinc-500">{t.loading}</p>
         ) : subscriptionStatus === "expired" ? (
           <div className={`mt-6 ${cardClass}`}>
             <div className={cardAccentBarClass} />
             <div className="p-6 text-center">
-              <p className="text-sm font-medium text-zinc-800">Your subscription has expired.</p>
-              <p className="mt-1 text-sm text-zinc-500">
-                Your dashboard and booking page are locked until you renew.
-              </p>
+              <p className="text-sm font-medium text-zinc-800">{t.subscriptionExpiredTitle}</p>
+              <p className="mt-1 text-sm text-zinc-500">{t.subscriptionExpiredBody}</p>
               <Link href="/dashboard/billing" className={`mt-4 inline-block ${primaryButtonClass}`}>
-                Go to Plan
+                {t.goToPlan}
               </Link>
             </div>
           </div>
@@ -362,9 +343,9 @@ export default function DashboardPage() {
             {subscriptionStatus === "trial" && trialDaysLeft <= 3 && (
               <div className="mt-6 flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 ring-1 ring-amber-200">
                 <span className={`${pulsingDotClass} bg-amber-500`} />
-                Your free trial ends in {trialDaysLeft} day{trialDaysLeft === 1 ? "" : "s"}.{" "}
+                {t.trialEnding(trialDaysLeft)}{" "}
                 <Link href="/dashboard/billing" className="underline">
-                  Renew now
+                  {t.renewNow}
                 </Link>
               </div>
             )}
@@ -375,13 +356,13 @@ export default function DashboardPage() {
                 <div className="p-4">
                   <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                     <IconChartBar className="h-4 w-4 text-zinc-500" />
-                    This week at a glance
+                    {t.weekAtGlance}
                   </h2>
                   <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <StatTile label="Appointments" value={stats.appointmentsThisWeek} />
-                    <StatTile label="Pending" value={stats.pendingCount} accent={stats.pendingCount > 0} />
-                    <StatTile label="Cancelled" value={stats.cancelledThisWeek} />
-                    <StatTile label="Waitlist" value={stats.waitlistCount} />
+                    <StatTile label={t.statAppointments} value={stats.appointmentsThisWeek} />
+                    <StatTile label={t.statPending} value={stats.pendingCount} accent={stats.pendingCount > 0} />
+                    <StatTile label={t.statCancelled} value={stats.cancelledThisWeek} />
+                    <StatTile label={t.statWaitlist} value={stats.waitlistCount} />
                   </div>
                 </div>
               </Reveal>
@@ -392,7 +373,7 @@ export default function DashboardPage() {
                 <h2 className="flex items-center gap-1.5 text-sm font-semibold text-amber-900">
                   <IconClock className="h-4 w-4 text-amber-600" />
                   <span className={`${pulsingDotClass} bg-amber-500`} />
-                  Pending Requests ({pendingBookings.length})
+                  {t.pendingRequests(pendingBookings.length)}
                 </h2>
                 <ul className="mt-2 flex flex-col gap-2">
                   {pendingBookings.map((b) => (
@@ -406,7 +387,7 @@ export default function DashboardPage() {
                         </span>{" "}
                         — {b.customerName} ({b.customerPhone}) — {b.serviceName} ({b.durationMinutes} min,{" "}
                         {b.employeeName})
-                        {b.note && <span className="ml-2 italic text-zinc-500">&ldquo;{b.note}&rdquo;</span>}
+                        {b.note && <span className="ms-2 italic text-zinc-500">&ldquo;{b.note}&rdquo;</span>}
                       </span>
                       <div className="flex gap-2">
                         <button
@@ -414,14 +395,14 @@ export default function DashboardPage() {
                           disabled={busyId === b.id}
                           className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-white transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-700 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                         >
-                          {busyId === b.id ? "..." : "Accept"}
+                          {busyId === b.id ? t.busy : t.accept}
                         </button>
                         <button
                           onClick={() => handleDecline(b.id)}
                           disabled={busyId === b.id}
                           className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                         >
-                          {busyId === b.id ? "..." : "Decline"}
+                          {busyId === b.id ? t.busy : t.decline}
                         </button>
                       </div>
                     </li>
@@ -433,7 +414,7 @@ export default function DashboardPage() {
             <Reveal delayMs={120} className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="overflow-x-auto p-4">
-                <div className="grid" style={{ gridTemplateColumns: "50px repeat(5, minmax(110px, 1fr))" }}>
+                <div dir="ltr" className="grid" style={{ gridTemplateColumns: "50px repeat(5, minmax(110px, 1fr))" }}>
                   <div />
                   {fiveDays.map((d, dayIndex) => (
                     <div key={d.date} className="pb-2 text-center text-sm font-medium">
@@ -446,7 +427,7 @@ export default function DashboardPage() {
                             : "text-zinc-800"
                         }
                       >
-                        {dayIndex === 0 ? "Today" : d.label}
+                        {dayIndex === 0 ? t.today : d.label}
                       </span>
                       {employees.length > 1 && (
                         <div className="mt-1.5 flex">
@@ -532,7 +513,7 @@ export default function DashboardPage() {
                                       ? undefined
                                       : { backgroundColor: `${color}22`, borderLeftColor: color }),
                                   }}
-                                  className={`absolute left-0.5 right-0.5 z-10 overflow-hidden rounded-lg border-l-[3px] px-1.5 py-0.5 text-left text-[11px] font-medium leading-tight shadow-sm transition-all duration-150 hover:z-20 hover:scale-[1.03] hover:shadow-md ${
+                                  className={`absolute left-0.5 right-0.5 z-10 overflow-hidden rounded-lg border-l-[3px] px-1.5 py-0.5 text-start text-[11px] font-medium leading-tight shadow-sm transition-all duration-150 hover:z-20 hover:scale-[1.03] hover:shadow-md ${
                                     isSelected
                                       ? "scale-[1.03] border-zinc-900 bg-zinc-900 text-white shadow-md"
                                       : isPending
@@ -541,7 +522,7 @@ export default function DashboardPage() {
                                   }`}
                                 >
                                   {isPending && (
-                                    <span className="mr-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500 align-middle" />
+                                    <span className="me-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500 align-middle" />
                                   )}
                                   {b.time} {b.customerName}
                                 </button>
@@ -572,7 +553,7 @@ export default function DashboardPage() {
                       {selectedBooking.status === "pending" && (
                         <span className="flex items-center gap-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
                           <span className={`${pulsingDotClass} bg-amber-500`} />
-                          Awaiting your confirmation
+                          {t.awaitingConfirmation}
                         </span>
                       )}
                     </div>
@@ -594,14 +575,14 @@ export default function DashboardPage() {
                             disabled={busyId === selectedBooking.id}
                             className={primaryButtonClass}
                           >
-                            {busyId === selectedBooking.id ? "..." : "Accept"}
+                            {busyId === selectedBooking.id ? t.busy : t.accept}
                           </button>
                           <button
                             onClick={() => handleDecline(selectedBooking.id)}
                             disabled={busyId === selectedBooking.id}
                             className={dangerButtonClass}
                           >
-                            {busyId === selectedBooking.id ? "..." : "Decline"}
+                            {busyId === selectedBooking.id ? t.busy : t.decline}
                           </button>
                         </>
                       ) : (
@@ -610,11 +591,11 @@ export default function DashboardPage() {
                           disabled={busyId === selectedBooking.id}
                           className={dangerButtonClass}
                         >
-                          {busyId === selectedBooking.id ? "Cancelling..." : "Cancel booking"}
+                          {busyId === selectedBooking.id ? t.cancelling : t.cancelBooking}
                         </button>
                       )}
                       <button onClick={() => setSelectedBookingId(null)} className={ghostButtonClass}>
-                        Close
+                        {t.close}
                       </button>
                     </div>
                   </div>
@@ -627,12 +608,12 @@ export default function DashboardPage() {
               <div className="p-4">
               <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                 <IconUsers className="h-4 w-4 text-zinc-500" />
-                Waitlist
+                {t.waitlist}
               </h2>
               {waitlist.length === 0 ? (
                 <p className="mt-2 flex items-center gap-2 text-sm text-zinc-400">
                   <IconUsers className="h-4 w-4 text-zinc-300" />
-                  No one is waiting.
+                  {t.noOneWaiting}
                 </p>
               ) : (
                 <ul className="mt-2 flex flex-col gap-2">
@@ -647,27 +628,27 @@ export default function DashboardPage() {
                         <span className="font-medium text-zinc-800">{w.date}</span> — {w.customerName} (
                         {w.customerPhone}) — {w.serviceName} ({w.durationMinutes} min)
                         {w.status === "notified" && (
-                          <span className="ml-2 font-medium text-amber-700">— notified for {w.notifiedTime}</span>
+                          <span className="ms-2 font-medium text-amber-700">{t.notifiedFor(w.notifiedTime ?? "")}</span>
                         )}
-                        {w.note && <span className="ml-2 italic text-zinc-500">&ldquo;{w.note}&rdquo;</span>}
+                        {w.note && <span className="ms-2 italic text-zinc-500">&ldquo;{w.note}&rdquo;</span>}
                       </span>
                       {w.status === "notified" && (
                         <div className="flex shrink-0 gap-2">
                           <a
-                            href={whatsappLink(w.customerPhone, waitlistSlotOpenMessage(w))}
+                            href={whatsappLink(w.customerPhone, t.message.waitlistSlotOpen(w))}
                             target="_blank"
                             rel="noopener noreferrer"
-                            title="A slot just opened up — no action has been taken yet, this only lets the customer know so they can reply."
+                            title={t.tellThemTitle}
                             className="flex items-center rounded-full bg-[#e7f7ee] px-3 py-1 text-xs font-medium text-[#1f7a4d] transition-all duration-150 hover:scale-[1.05] hover:bg-[#d5f2e2] active:scale-95"
                           >
-                            Tell them
+                            {t.tellThem}
                           </a>
                           <button
                             onClick={() => handleConfirmWaitlist(w.id)}
                             disabled={busyId === w.id}
                             className="rounded-full bg-zinc-900 px-3 py-1 text-xs font-medium text-white transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-700 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                           >
-                            {busyId === w.id ? "..." : "Confirm into slot"}
+                            {busyId === w.id ? t.busy : t.confirmIntoSlot}
                           </button>
                         </div>
                       )}
@@ -683,12 +664,12 @@ export default function DashboardPage() {
               <div className="p-4">
               <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                 <IconCalendar className="h-4 w-4 text-zinc-500" />
-                Later Appointments
+                {t.laterAppointments}
               </h2>
               {laterDates.length === 0 ? (
                 <p className="mt-2 flex items-center gap-2 text-sm text-zinc-400">
                   <IconCalendar className="h-4 w-4 text-zinc-300" />
-                  Nothing booked beyond the next 5 days.
+                  {t.nothingBeyond}
                 </p>
               ) : (
                 <div className="mt-2 flex flex-col gap-4">
@@ -710,19 +691,19 @@ export default function DashboardPage() {
                                 — {b.customerName} ({b.customerPhone})
                               </span>
                               {b.status === "pending" && (
-                                <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                                <span className="ms-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
                                   <span className={`${pulsingDotClass} bg-amber-500`} />
-                                  Pending
+                                  {t.pending}
                                 </span>
                               )}
-                              {b.note && <span className="ml-2 italic text-zinc-500">&ldquo;{b.note}&rdquo;</span>}
+                              {b.note && <span className="ms-2 italic text-zinc-500">&ldquo;{b.note}&rdquo;</span>}
                             </span>
                             <button
                               onClick={() => handleCancel(b.id)}
                               disabled={busyId === b.id}
                               className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                             >
-                              {busyId === b.id ? "..." : "Cancel"}
+                              {busyId === b.id ? t.busy : t.cancel}
                             </button>
                           </li>
                         ))}
@@ -740,6 +721,7 @@ export default function DashboardPage() {
       {reserveOpen && (
         <ReserveModal
           services={services}
+          lang={lang}
           onClose={() => setReserveOpen(false)}
           onCreated={() => {
             setReserveOpen(false);
@@ -753,13 +735,17 @@ export default function DashboardPage() {
 
 function ReserveModal({
   services,
+  lang,
   onClose,
   onCreated,
 }: {
   services: Service[];
+  lang: Lang;
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const t = dashboardCopy[lang];
+
   const todayStr = (() => {
     const d = new Date();
     return toDateStr(d.getFullYear(), d.getMonth(), d.getDate());
@@ -833,17 +819,13 @@ function ReserveModal({
       const data = await res.json();
       if (!res.ok) {
         waWindow?.close();
-        setError(
-          data.error === "slot_taken"
-            ? "That time was just taken — pick another slot."
-            : "Something went wrong. Please try again."
-        );
+        setError(data.error === "slot_taken" ? t.slotTaken : t.genericError);
         return;
       }
       if (waWindow) {
         waWindow.location.href = whatsappLink(
           customerPhone,
-          reservedMessage({
+          t.message.reserved({
             customerName,
             date,
             time: selectedTime,
@@ -858,20 +840,23 @@ function ReserveModal({
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4 py-8">
+    <div
+      dir={lang === "ar" ? "rtl" : "ltr"}
+      className={`fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4 py-8 ${lang === "ar" ? "lang-ar" : ""}`}
+    >
       <div className={`w-full max-w-md ${cardClass} max-h-full overflow-y-auto`}>
         <div className={cardAccentBarClass} />
         <div className="p-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-zinc-900">Reserve for a customer</h2>
-            <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600" aria-label="Close">
+            <h2 className="text-lg font-semibold text-zinc-900">{t.reserveModalTitle}</h2>
+            <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600" aria-label={t.close}>
               ✕
             </button>
           </div>
 
           <form onSubmit={submit} className="mt-4 flex flex-col gap-3">
             <label className="flex flex-col gap-1 text-sm text-zinc-600">
-              Date
+              {t.date}
               <input
                 type="date"
                 min={todayStr}
@@ -883,18 +868,18 @@ function ReserveModal({
 
             <div className="relative">
               <label className="flex flex-col gap-1 text-sm text-zinc-600">
-                Services
+                {t.services}
                 <button
                   type="button"
                   onClick={() => setServiceMenuOpen((v) => !v)}
-                  className={`${inputClass} flex items-center justify-between bg-white text-left`}
+                  className={`${inputClass} flex items-center justify-between bg-white text-start`}
                 >
                   <span className={selectedServices.length === 0 ? "text-zinc-400" : "text-zinc-800"}>
                     {selectedServices.length === 0
-                      ? "Select services"
-                      : `${selectedServices.map((s) => s.name).join(" + ")} — ${totalDurationMinutes} min`}
+                      ? t.selectServices
+                      : t.servicesSummary(selectedServices.map((s) => s.name).join(" + "), totalDurationMinutes)}
                   </span>
-                  <span className="ml-2 shrink-0 text-zinc-400">{serviceMenuOpen ? "▲" : "▼"}</span>
+                  <span className="ms-2 shrink-0 text-zinc-400">{serviceMenuOpen ? "▲" : "▼"}</span>
                 </button>
               </label>
 
@@ -919,7 +904,7 @@ function ReserveModal({
                     onClick={() => setServiceMenuOpen(false)}
                     className="mt-1 w-full rounded-md px-2 py-1.5 text-center text-xs font-medium text-zinc-500 hover:bg-zinc-50"
                   >
-                    Done
+                    {t.done}
                   </button>
                 </div>
               )}
@@ -927,17 +912,17 @@ function ReserveModal({
 
             {selectedServiceIds.length > 0 && (
               <div>
-                <p className="text-sm text-zinc-600">Time</p>
+                <p className="text-sm text-zinc-600">{t.time}</p>
                 {slotsLoading ? (
-                  <p className="mt-1 text-sm text-zinc-400">Loading times...</p>
+                  <p className="mt-1 text-sm text-zinc-400">{t.loadingTimes}</p>
                 ) : dayClosed ? (
-                  <p className="mt-1 text-sm text-zinc-400">Closed that day.</p>
+                  <p className="mt-1 text-sm text-zinc-400">{t.closedThatDay}</p>
                 ) : fullyBooked ? (
-                  <p className="mt-1 text-sm text-zinc-400">Fully booked that day.</p>
+                  <p className="mt-1 text-sm text-zinc-400">{t.fullyBookedThatDay}</p>
                 ) : slots.length === 0 ? (
-                  <p className="mt-1 text-sm text-zinc-400">No times available.</p>
+                  <p className="mt-1 text-sm text-zinc-400">{t.noTimesAvailable}</p>
                 ) : (
-                  <div className="mt-1 grid grid-cols-4 gap-2">
+                  <div dir="ltr" className="mt-1 grid grid-cols-4 gap-2">
                     {slots.map((slot) => (
                       <button
                         key={slot.time}
@@ -961,7 +946,7 @@ function ReserveModal({
             )}
 
             <label className="flex flex-col gap-1 text-sm text-zinc-600">
-              Customer name
+              {t.customerName}
               <input
                 type="text"
                 value={customerName}
@@ -972,7 +957,7 @@ function ReserveModal({
             </label>
 
             <label className="flex flex-col gap-1 text-sm text-zinc-600">
-              Customer phone
+              {t.customerPhone}
               <input
                 type="tel"
                 value={customerPhone}
@@ -983,7 +968,7 @@ function ReserveModal({
             </label>
 
             <label className="flex flex-col gap-1 text-sm text-zinc-600">
-              Note (optional)
+              {t.noteOptional}
               <input type="text" value={note} onChange={(e) => setNote(e.target.value)} className={inputClass} />
             </label>
 
@@ -995,10 +980,10 @@ function ReserveModal({
                 disabled={submitting || !selectedTime || selectedServiceIds.length === 0 || !customerName || !customerPhone}
                 className={primaryButtonClass}
               >
-                {submitting ? "Reserving..." : "Reserve"}
+                {submitting ? t.reserving : t.reserve}
               </button>
               <button type="button" onClick={onClose} className={ghostButtonClass}>
-                Cancel
+                {t.cancel}
               </button>
             </div>
           </form>

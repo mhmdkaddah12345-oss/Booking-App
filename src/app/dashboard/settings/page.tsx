@@ -6,6 +6,8 @@ import OwnerNav from "@/components/OwnerNav";
 import PushNotificationSettings from "@/components/PushNotificationSettings";
 import { inputClass, primaryButtonClass, cardClass, cardAccentBarClass, listRowHoverClass } from "@/lib/ui";
 import { IconLink, IconBell, IconBuilding, IconTag, IconUsers, IconLock } from "@/components/icons";
+import { useOwnerLang } from "@/lib/useOwnerLang";
+import { settingsCopy } from "@/lib/settingsPageTranslations";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
@@ -23,21 +25,17 @@ type Business = {
 
 const DURATION_OPTIONS = [15, 30, 45, 60, 75, 90, 105, 120];
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, h) => h);
-const WEEKDAYS = [
-  { value: 0, label: "Sunday" },
-  { value: 1, label: "Monday" },
-  { value: 2, label: "Tuesday" },
-  { value: 3, label: "Wednesday" },
-  { value: 4, label: "Thursday" },
-  { value: 5, label: "Friday" },
-  { value: 6, label: "Saturday" },
-];
+const WEEKDAY_VALUES = [0, 1, 2, 3, 4, 5, 6];
 
 function formatHour(h: number) {
   return `${h.toString().padStart(2, "0")}:00`;
 }
 
 export default function SettingsPage() {
+  const [lang, setLang] = useOwnerLang();
+  const t = settingsCopy[lang];
+  const dir = lang === "ar" ? "rtl" : "ltr";
+
   const [business, setBusiness] = useState<Business | null>(null);
   const [name, setName] = useState("");
   const [startHour, setStartHour] = useState(9);
@@ -162,11 +160,11 @@ export default function SettingsPage() {
     setPasswordError(null);
     setPasswordChanged(false);
     if (newPassword.length < 8) {
-      setPasswordError("New password must be at least 8 characters.");
+      setPasswordError(t.passwordTooShort);
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordError("New passwords don't match.");
+      setPasswordError(t.passwordsDontMatch);
       return;
     }
     setChangingPassword(true);
@@ -178,9 +176,7 @@ export default function SettingsPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setPasswordError(
-          data.error === "incorrect_password" ? "Current password is incorrect." : "Something went wrong."
-        );
+        setPasswordError(data.error === "incorrect_password" ? t.incorrectPassword : t.genericError);
         return;
       }
       setCurrentPassword("");
@@ -193,13 +189,13 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 px-4 py-8">
+    <div dir={dir} className={`min-h-screen bg-zinc-50 px-4 py-8 ${lang === "ar" ? "lang-ar" : ""}`}>
       <div className="mx-auto max-w-xl">
-        <OwnerNav current="settings" />
-        <h1 className="mt-6 text-2xl font-semibold text-zinc-900">Settings</h1>
+        <OwnerNav current="settings" lang={lang} onToggleLang={() => setLang(lang === "en" ? "ar" : "en")} />
+        <h1 className="mt-6 text-2xl font-semibold text-zinc-900">{t.title}</h1>
 
         {!business ? (
-          <p className="mt-6 text-sm text-zinc-500">Loading...</p>
+          <p className="mt-6 text-sm text-zinc-500">{t.loading}</p>
         ) : (
           <>
             <div className={`mt-6 ${cardClass}`}>
@@ -207,14 +203,11 @@ export default function SettingsPage() {
               <div className="p-4">
                 <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconLink className="h-4 w-4 text-zinc-500" />
-                  Your booking page
+                  {t.bookingPageTitle}
                 </h2>
-                <p className="mt-1 text-sm text-zinc-600">
-                  This is the link to share with customers — send it on WhatsApp, Instagram, or
-                  anywhere else. Anyone who opens it can book an appointment directly.
-                </p>
+                <p className="mt-1 text-sm text-zinc-600">{t.bookingPageBody}</p>
                 <div className="mt-3 flex items-center gap-2">
-                  <code className="flex-1 truncate rounded-lg bg-zinc-50 px-3 py-2 text-sm font-medium text-zinc-800 ring-1 ring-zinc-200">
+                  <code dir="ltr" className="flex-1 truncate rounded-lg bg-zinc-50 px-3 py-2 text-sm font-medium text-zinc-800 ring-1 ring-zinc-200">
                     {business.slug}.{ROOT_DOMAIN}
                   </code>
                   <button
@@ -225,7 +218,7 @@ export default function SettingsPage() {
                     }}
                     className={primaryButtonClass}
                   >
-                    {linkCopied ? "Copied!" : "Copy link"}
+                    {linkCopied ? t.copied : t.copyLink}
                   </button>
                 </div>
                 <Link
@@ -233,7 +226,7 @@ export default function SettingsPage() {
                   target="_blank"
                   className="mt-2 inline-block text-sm font-medium text-zinc-600 underline"
                 >
-                  Open booking page →
+                  {t.openBookingPage}
                 </Link>
               </div>
             </div>
@@ -243,12 +236,9 @@ export default function SettingsPage() {
               <div className="p-4">
                 <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconBell className="h-4 w-4 text-zinc-500" />
-                  Notifications
+                  {t.notificationsTitle}
                 </h2>
-                <p className="mt-1 text-sm text-zinc-600">
-                  Get a notification on this device the moment a new booking request comes in — no need to
-                  keep the dashboard open.
-                </p>
+                <p className="mt-1 text-sm text-zinc-600">{t.notificationsBody}</p>
                 <div className="mt-3">
                   <PushNotificationSettings />
                 </div>
@@ -260,10 +250,10 @@ export default function SettingsPage() {
               <div className="flex flex-col gap-3 p-4">
               <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                 <IconBuilding className="h-4 w-4 text-zinc-500" />
-                Business Details
+                {t.businessDetailsTitle}
               </h2>
               <label className="flex flex-col gap-1 text-sm text-zinc-600">
-                Business name
+                {t.businessName}
                 <input
                   value={name}
                   onChange={(e) => {
@@ -275,7 +265,7 @@ export default function SettingsPage() {
               </label>
               <div className="flex gap-3">
                 <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
-                  Opens at
+                  {t.opensAt}
                   <select
                     value={startHour}
                     onChange={(e) => {
@@ -292,7 +282,7 @@ export default function SettingsPage() {
                   </select>
                 </label>
                 <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
-                  Closes at
+                  {t.closesAt}
                   <select
                     value={endHour}
                     onChange={(e) => {
@@ -310,17 +300,17 @@ export default function SettingsPage() {
                 </label>
               </div>
               <div className="flex flex-col gap-1 text-sm text-zinc-600">
-                Closed on
+                {t.closedOn}
                 <div className="flex flex-wrap gap-3">
-                  {WEEKDAYS.map((w) => (
-                    <label key={w.value} className="flex items-center gap-1.5 text-sm text-zinc-700">
+                  {WEEKDAY_VALUES.map((value) => (
+                    <label key={value} className="flex items-center gap-1.5 text-sm text-zinc-700">
                       <input
                         type="checkbox"
-                        checked={offDays.includes(w.value)}
-                        onChange={() => toggleOffDay(w.value)}
+                        checked={offDays.includes(value)}
+                        onChange={() => toggleOffDay(value)}
                         className="h-4 w-4 rounded border-zinc-300"
                       />
-                      {w.label}
+                      {t.weekdays[value]}
                     </label>
                   ))}
                 </div>
@@ -331,9 +321,9 @@ export default function SettingsPage() {
                   disabled={savingDetails}
                   className={primaryButtonClass}
                 >
-                  {savingDetails ? "Saving..." : "Save"}
+                  {savingDetails ? t.saving : t.save}
                 </button>
-                {detailsSaved && <span className="text-sm font-medium text-green-700">Saved.</span>}
+                {detailsSaved && <span className="text-sm font-medium text-green-700">{t.saved}</span>}
               </div>
               </div>
             </form>
@@ -343,11 +333,9 @@ export default function SettingsPage() {
               <div className="p-4">
               <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                 <IconTag className="h-4 w-4 text-zinc-500" />
-                Services
+                {t.servicesTitle}
               </h2>
-              <p className="mt-1 text-xs text-zinc-500">
-                Each service has its own duration — customers pick one before choosing a time.
-              </p>
+              <p className="mt-1 text-xs text-zinc-500">{t.servicesBody}</p>
 
               <ul className="mt-3 flex flex-col gap-2">
                 {business.services.map((s) => (
@@ -356,35 +344,35 @@ export default function SettingsPage() {
                     className={`flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm ${listRowHoverClass}`}
                   >
                     <span className="text-zinc-700">
-                      {s.name} <span className="text-zinc-400">— {s.durationMinutes} min</span>
+                      {s.name} <span className="text-zinc-400">— {t.durationMin(s.durationMinutes)}</span>
                     </span>
                     <button
                       onClick={() => removeService(s.id)}
                       disabled={removingId === s.id}
                       className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                     >
-                      {removingId === s.id ? "..." : "Remove"}
+                      {removingId === s.id ? t.removing : t.remove}
                     </button>
                   </li>
                 ))}
                 {business.services.length === 0 && (
-                  <li className="text-sm text-zinc-400">No services yet — add one below.</li>
+                  <li className="text-sm text-zinc-400">{t.noServicesYet}</li>
                 )}
               </ul>
 
               <form onSubmit={addService} className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4 sm:flex-row sm:items-end">
                 <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
-                  Service name
+                  {t.serviceName}
                   <input
                     required
-                    placeholder="e.g. Haircut"
+                    placeholder={t.serviceNamePlaceholder}
                     value={newServiceName}
                     onChange={(e) => setNewServiceName(e.target.value)}
                     className={inputClass}
                   />
                 </label>
                 <label className="flex flex-col gap-1 text-sm text-zinc-600">
-                  Duration
+                  {t.duration}
                   <select
                     value={newServiceDuration}
                     onChange={(e) => setNewServiceDuration(Number(e.target.value))}
@@ -392,7 +380,7 @@ export default function SettingsPage() {
                   >
                     {DURATION_OPTIONS.map((d) => (
                       <option key={d} value={d}>
-                        {d} min
+                        {t.durationMin(d)}
                       </option>
                     ))}
                   </select>
@@ -402,7 +390,7 @@ export default function SettingsPage() {
                   disabled={addingService}
                   className={primaryButtonClass}
                 >
-                  {addingService ? "Adding..." : "Add service"}
+                  {addingService ? t.adding : t.addService}
                 </button>
               </form>
               </div>
@@ -413,11 +401,9 @@ export default function SettingsPage() {
               <div className="p-4">
               <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                 <IconUsers className="h-4 w-4 text-zinc-500" />
-                Employees
+                {t.employeesTitle}
               </h2>
-              <p className="mt-1 text-xs text-zinc-500">
-                Bookings are automatically assigned to whichever employee is free at that time.
-              </p>
+              <p className="mt-1 text-xs text-zinc-500">{t.employeesBody}</p>
 
               <ul className="mt-3 flex flex-col gap-2">
                 {business.employees.map((emp) => (
@@ -431,21 +417,21 @@ export default function SettingsPage() {
                       disabled={removingEmployeeId === emp.id}
                       className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                     >
-                      {removingEmployeeId === emp.id ? "..." : "Remove"}
+                      {removingEmployeeId === emp.id ? t.removing : t.remove}
                     </button>
                   </li>
                 ))}
                 {business.employees.length === 0 && (
-                  <li className="text-sm text-zinc-400">No employees yet — add one below.</li>
+                  <li className="text-sm text-zinc-400">{t.noEmployeesYet}</li>
                 )}
               </ul>
 
               <form onSubmit={addEmployee} className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4 sm:flex-row sm:items-end">
                 <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
-                  Employee name
+                  {t.employeeName}
                   <input
                     required
-                    placeholder="e.g. Sarah"
+                    placeholder={t.employeeNamePlaceholder}
                     value={newEmployeeName}
                     onChange={(e) => setNewEmployeeName(e.target.value)}
                     className={inputClass}
@@ -456,7 +442,7 @@ export default function SettingsPage() {
                   disabled={addingEmployee}
                   className={primaryButtonClass}
                 >
-                  {addingEmployee ? "Adding..." : "Add employee"}
+                  {addingEmployee ? t.adding : t.addEmployee}
                 </button>
               </form>
               </div>
@@ -467,10 +453,10 @@ export default function SettingsPage() {
               <div className="flex flex-col gap-3 p-4">
               <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                 <IconLock className="h-4 w-4 text-zinc-500" />
-                Change password
+                {t.changePasswordTitle}
               </h2>
               <label className="flex flex-col gap-1 text-sm text-zinc-600">
-                Current password
+                {t.currentPassword}
                 <input
                   type="password"
                   required
@@ -484,7 +470,7 @@ export default function SettingsPage() {
                 />
               </label>
               <label className="flex flex-col gap-1 text-sm text-zinc-600">
-                New password
+                {t.newPassword}
                 <input
                   type="password"
                   required
@@ -499,7 +485,7 @@ export default function SettingsPage() {
                 />
               </label>
               <label className="flex flex-col gap-1 text-sm text-zinc-600">
-                Confirm new password
+                {t.confirmNewPassword}
                 <input
                   type="password"
                   required
@@ -520,9 +506,9 @@ export default function SettingsPage() {
                   disabled={changingPassword}
                   className={primaryButtonClass}
                 >
-                  {changingPassword ? "Saving..." : "Change password"}
+                  {changingPassword ? t.saving : t.changePassword}
                 </button>
-                {passwordChanged && <span className="text-sm font-medium text-green-700">Password changed.</span>}
+                {passwordChanged && <span className="text-sm font-medium text-green-700">{t.passwordChanged}</span>}
               </div>
               </div>
             </form>
