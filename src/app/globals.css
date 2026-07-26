@@ -53,6 +53,14 @@ body {
   font-family: Cambria, Georgia, "Times New Roman", serif;
 }
 
+/* Arabic mode: swap in the Arabic-capable font (see layout.tsx) for both
+   body copy and the font-display headings. Scoped to .lang-ar so English
+   pages/components keep rendering in Cambria untouched. */
+.lang-ar,
+.lang-ar .font-display {
+  font-family: var(--font-arabic), Cairo, sans-serif;
+}
+
 /* Landing page decorative motion: a slow drifting glow behind the hero/CTA
    panels, and an infinite-scroll strip of business types. Both pause under
    reduced-motion so they never become the reason someone feels seasick. */

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function FaqAccordion({ faqs }: { faqs: { q: string; a: string }[] }) {
+export default function FaqAccordion({ faqs }: { faqs: readonly { q: string; a: string }[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
@@ -18,7 +18,7 @@ export default function FaqAccordion({ faqs }: { faqs: { q: string; a: string }[
           >
             <button
               onClick={() => setOpenIndex(isOpen ? null : i)}
-              className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+              className="flex w-full items-center justify-between gap-4 px-5 py-4 text-start"
             >
               <span className="text-sm font-semibold text-zinc-800">{f.q}</span>
               <span

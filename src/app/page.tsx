@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Wordmark from "@/components/Wordmark";
@@ -7,6 +10,7 @@ import Reveal from "@/components/Reveal";
 import FaqAccordion from "@/components/FaqAccordion";
 import BookingPreviewMockup from "@/components/BookingPreviewMockup";
 import { PLANS, PlanId } from "@/lib/plans";
+import { landingCopy, Lang } from "@/lib/landingTranslations";
 import {
   IconAlert,
   IconBrowser,
@@ -19,8 +23,6 @@ import {
   IconUsers,
 } from "@/components/icons";
 
-const BUSINESS_TYPES = ["Salons", "Barbershops", "Clinics", "Gyms", "Spas", "Nail studios"];
-
 // Cycles feature-card icon tints through the brand's three accent notes
 // (terracotta, gold, cedar — the same trio in cardAccentBarClass) so the
 // grid reads as lively rather than six identical grey circles. The dark
@@ -32,102 +34,31 @@ const ICON_TINTS = [
   "bg-white/10 text-[#9cc2a8]",
 ];
 
-const PAIN_POINTS = [
-  {
-    icon: IconChat,
-    body: "A customer messages at midnight and you forget to reply by morning — booking lost.",
-  },
-  {
-    icon: IconCalendarX,
-    body: "Someone cancels last-minute and the slot just sits empty, because calling down the waitlist takes too long.",
-  },
-  {
-    icon: IconAlert,
-    body: "Two customers message at the same time for the same slot, and now you have an awkward call to make.",
-  },
-];
-
-const STEPS = [
-  {
-    step: "01",
-    title: "Tell us about your business",
-    body: "Business name, services, and staff. Takes about two minutes — no technical setup on your end.",
-  },
-  {
-    step: "02",
-    title: "Get your own booking link",
-    body: "A clean, branded link like yourbusiness.maw3edapp.com — share it on WhatsApp, Instagram, or your storefront window.",
-  },
-  {
-    step: "03",
-    title: "Bookings run themselves",
-    body: "Customers pick a time, get auto-assigned to whoever's free, and can reschedule or cancel on their own — day or night.",
-  },
-];
-
-const FEATURES = [
-  {
-    icon: IconBrowser,
-    title: "No app to download",
-    body: "Customers book from a link you share — on WhatsApp, Instagram, or anywhere else. No install, no account.",
-  },
-  {
-    icon: IconClock,
-    title: "Automatic waitlist",
-    body: "When someone cancels, the freed slot is offered to the next person waiting — no calls, no missed revenue.",
-  },
-  {
-    icon: IconUsers,
-    title: "Multi-staff scheduling",
-    body: "Bookings are assigned to whichever staff member is free. Customers never have to guess who to pick.",
-  },
-  {
-    icon: IconRefresh,
-    title: "Self-service changes",
-    body: "Customers can reschedule or cancel their own appointment from a link — no back-and-forth messages needed.",
-  },
-  {
-    icon: IconLink,
-    title: "Your own branded link",
-    body: "Every business gets a clean, professional web address — yours to put on business cards, stories, or a storefront sign.",
-  },
-  {
-    icon: IconShieldCheck,
-    title: "Race-condition-safe booking",
-    body: "Built on a real database with proper safeguards, so two customers can never accidentally book the same slot.",
-  },
-];
-
-const FAQS = [
-  {
-    q: "Do my customers need to download anything?",
-    a: "No. They open your link in any browser, book, and get a confirmation — nothing to install, no account to create.",
-  },
-  {
-    q: "What happens when a customer cancels?",
-    a: "The freed slot is automatically offered to the next person on that day's waitlist — you don't have to call anyone.",
-  },
-  {
-    q: "Can I have more than one staff member?",
-    a: "Yes. Add as many staff as you like in Settings — bookings are automatically assigned to whoever is free.",
-  },
-  {
-    q: "How much does it cost?",
-    a: "$30/month, or save by paying for 6 months ($150) or a full year ($240). Every business starts with a free trial — see Pricing above for the full breakdown.",
-  },
-];
+const PAIN_ICONS = [IconChat, IconCalendarX, IconAlert];
+const FEATURE_ICONS = [IconBrowser, IconClock, IconUsers, IconRefresh, IconLink, IconShieldCheck];
 
 export default function LandingPage() {
+  const [lang, setLang] = useState<Lang>("en");
+  const t = landingCopy[lang];
+  const dir = lang === "ar" ? "rtl" : "ltr";
+
   return (
-    <div className="flex min-h-screen flex-col bg-paper">
+    <div dir={dir} className={`flex min-h-screen flex-col bg-paper ${lang === "ar" ? "lang-ar" : ""}`}>
       <StandaloneLoginRedirect />
       <header className="sticky top-0 z-30 border-b border-zinc-200/0 bg-zinc-50/80 backdrop-blur-md transition-colors">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
           <Wordmark />
           <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setLang(lang === "en" ? "ar" : "en")}
+              className="rounded-full px-3 py-1.5 text-sm font-medium text-zinc-600 ring-1 ring-zinc-300 transition-colors hover:bg-zinc-100"
+            >
+              {lang === "en" ? "العربية" : "English"}
+            </button>
             <InstallAppButton />
             <Link href="/dashboard/login" className="text-sm font-medium text-zinc-600 hover:underline">
-              Log in
+              {t.logIn}
             </Link>
           </div>
         </div>
@@ -142,9 +73,6 @@ export default function LandingPage() {
       >
         <Image src="/images/hero-salon.jpg" alt="" fill priority className="object-cover" sizes="100vw" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/25" />
-        {/* Soft drifting color glows in the brand's terracotta/cedar tones,
-            layered above the photo darkening but below the copy — reads as
-            depth rather than a flat overlay. */}
         <div
           aria-hidden
           className="animate-drift pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-[#b5654f]/40 blur-[90px]"
@@ -154,40 +82,41 @@ export default function LandingPage() {
           className="animate-drift pointer-events-none absolute -right-16 bottom-0 h-80 w-80 rounded-full bg-cedar/30 blur-[100px]"
           style={{ animationDelay: "-9s" }}
         />
-        <div className="animate-hero-in relative z-10 flex flex-col items-center">
+        <div key={lang} className="animate-hero-in relative z-10 flex flex-col items-center">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium text-zinc-100 ring-1 ring-white/30 backdrop-blur-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-[#e8a86f]" />
-            Built for Lebanon&apos;s salons, clinics &amp; gyms
+            {t.hero.badge}
           </span>
 
-          <h1 className="font-display mt-6 max-w-2xl text-balance text-5xl font-semibold leading-[1.05] text-white sm:text-6xl">
-            Booking pages for local businesses
+          <h1 className="font-display mt-6 max-w-2xl text-balance text-5xl font-semibold leading-[1.15] text-white sm:text-6xl">
+            {t.hero.headline}
           </h1>
-          <p className="mt-5 max-w-xl text-balance text-base text-zinc-100 sm:text-lg">
-            A simple, professional booking page for salons, clinics, and gyms — with automatic waitlist
-            promotion the moment someone cancels.
-          </p>
+          <p className="mt-5 max-w-xl text-balance text-base text-zinc-100 sm:text-lg">{t.hero.subhead}</p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/signup"
               className="rounded-full bg-white px-6 py-3 text-sm font-medium text-zinc-900 transition-all duration-150 hover:scale-[1.03] hover:bg-zinc-100 active:scale-[0.97]"
             >
-              Create your booking page
+              {t.hero.ctaPrimary}
             </Link>
             <Link
               href="#how-it-works"
               className="rounded-full px-6 py-3 text-sm font-medium text-white ring-1 ring-white/70 transition-all duration-150 hover:scale-[1.03] hover:bg-white/10 active:scale-[0.97]"
             >
-              See how it works
+              {t.hero.ctaSecondary}
             </Link>
           </div>
 
           {/* Business-type strip — a quiet, continuous reminder of who this
               is for, without claiming customer counts we don't have. */}
           <div className="mt-10 w-full max-w-xs overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_15%,black_85%,transparent)] sm:max-w-md">
-            <div className="animate-marquee flex w-max gap-8 text-xs font-medium uppercase tracking-wide text-zinc-200/80">
-              {[...BUSINESS_TYPES, ...BUSINESS_TYPES].map((type, i) => (
+            <div
+              className={`animate-marquee flex w-max gap-8 text-xs font-medium text-zinc-200/80 ${
+                lang === "en" ? "uppercase tracking-wide" : ""
+              }`}
+            >
+              {[...t.hero.businessTypes, ...t.hero.businessTypes].map((type, i) => (
                 <span key={i} className="whitespace-nowrap">
                   {type}
                 </span>
@@ -200,20 +129,23 @@ export default function LandingPage() {
       {/* Problem — pulled up to tuck under the hero's diagonal cut */}
       <section className="-mt-16 bg-paper pt-4 sm:-mt-20">
         <div className="mx-auto max-w-5xl px-6 py-16 sm:py-20">
-          <Reveal className="w-full text-left">
+          <Reveal className="w-full text-start">
             <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
-              Still booking over WhatsApp and a notebook?
+              {t.problem.heading}
             </h2>
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              {PAIN_POINTS.map(({ icon: Icon, body }) => (
-                <div
-                  key={body}
-                  className="group rounded-xl bg-zinc-100 p-5 transition-all duration-200 hover:-translate-y-1 hover:bg-zinc-200/70 hover:shadow-sm"
-                >
-                  <Icon className="h-6 w-6 text-zinc-500 transition-transform duration-200 group-hover:scale-110" />
-                  <p className="mt-3 text-sm leading-relaxed text-zinc-600">{body}</p>
-                </div>
-              ))}
+              {t.problem.points.map((body, i) => {
+                const Icon = PAIN_ICONS[i];
+                return (
+                  <div
+                    key={body}
+                    className="group rounded-xl bg-zinc-100 p-5 transition-all duration-200 hover:-translate-y-1 hover:bg-zinc-200/70 hover:shadow-sm"
+                  >
+                    <Icon className="h-6 w-6 text-zinc-500 transition-transform duration-200 group-hover:scale-110" />
+                    <p className="mt-3 text-sm leading-relaxed text-zinc-600">{body}</p>
+                  </div>
+                );
+              })}
             </div>
           </Reveal>
         </div>
@@ -223,16 +155,16 @@ export default function LandingPage() {
           monotony and gives the page a sense of moving through chapters. */}
       <section className="bg-zinc-100">
         <div className="mx-auto max-w-5xl px-6 py-20">
-          <Reveal id="how-it-works" className="w-full scroll-mt-8 text-left">
+          <Reveal id="how-it-works" className="w-full scroll-mt-8 text-start">
             <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
-              How Maw3ed works
+              {t.howItWorks.heading}
             </h2>
             <div className="relative mt-10 grid gap-10 sm:grid-cols-3 sm:gap-8">
               <div aria-hidden className="absolute left-0 right-0 top-6 hidden h-px bg-zinc-300 sm:block" />
-              {STEPS.map((s) => (
-                <div key={s.step} className="relative">
+              {t.howItWorks.steps.map((s, i) => (
+                <div key={s.title} className="relative">
                   <span className="font-display relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-900 text-base font-semibold text-white shadow-sm">
-                    {s.step}
+                    {String(i + 1).padStart(2, "0")}
                   </span>
                   <h3 className="font-display mt-4 text-base font-semibold text-zinc-800">{s.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-zinc-600">{s.body}</p>
@@ -248,16 +180,12 @@ export default function LandingPage() {
           card like every other panel, breaking the page's rectangle rhythm. */}
       <section className="overflow-hidden bg-paper">
         <div className="mx-auto flex max-w-5xl flex-col gap-20 px-6 py-20">
-          <Reveal className="grid w-full items-center gap-8 text-left sm:grid-cols-2">
+          <Reveal className="grid w-full items-center gap-8 text-start sm:grid-cols-2">
             <div>
               <h2 className="font-display text-2xl font-semibold text-zinc-800 sm:text-3xl">
-                Built for every kind of business
+                {t.photoSplit.heading}
               </h2>
-              <p className="mt-4 text-sm leading-relaxed text-zinc-600 sm:text-base">
-                Whether you run a salon, a clinic, or a gym, Maw3ed adapts to how your business actually
-                takes bookings — multiple staff members, different service lengths, and a waitlist that
-                fills itself the moment someone cancels.
-              </p>
+              <p className="mt-4 text-sm leading-relaxed text-zinc-600 sm:text-base">{t.photoSplit.body}</p>
             </div>
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl sm:-mr-6 sm:aspect-[5/4] sm:rounded-l-2xl sm:rounded-r-none lg:-mr-[calc((100vw-64rem)/2+1.5rem)]">
               <Image
@@ -270,19 +198,13 @@ export default function LandingPage() {
             </div>
           </Reveal>
 
-          <Reveal className="grid w-full items-center gap-10 text-left sm:grid-cols-2">
+          <Reveal className="grid w-full items-center gap-10 text-start sm:grid-cols-2">
             <div className="order-2 sm:order-1">
-              <BookingPreviewMockup />
+              <BookingPreviewMockup lang={lang} />
             </div>
             <div className="order-1 sm:order-2">
-              <h2 className="font-display text-2xl font-semibold text-zinc-800 sm:text-3xl">
-                What your customers actually see
-              </h2>
-              <p className="mt-4 text-sm leading-relaxed text-zinc-600 sm:text-base">
-                A clean page with your services, open time slots, and instant confirmation — the moment
-                someone books, it&apos;s locked into your calendar. No app, no account, no confusion about
-                which times are actually free.
-              </p>
+              <h2 className="font-display text-2xl font-semibold text-zinc-800 sm:text-3xl">{t.preview.heading}</h2>
+              <p className="mt-4 text-sm leading-relaxed text-zinc-600 sm:text-base">{t.preview.body}</p>
             </div>
           </Reveal>
         </div>
@@ -293,25 +215,28 @@ export default function LandingPage() {
           grey-on-white grid) is what actually breaks the template feel. */}
       <section className="bg-zinc-800">
         <div className="mx-auto max-w-5xl px-6 py-20">
-          <Reveal className="w-full text-left">
+          <Reveal className="w-full text-start">
             <h2 className="font-display text-center text-2xl font-semibold text-white sm:text-3xl">
-              Everything your booking page needs
+              {t.features.heading}
             </h2>
             <div className="mt-8 grid w-full gap-6 sm:grid-cols-3">
-              {FEATURES.map(({ icon: Icon, title, body }, i) => (
-                <div
-                  key={title}
-                  className="group rounded-xl bg-white/5 p-6 ring-1 ring-white/10 transition-all duration-200 hover:-translate-y-1 hover:bg-white/[0.07]"
-                >
+              {t.features.items.map((f, i) => {
+                const Icon = FEATURE_ICONS[i];
+                return (
                   <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200 group-hover:scale-110 ${ICON_TINTS[i % ICON_TINTS.length]}`}
+                    key={f.title}
+                    className="group rounded-xl bg-white/5 p-6 ring-1 ring-white/10 transition-all duration-200 hover:-translate-y-1 hover:bg-white/[0.07]"
                   >
-                    <Icon className="h-5 w-5" />
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200 group-hover:scale-110 ${ICON_TINTS[i % ICON_TINTS.length]}`}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <h3 className="font-display mt-3 text-base font-semibold text-white">{f.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-zinc-300">{f.body}</p>
                   </div>
-                  <h3 className="font-display mt-3 text-base font-semibold text-white">{title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-zinc-300">{body}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Reveal>
         </div>
@@ -332,15 +257,14 @@ export default function LandingPage() {
         <div className="relative mx-auto max-w-5xl px-6 py-20">
           <Reveal id="pricing" className="w-full scroll-mt-8">
             <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
-              Simple, honest pricing
+              {t.pricing.heading}
             </h2>
-            <p className="mt-3 text-center text-sm text-zinc-500">
-              Every business starts with a free trial. Pay via OMT or Whish Money — LBP equivalent to
-              market rate at time of payment.
-            </p>
-            <div className="mt-8 grid w-full gap-6 text-left sm:grid-cols-3">
+            <p className="mt-3 text-center text-sm text-zinc-500">{t.pricing.subtext}</p>
+            <div className="mt-8 grid w-full gap-6 text-start sm:grid-cols-3">
               {(Object.entries(PLANS) as [PlanId, (typeof PLANS)[PlanId]][]).map(([planId, plan]) => {
                 const isHighlighted = planId === "yearly";
+                const period =
+                  plan.days === 30 ? t.pricing.periodMonth : plan.days === 182 ? t.pricing.periodHalfYear : t.pricing.periodYear;
                 return (
                   <div
                     key={planId}
@@ -351,12 +275,12 @@ export default function LandingPage() {
                     }`}
                   >
                     {isHighlighted && (
-                      <span className="absolute right-4 top-4 rounded-full bg-[#e8a86f] px-2.5 py-0.5 text-xs font-medium text-zinc-900">
-                        Best value
+                      <span className="absolute end-4 top-4 rounded-full bg-[#e8a86f] px-2.5 py-0.5 text-xs font-medium text-zinc-900">
+                        {t.pricing.bestValue}
                       </span>
                     )}
                     <p className={`font-display text-sm font-semibold ${isHighlighted ? "text-zinc-200" : "text-zinc-500"}`}>
-                      {plan.label}
+                      {t.pricing.planNames[planId]}
                     </p>
                     <p className="mt-2 flex items-baseline gap-2">
                       {plan.compareAtUsd && (
@@ -365,12 +289,11 @@ export default function LandingPage() {
                         </span>
                       )}
                       <span className="font-display text-3xl font-semibold">${plan.priceUsd}</span>
-                      <span className={`text-sm ${isHighlighted ? "text-zinc-300" : "text-zinc-500"}`}>
-                        / {plan.days === 30 ? "month" : plan.days === 182 ? "6 months" : "year"}
-                      </span>
+                      <span className={`text-sm ${isHighlighted ? "text-zinc-300" : "text-zinc-500"}`}>/ {period}</span>
                     </p>
                     <p className={`mt-1 text-sm ${isHighlighted ? "text-zinc-300" : "text-zinc-500"}`}>
-                      ${plan.perMonthUsd}/mo{plan.discountLabel ? ` — ${plan.discountLabel}` : ""}
+                      ${plan.perMonthUsd}/{t.pricing.perMonth}
+                      {plan.discountLabel ? ` — ${lang === "ar" ? `وفّر ${plan.discountLabel.replace(/\D/g, "")}٪` : plan.discountLabel}` : ""}
                     </p>
                   </div>
                 );
@@ -383,11 +306,11 @@ export default function LandingPage() {
       {/* FAQ */}
       <section className="bg-paper">
         <div className="mx-auto max-w-2xl px-6 py-20">
-          <Reveal className="w-full text-left">
+          <Reveal className="w-full text-start">
             <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
-              Questions business owners ask
+              {t.faq.heading}
             </h2>
-            <FaqAccordion faqs={FAQS} />
+            <FaqAccordion faqs={t.faq.items} />
           </Reveal>
         </div>
       </section>
@@ -405,24 +328,18 @@ export default function LandingPage() {
           className="animate-drift pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[#b98b3e]/25 blur-[100px]"
         />
         <div className="relative z-10">
-          <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
-            Ready to stop losing bookings to a missed message?
-          </h2>
-          <p className="mt-3 text-sm text-zinc-200 sm:text-base">
-            Set up your booking page today — it takes about two minutes.
-          </p>
+          <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">{t.closingCta.heading}</h2>
+          <p className="mt-3 text-sm text-zinc-200 sm:text-base">{t.closingCta.body}</p>
           <Link
             href="/signup"
             className="mt-6 inline-block rounded-full bg-white px-6 py-3 text-sm font-medium text-zinc-900 transition-all duration-150 hover:scale-[1.03] hover:bg-zinc-100 active:scale-[0.97]"
           >
-            Create your booking page
+            {t.closingCta.cta}
           </Link>
         </div>
       </section>
 
-      <footer className="-mt-1 bg-paper px-6 pb-8 pt-10 text-center text-xs text-zinc-400">
-        Maw3ed — built for Lebanon&apos;s salons, clinics, and gyms.
-      </footer>
+      <footer className="-mt-1 bg-paper px-6 pb-8 pt-10 text-center text-xs text-zinc-400">{t.footer}</footer>
     </div>
   );
 }
