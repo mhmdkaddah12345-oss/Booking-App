@@ -23,11 +23,13 @@ const BUSINESS_TYPES = ["Salons", "Barbershops", "Clinics", "Gyms", "Spas", "Nai
 
 // Cycles feature-card icon tints through the brand's three accent notes
 // (terracotta, gold, cedar — the same trio in cardAccentBarClass) so the
-// grid reads as lively rather than six identical grey circles.
+// grid reads as lively rather than six identical grey circles. The dark
+// variants run brighter/more saturated so they hold contrast on the
+// espresso-dark Features band instead of washing out.
 const ICON_TINTS = [
-  "bg-[#b5654f]/10 text-[#b5654f]",
-  "bg-[#b98b3e]/15 text-[#8a692f]",
-  "bg-cedar/10 text-cedar",
+  "bg-white/10 text-[#e8a86f]",
+  "bg-white/10 text-[#e0c08a]",
+  "bg-white/10 text-[#9cc2a8]",
 ];
 
 const PAIN_POINTS = [
@@ -117,7 +119,7 @@ const FAQS = [
 
 export default function LandingPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-50">
+    <div className="flex min-h-screen flex-col bg-paper">
       <StandaloneLoginRedirect />
       <header className="sticky top-0 z-30 border-b border-zinc-200/0 bg-zinc-50/80 backdrop-blur-md transition-colors">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
@@ -131,17 +133,15 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="relative flex min-h-[600px] items-center justify-center overflow-hidden px-6 py-24 text-center sm:min-h-[680px]">
-        <Image
-          src="/images/hero-salon.jpg"
-          alt=""
-          fill
-          priority
-          className="object-cover"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/45 to-black/25" />
+      {/* Hero — clip-path gives the bottom edge a torn-paper diagonal
+          instead of a flat rectangle, so the transition into the next band
+          reads as a deliberate cut rather than a stacked box. */}
+      <section
+        className="relative flex min-h-[620px] items-center justify-center overflow-hidden px-6 pb-28 pt-24 text-center sm:min-h-[720px]"
+        style={{ clipPath: "polygon(0 0, 100% 0, 100% 94%, 0 100%)" }}
+      >
+        <Image src="/images/hero-salon.jpg" alt="" fill priority className="object-cover" sizes="100vw" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/25" />
         {/* Soft drifting color glows in the brand's terracotta/cedar tones,
             layered above the photo darkening but below the copy — reads as
             depth rather than a flat overlay. */}
@@ -154,13 +154,13 @@ export default function LandingPage() {
           className="animate-drift pointer-events-none absolute -right-16 bottom-0 h-80 w-80 rounded-full bg-cedar/30 blur-[100px]"
           style={{ animationDelay: "-9s" }}
         />
-        <div className="relative z-10 flex flex-col items-center">
+        <div className="animate-hero-in relative z-10 flex flex-col items-center">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium text-zinc-100 ring-1 ring-white/30 backdrop-blur-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-[#e8a86f]" />
             Built for Lebanon&apos;s salons, clinics &amp; gyms
           </span>
 
-          <h1 className="font-display mt-6 max-w-2xl text-balance text-4xl font-semibold leading-tight text-white sm:text-5xl">
+          <h1 className="font-display mt-6 max-w-2xl text-balance text-5xl font-semibold leading-[1.05] text-white sm:text-6xl">
             Booking pages for local businesses
           </h1>
           <p className="mt-5 max-w-xl text-balance text-base text-zinc-100 sm:text-lg">
@@ -197,175 +197,208 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center px-6 pb-24 pt-16 text-center">
-        {/* Problem */}
-        <Reveal className="w-full text-left">
-          <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
-            Still booking over WhatsApp and a notebook?
-          </h2>
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            {PAIN_POINTS.map(({ icon: Icon, body }) => (
-              <div
-                key={body}
-                className="group rounded-xl bg-zinc-100 p-5 transition-all duration-200 hover:-translate-y-1 hover:bg-zinc-200/70 hover:shadow-sm"
-              >
-                <Icon className="h-6 w-6 text-zinc-500 transition-transform duration-200 group-hover:scale-110" />
-                <p className="mt-3 text-sm leading-relaxed text-zinc-600">{body}</p>
-              </div>
-            ))}
-          </div>
-        </Reveal>
-
-        {/* How it works */}
-        <Reveal id="how-it-works" className="mt-24 w-full scroll-mt-8 text-left">
-          <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
-            How Maw3ed works
-          </h2>
-          <div className="relative mt-10 grid gap-10 sm:grid-cols-3 sm:gap-8">
-            <div aria-hidden className="absolute left-0 right-0 top-6 hidden h-px bg-zinc-200 sm:block" />
-            {STEPS.map((s) => (
-              <div key={s.step} className="relative">
-                <span className="font-display relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-900 text-base font-semibold text-white shadow-sm">
-                  {s.step}
-                </span>
-                <h3 className="font-display mt-4 text-base font-semibold text-zinc-800">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{s.body}</p>
-              </div>
-            ))}
-          </div>
-        </Reveal>
-
-        {/* Photo split */}
-        <Reveal className="mt-24 grid w-full items-center gap-8 text-left sm:grid-cols-2">
-          <div>
-            <h2 className="font-display text-2xl font-semibold text-zinc-800 sm:text-3xl">
-              Built for every kind of business
+      {/* Problem — pulled up to tuck under the hero's diagonal cut */}
+      <section className="-mt-16 bg-paper pt-4 sm:-mt-20">
+        <div className="mx-auto max-w-5xl px-6 py-16 sm:py-20">
+          <Reveal className="w-full text-left">
+            <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
+              Still booking over WhatsApp and a notebook?
             </h2>
-            <p className="mt-4 text-sm leading-relaxed text-zinc-600 sm:text-base">
-              Whether you run a salon, a clinic, or a gym, Maw3ed adapts to how your business actually
-              takes bookings — multiple staff members, different service lengths, and a waitlist that
-              fills itself the moment someone cancels.
-            </p>
-          </div>
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
-            <Image
-              src="/images/gym-interior.png"
-              alt="Modern gym interior with exercise equipment"
-              fill
-              className="object-cover"
-              sizes="(min-width: 640px) 50vw, 100vw"
-            />
-          </div>
-        </Reveal>
-
-        {/* Product preview */}
-        <Reveal className="mt-24 grid w-full items-center gap-10 text-left sm:grid-cols-2">
-          <div className="order-2 sm:order-1">
-            <BookingPreviewMockup />
-          </div>
-          <div className="order-1 sm:order-2">
-            <h2 className="font-display text-2xl font-semibold text-zinc-800 sm:text-3xl">
-              What your customers actually see
-            </h2>
-            <p className="mt-4 text-sm leading-relaxed text-zinc-600 sm:text-base">
-              A clean page with your services, open time slots, and instant confirmation — the moment
-              someone books, it&apos;s locked into your calendar. No app, no account, no confusion about
-              which times are actually free.
-            </p>
-          </div>
-        </Reveal>
-
-        {/* Features */}
-        <Reveal className="mt-24 w-full text-left">
-          <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
-            Everything your booking page needs
-          </h2>
-          <div className="mt-8 grid w-full gap-6 sm:grid-cols-3">
-            {FEATURES.map(({ icon: Icon, title, body }, i) => (
-              <div
-                key={title}
-                className="group rounded-xl bg-paper p-6 shadow-sm ring-1 ring-zinc-200 transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
-              >
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              {PAIN_POINTS.map(({ icon: Icon, body }) => (
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200 group-hover:scale-110 ${ICON_TINTS[i % ICON_TINTS.length]}`}
+                  key={body}
+                  className="group rounded-xl bg-zinc-100 p-5 transition-all duration-200 hover:-translate-y-1 hover:bg-zinc-200/70 hover:shadow-sm"
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-6 w-6 text-zinc-500 transition-transform duration-200 group-hover:scale-110" />
+                  <p className="mt-3 text-sm leading-relaxed text-zinc-600">{body}</p>
                 </div>
-                <h3 className="font-display mt-3 text-base font-semibold text-zinc-800">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{body}</p>
-              </div>
-            ))}
-          </div>
-        </Reveal>
+              ))}
+            </div>
+          </Reveal>
+        </div>
+      </section>
 
-        {/* Pricing */}
-        <Reveal id="pricing" className="mt-24 w-full scroll-mt-8">
-          <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
-            Simple, honest pricing
-          </h2>
-          <p className="mt-3 text-center text-sm text-zinc-500">
-            Every business starts with a free trial. Pay via OMT or Whish Money — LBP equivalent to
-            market rate at time of payment.
-          </p>
-          <div className="mt-8 grid w-full gap-6 text-left sm:grid-cols-3">
-            {(Object.entries(PLANS) as [PlanId, (typeof PLANS)[PlanId]][]).map(([planId, plan]) => {
-              const isHighlighted = planId === "yearly";
-              return (
+      {/* How it works — warm tint band breaks the "everything on bg-paper"
+          monotony and gives the page a sense of moving through chapters. */}
+      <section className="bg-zinc-100">
+        <div className="mx-auto max-w-5xl px-6 py-20">
+          <Reveal id="how-it-works" className="w-full scroll-mt-8 text-left">
+            <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
+              How Maw3ed works
+            </h2>
+            <div className="relative mt-10 grid gap-10 sm:grid-cols-3 sm:gap-8">
+              <div aria-hidden className="absolute left-0 right-0 top-6 hidden h-px bg-zinc-300 sm:block" />
+              {STEPS.map((s) => (
+                <div key={s.step} className="relative">
+                  <span className="font-display relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-900 text-base font-semibold text-white shadow-sm">
+                    {s.step}
+                  </span>
+                  <h3 className="font-display mt-4 text-base font-semibold text-zinc-800">{s.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-zinc-600">{s.body}</p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Photo split + product preview — the photo bleeds past the
+          container edge on desktop instead of sitting in a boxed rounded
+          card like every other panel, breaking the page's rectangle rhythm. */}
+      <section className="overflow-hidden bg-paper">
+        <div className="mx-auto flex max-w-5xl flex-col gap-20 px-6 py-20">
+          <Reveal className="grid w-full items-center gap-8 text-left sm:grid-cols-2">
+            <div>
+              <h2 className="font-display text-2xl font-semibold text-zinc-800 sm:text-3xl">
+                Built for every kind of business
+              </h2>
+              <p className="mt-4 text-sm leading-relaxed text-zinc-600 sm:text-base">
+                Whether you run a salon, a clinic, or a gym, Maw3ed adapts to how your business actually
+                takes bookings — multiple staff members, different service lengths, and a waitlist that
+                fills itself the moment someone cancels.
+              </p>
+            </div>
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl sm:-mr-6 sm:aspect-[5/4] sm:rounded-l-2xl sm:rounded-r-none lg:-mr-[calc((100vw-64rem)/2+1.5rem)]">
+              <Image
+                src="/images/gym-interior.png"
+                alt="Modern gym interior with exercise equipment"
+                fill
+                className="object-cover"
+                sizes="(min-width: 640px) 50vw, 100vw"
+              />
+            </div>
+          </Reveal>
+
+          <Reveal className="grid w-full items-center gap-10 text-left sm:grid-cols-2">
+            <div className="order-2 sm:order-1">
+              <BookingPreviewMockup />
+            </div>
+            <div className="order-1 sm:order-2">
+              <h2 className="font-display text-2xl font-semibold text-zinc-800 sm:text-3xl">
+                What your customers actually see
+              </h2>
+              <p className="mt-4 text-sm leading-relaxed text-zinc-600 sm:text-base">
+                A clean page with your services, open time slots, and instant confirmation — the moment
+                someone books, it&apos;s locked into your calendar. No app, no account, no confusion about
+                which times are actually free.
+              </p>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Features — the page's one dark moment. Everything else on this
+          page is light/warm, so a genuine contrast band here (not another
+          grey-on-white grid) is what actually breaks the template feel. */}
+      <section className="bg-zinc-800">
+        <div className="mx-auto max-w-5xl px-6 py-20">
+          <Reveal className="w-full text-left">
+            <h2 className="font-display text-center text-2xl font-semibold text-white sm:text-3xl">
+              Everything your booking page needs
+            </h2>
+            <div className="mt-8 grid w-full gap-6 sm:grid-cols-3">
+              {FEATURES.map(({ icon: Icon, title, body }, i) => (
                 <div
-                  key={planId}
-                  className={`relative overflow-hidden rounded-2xl p-6 transition-all duration-200 hover:-translate-y-1 ${
-                    isHighlighted
-                      ? "bg-zinc-900 text-white shadow-lg"
-                      : "bg-paper shadow-sm ring-1 ring-zinc-200 hover:shadow-md"
-                  }`}
+                  key={title}
+                  className="group rounded-xl bg-white/5 p-6 ring-1 ring-white/10 transition-all duration-200 hover:-translate-y-1 hover:bg-white/[0.07]"
                 >
-                  {isHighlighted && (
-                    <span className="absolute right-4 top-4 rounded-full bg-[#e8a86f] px-2.5 py-0.5 text-xs font-medium text-zinc-900">
-                      Best value
-                    </span>
-                  )}
-                  <p className={`font-display text-sm font-semibold ${isHighlighted ? "text-zinc-200" : "text-zinc-500"}`}>
-                    {plan.label}
-                  </p>
-                  <p className="mt-2 flex items-baseline gap-2">
-                    {plan.compareAtUsd && (
-                      <span className={`text-lg line-through ${isHighlighted ? "text-zinc-400" : "text-zinc-300"}`}>
-                        ${plan.compareAtUsd}
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200 group-hover:scale-110 ${ICON_TINTS[i % ICON_TINTS.length]}`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="font-display mt-3 text-base font-semibold text-white">{title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-zinc-300">{body}</p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Pricing — a warm "spotlight" band since this is the moment that
+          actually matters most to a hesitant owner. */}
+      <section className="relative overflow-hidden bg-zinc-100">
+        <div
+          aria-hidden
+          className="animate-drift pointer-events-none absolute -left-20 top-0 h-72 w-72 rounded-full bg-[#b5654f]/20 blur-[100px]"
+        />
+        <div
+          aria-hidden
+          className="animate-drift pointer-events-none absolute -right-16 bottom-0 h-72 w-72 rounded-full bg-cedar/20 blur-[100px]"
+          style={{ animationDelay: "-9s" }}
+        />
+        <div className="relative mx-auto max-w-5xl px-6 py-20">
+          <Reveal id="pricing" className="w-full scroll-mt-8">
+            <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
+              Simple, honest pricing
+            </h2>
+            <p className="mt-3 text-center text-sm text-zinc-500">
+              Every business starts with a free trial. Pay via OMT or Whish Money — LBP equivalent to
+              market rate at time of payment.
+            </p>
+            <div className="mt-8 grid w-full gap-6 text-left sm:grid-cols-3">
+              {(Object.entries(PLANS) as [PlanId, (typeof PLANS)[PlanId]][]).map(([planId, plan]) => {
+                const isHighlighted = planId === "yearly";
+                return (
+                  <div
+                    key={planId}
+                    className={`relative overflow-hidden rounded-2xl p-6 transition-all duration-200 hover:-translate-y-1 ${
+                      isHighlighted
+                        ? "bg-zinc-900 text-white shadow-lg"
+                        : "bg-paper shadow-sm ring-1 ring-zinc-200 hover:shadow-md"
+                    }`}
+                  >
+                    {isHighlighted && (
+                      <span className="absolute right-4 top-4 rounded-full bg-[#e8a86f] px-2.5 py-0.5 text-xs font-medium text-zinc-900">
+                        Best value
                       </span>
                     )}
-                    <span className="font-display text-3xl font-semibold">${plan.priceUsd}</span>
-                    <span className={`text-sm ${isHighlighted ? "text-zinc-300" : "text-zinc-500"}`}>
-                      / {plan.days === 30 ? "month" : plan.days === 182 ? "6 months" : "year"}
-                    </span>
-                  </p>
-                  <p className={`mt-1 text-sm ${isHighlighted ? "text-zinc-300" : "text-zinc-500"}`}>
-                    ${plan.perMonthUsd}/mo{plan.discountLabel ? ` — ${plan.discountLabel}` : ""}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </Reveal>
+                    <p className={`font-display text-sm font-semibold ${isHighlighted ? "text-zinc-200" : "text-zinc-500"}`}>
+                      {plan.label}
+                    </p>
+                    <p className="mt-2 flex items-baseline gap-2">
+                      {plan.compareAtUsd && (
+                        <span className={`text-lg line-through ${isHighlighted ? "text-zinc-400" : "text-zinc-300"}`}>
+                          ${plan.compareAtUsd}
+                        </span>
+                      )}
+                      <span className="font-display text-3xl font-semibold">${plan.priceUsd}</span>
+                      <span className={`text-sm ${isHighlighted ? "text-zinc-300" : "text-zinc-500"}`}>
+                        / {plan.days === 30 ? "month" : plan.days === 182 ? "6 months" : "year"}
+                      </span>
+                    </p>
+                    <p className={`mt-1 text-sm ${isHighlighted ? "text-zinc-300" : "text-zinc-500"}`}>
+                      ${plan.perMonthUsd}/mo{plan.discountLabel ? ` — ${plan.discountLabel}` : ""}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </Reveal>
+        </div>
+      </section>
 
-        {/* FAQ */}
-        <Reveal className="mt-24 w-full max-w-2xl text-left">
-          <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
-            Questions business owners ask
-          </h2>
-          <FaqAccordion faqs={FAQS} />
-        </Reveal>
+      {/* FAQ */}
+      <section className="bg-paper">
+        <div className="mx-auto max-w-2xl px-6 py-20">
+          <Reveal className="w-full text-left">
+            <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
+              Questions business owners ask
+            </h2>
+            <FaqAccordion faqs={FAQS} />
+          </Reveal>
+        </div>
+      </section>
 
-      </main>
-
-      {/* Closing CTA — full-bleed like the hero */}
-      <section className="relative flex min-h-[420px] items-center justify-center overflow-hidden px-6 py-20 text-center sm:min-h-[480px]">
-        <Image
-          src="/images/dental-clinic.jpg"
-          alt=""
-          fill
-          className="object-cover"
-          sizes="100vw"
-        />
+      {/* Closing CTA — full-bleed like the hero, with a matching diagonal
+          top edge so the two dark photo moments bookend the page. */}
+      <section
+        className="relative -mt-16 flex min-h-[440px] items-center justify-center overflow-hidden px-6 pb-20 pt-28 text-center sm:-mt-20 sm:min-h-[500px]"
+        style={{ clipPath: "polygon(0 6%, 100% 0, 100% 100%, 0 100%)" }}
+      >
+        <Image src="/images/dental-clinic.jpg" alt="" fill className="object-cover" sizes="100vw" />
         <div className="absolute inset-0 bg-black/70" />
         <div
           aria-hidden
@@ -387,7 +420,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="mx-auto w-full max-w-5xl px-6 pb-8 pt-16 text-center text-xs text-zinc-400">
+      <footer className="-mt-1 bg-paper px-6 pb-8 pt-10 text-center text-xs text-zinc-400">
         Maw3ed — built for Lebanon&apos;s salons, clinics, and gyms.
       </footer>
     </div>
