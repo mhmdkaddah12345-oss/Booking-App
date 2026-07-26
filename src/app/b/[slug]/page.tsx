@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { inputClass, primaryButtonClass, ghostButtonClass, cardClass, cardAccentBarClass } from "@/lib/ui";
+import { bookingCopy, Lang } from "@/lib/bookingPageTranslations";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
@@ -17,8 +18,6 @@ type FoundBooking = {
   durationMinutes: number;
   status: "pending" | "booked";
 };
-
-const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function pad2(n: number) {
   return n.toString().padStart(2, "0");
@@ -39,6 +38,11 @@ function firstWeekdayOfMonth(year: number, month: number) {
 export default function BookingPage() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
+
+  const [lang, setLang] = useState<Lang>("en");
+  const t = bookingCopy[lang];
+  const dir = lang === "ar" ? "rtl" : "ltr";
+  const dateLocale = t.localeTag;
 
   const [businessName, setBusinessName] = useState<string>("");
   const [notFound, setNotFound] = useState(false);
@@ -89,11 +93,11 @@ export default function BookingPage() {
       const res = await fetch(`/api/bookings/find?slug=${slug}&phone=${encodeURIComponent(findPhone)}`);
       const data = await res.json();
       if (!res.ok) {
-        setFindError("Something went wrong. Please try again.");
+        setFindError(t.find.genericError);
         return;
       }
       if (data.bookings.length === 0) {
-        setFindError("No upcoming appointments found for that phone number.");
+        setFindError(t.find.noneFound);
         return;
       }
       setFoundBookings(data.bookings);
@@ -173,19 +177,17 @@ export default function BookingPage() {
         }),
       });
       if (res.status === 409) {
-        setFormError("Sorry, that slot was just taken. Please pick another time.");
+        setFormError(t.messages.slotTaken);
         setSelectedTime(null);
         refreshSlots();
         return;
       }
       if (!res.ok) {
-        setFormError("Something went wrong. Please try again.");
+        setFormError(t.messages.genericError);
         return;
       }
       const data = await res.json();
-      setSuccessMessage(
-        `Your request for ${selectedDate} at ${selectedTime} has been sent — we'll confirm it shortly.`
-      );
+      setSuccessMessage(t.messages.requestSent(selectedDate, selectedTime));
       setBookedId(data.booking.id);
       setSelectedTime(null);
       setName("");
@@ -215,10 +217,10 @@ export default function BookingPage() {
         }),
       });
       if (!res.ok) {
-        setFormError("Something went wrong. Please try again.");
+        setFormError(t.messages.genericError);
         return;
       }
-      setSuccessMessage("You're on the waitlist. We'll message you if a slot opens up.");
+      setSuccessMessage(t.messages.waitlistJoined);
       setJoiningWaitlist(false);
       setName("");
       setPhone("");
@@ -262,15 +264,25 @@ export default function BookingPage() {
     const date = toDateStr(d.getFullYear(), d.getMonth(), d.getDate());
     return {
       date,
-      label: d.toLocaleDateString(undefined, { weekday: "short", day: "numeric" }),
+      label: d.toLocaleDateString(dateLocale, { weekday: "short", day: "numeric" }),
       closed: offDays.includes(d.getDay()),
     };
   });
 
+  const LangToggle = (
+    <button
+      type="button"
+      onClick={() => setLang(lang === "en" ? "ar" : "en")}
+      className="rounded-full px-3 py-1.5 text-xs font-medium text-zinc-600 ring-1 ring-zinc-300 transition-colors hover:bg-zinc-100"
+    >
+      {t.langToggle}
+    </button>
+  );
+
   if (notFound) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-8">
-        <p className="text-sm text-zinc-500">We couldn&apos;t find that business.</p>
+        <p className="text-sm text-zinc-500">{t.notFound}</p>
       </div>
     );
   }
@@ -278,23 +290,28 @@ export default function BookingPage() {
   if (locked) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-8">
-        <p className="text-sm text-zinc-500">This booking page is temporarily unavailable.</p>
+        <p className="text-sm text-zinc-500">{t.locked}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 px-4 py-8">
+    <div dir={dir} className={`min-h-screen bg-zinc-50 px-4 py-8 ${lang === "ar" ? "lang-ar" : ""}`}>
       <div className="mx-auto max-w-xl">
-        <h1 className="text-2xl font-semibold text-zinc-900">{businessName || "Loading..."}</h1>
-        <p className="mt-1 text-sm text-zinc-500">Choose a service, then pick a day and time.</p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold text-zinc-900">{businessName || t.loading}</h1>
+            <p className="mt-1 text-sm text-zinc-500">{t.subtitle}</p>
+          </div>
+          {LangToggle}
+        </div>
 
         <button
           type="button"
           onClick={() => setFindOpen((v) => !v)}
           className="mt-3 text-sm font-medium text-zinc-600 underline"
         >
-          Already booked? Find your appointment
+          {t.findToggle}
         </button>
 
         {findOpen && (
@@ -303,17 +320,17 @@ export default function BookingPage() {
             <div className="p-4">
               <form onSubmit={handleFindBookings} className="flex flex-col gap-3 sm:flex-row sm:items-end">
                 <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
-                  Phone number
+                  {t.find.phoneLabel}
                   <input
                     required
-                    placeholder="Phone number you booked with"
+                    placeholder={t.find.phonePlaceholder}
                     value={findPhone}
                     onChange={(e) => setFindPhone(e.target.value)}
                     className={inputClass}
                   />
                 </label>
                 <button type="submit" disabled={findLoading} className={primaryButtonClass}>
-                  {findLoading ? "Searching..." : "Find"}
+                  {findLoading ? t.find.searching : t.find.findButton}
                 </button>
               </form>
               {findError && <p className="mt-3 text-sm text-red-600">{findError}</p>}
@@ -326,17 +343,17 @@ export default function BookingPage() {
                     >
                       <span className="text-zinc-700">
                         <span className="font-medium text-zinc-800">
-                          {b.date} at {b.time}
+                          {b.date} {lang === "ar" ? "الساعة" : "at"} {b.time}
                         </span>{" "}
-                        — {b.serviceName} ({b.durationMinutes} min)
+                        — {b.serviceName} ({b.durationMinutes} {lang === "ar" ? "د" : "min"})
                         {b.status === "pending" && (
-                          <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                            Pending
+                          <span className="ms-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                            {t.find.pending}
                           </span>
                         )}
                       </span>
                       <Link href={`/manage/${b.id}`} className="font-medium text-zinc-700 underline">
-                        Manage →
+                        {t.find.manage}
                       </Link>
                     </li>
                   ))}
@@ -348,23 +365,23 @@ export default function BookingPage() {
 
         <div className="relative mt-6">
           <label className="flex flex-col gap-1 text-sm text-zinc-600">
-            Services
+            {t.services.label}
             <button
               type="button"
               onClick={() => setServiceMenuOpen((v) => !v)}
-              className={`${inputClass} flex items-center justify-between bg-white text-left`}
+              className={`${inputClass} flex items-center justify-between bg-white text-start`}
             >
               <span className={selectedServices.length === 0 ? "text-zinc-400" : "text-zinc-800"}>
                 {selectedServices.length === 0
-                  ? "Select services"
-                  : `${selectedServices.map((s) => s.name).join(" + ")} — ${totalDurationMinutes} min`}
+                  ? t.services.select
+                  : `${selectedServices.map((s) => s.name).join(" + ")} — ${totalDurationMinutes} ${lang === "ar" ? "د" : "min"}`}
               </span>
-              <span className="ml-2 shrink-0 text-zinc-400">{serviceMenuOpen ? "▲" : "▼"}</span>
+              <span className="ms-2 shrink-0 text-zinc-400">{serviceMenuOpen ? "▲" : "▼"}</span>
             </button>
           </label>
 
           {serviceMenuOpen && (
-            <div className="absolute z-20 mt-1 w-full rounded-lg bg-white p-2 shadow-lg ring-1 ring-zinc-200">
+            <div className="absolute start-0 end-0 z-20 mt-1 w-full rounded-lg bg-white p-2 shadow-lg ring-1 ring-zinc-200">
               {services.map((s) => (
                 <label
                   key={s.id}
@@ -376,7 +393,7 @@ export default function BookingPage() {
                     onChange={() => toggleService(s.id)}
                     className="h-4 w-4 rounded border-zinc-300"
                   />
-                  {s.name} <span className="text-zinc-400">— {s.durationMinutes} min</span>
+                  {s.name} <span className="text-zinc-400">— {s.durationMinutes} {lang === "ar" ? "د" : "min"}</span>
                 </label>
               ))}
               <button
@@ -384,12 +401,14 @@ export default function BookingPage() {
                 onClick={() => setServiceMenuOpen(false)}
                 className="mt-1 w-full rounded-md px-2 py-1.5 text-center text-xs font-medium text-zinc-500 hover:bg-zinc-50"
               >
-                Done
+                {t.services.done}
               </button>
             </div>
           )}
 
-          {selectedServiceIds.length === 0 && <p className="mt-1.5 text-xs text-red-600">Pick at least one service.</p>}
+          {selectedServiceIds.length === 0 && (
+            <p className="mt-1.5 text-xs text-red-600">{t.services.pickAtLeastOne}</p>
+          )}
         </div>
 
         <div className="mt-6 flex items-center gap-2">
@@ -415,7 +434,7 @@ export default function BookingPage() {
           </div>
           <button
             onClick={() => setCalendarOpen((open) => !open)}
-            aria-label="Pick another date"
+            aria-label={t.pickAnotherDate}
             className={`shrink-0 rounded-full p-2 text-lg ring-1 transition-all duration-150 hover:scale-[1.05] active:scale-95 ${
               calendarOpen ? "bg-zinc-900 text-white ring-zinc-900" : "bg-white text-zinc-600 ring-zinc-200 hover:bg-zinc-100"
             }`}
@@ -435,7 +454,7 @@ export default function BookingPage() {
                 ‹
               </button>
               <p className="text-sm font-semibold text-zinc-800">
-                {new Date(viewYear, viewMonth, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+                {new Date(viewYear, viewMonth, 1).toLocaleDateString(dateLocale, { month: "long", year: "numeric" })}
               </p>
               <button
                 onClick={goToNextMonth}
@@ -446,7 +465,7 @@ export default function BookingPage() {
             </div>
 
             <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs font-medium text-zinc-400">
-              {WEEKDAY_LABELS.map((w) => (
+              {t.weekdayLabels.map((w) => (
                 <div key={w}>{w}</div>
               ))}
             </div>
@@ -490,17 +509,13 @@ export default function BookingPage() {
           <div className={cardAccentBarClass} />
           <div className="p-4">
           {slotsLoading ? (
-            <p className="text-sm text-zinc-500">Loading times...</p>
+            <p className="text-sm text-zinc-500">{t.slotsCard.loadingTimes}</p>
           ) : dayClosed ? (
-            <p className="text-sm font-medium text-zinc-800">We&apos;re closed on this day.</p>
+            <p className="text-sm font-medium text-zinc-800">{t.slotsCard.closedDay}</p>
           ) : fullyBooked ? (
             <div>
-              <p className="text-sm font-medium text-zinc-800">
-                This day is fully booked for this service.
-              </p>
-              <p className="mt-1 text-sm text-zinc-500">
-                Join the waitlist and we&apos;ll message you if a slot opens up.
-              </p>
+              <p className="text-sm font-medium text-zinc-800">{t.slotsCard.fullyBooked}</p>
+              <p className="mt-1 text-sm text-zinc-500">{t.slotsCard.waitlistPrompt}</p>
               {!joiningWaitlist ? (
                 <button
                   onClick={() => {
@@ -509,26 +524,26 @@ export default function BookingPage() {
                   }}
                   className={`mt-3 ${primaryButtonClass}`}
                 >
-                  Join waitlist
+                  {t.slotsCard.joinWaitlist}
                 </button>
               ) : (
                 <form onSubmit={submitWaitlist} className="mt-3 flex flex-col gap-3">
                   <input
                     required
-                    placeholder="Your name"
+                    placeholder={t.slotsCard.yourName}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className={inputClass}
                   />
                   <input
                     required
-                    placeholder="Phone number"
+                    placeholder={t.slotsCard.phoneNumber}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className={inputClass}
                   />
                   <textarea
-                    placeholder="Note for the business (optional)"
+                    placeholder={t.slotsCard.notePlaceholder}
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     rows={2}
@@ -541,21 +556,21 @@ export default function BookingPage() {
                       disabled={submitting}
                       className={primaryButtonClass}
                     >
-                      {submitting ? "Joining..." : "Confirm waitlist spot"}
+                      {submitting ? t.slotsCard.joining : t.slotsCard.confirmWaitlistSpot}
                     </button>
                     <button
                       type="button"
                       onClick={() => setJoiningWaitlist(false)}
                       className={ghostButtonClass}
                     >
-                      Cancel
+                      {t.slotsCard.cancel}
                     </button>
                   </div>
                 </form>
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            <div dir="ltr" className="grid grid-cols-3 gap-2 sm:grid-cols-4">
               {slots.map((slot) => (
                 <button
                   key={slot.time}
@@ -591,24 +606,24 @@ export default function BookingPage() {
                 <div className={cardAccentBarClass} />
                 <form onSubmit={submitBooking} className="flex flex-col gap-3 p-5">
                   <p className="text-sm font-medium text-zinc-800">
-                    Booking {selectedDate} at {selectedTime}
+                    {t.bookingModal.title(selectedDate, selectedTime)}
                   </p>
                   <input
                     required
-                    placeholder="Your name"
+                    placeholder={t.slotsCard.yourName}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className={inputClass}
                   />
                   <input
                     required
-                    placeholder="Phone number"
+                    placeholder={t.slotsCard.phoneNumber}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className={inputClass}
                   />
                   <textarea
-                    placeholder="Note for the business (optional)"
+                    placeholder={t.slotsCard.notePlaceholder}
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     rows={2}
@@ -621,14 +636,14 @@ export default function BookingPage() {
                       disabled={submitting}
                       className={primaryButtonClass}
                     >
-                      {submitting ? "Booking..." : "Confirm booking"}
+                      {submitting ? t.bookingModal.booking : t.bookingModal.confirmBooking}
                     </button>
                     <button
                       type="button"
                       onClick={() => setSelectedTime(null)}
                       className={ghostButtonClass}
                     >
-                      Cancel
+                      {t.slotsCard.cancel}
                     </button>
                   </div>
                 </form>
@@ -641,7 +656,7 @@ export default function BookingPage() {
               <p>{successMessage}</p>
               {bookedId && (
                 <Link href={`/manage/${bookedId}`} className="mt-1 block underline">
-                  Manage or cancel this booking
+                  {t.messages.manageLink}
                 </Link>
               )}
             </div>
@@ -650,7 +665,7 @@ export default function BookingPage() {
         </div>
 
         <p className="mt-8 text-center text-xs text-zinc-400">
-          Powered by{" "}
+          {t.poweredBy}{" "}
           <a
             href={`https://${ROOT_DOMAIN}`}
             className="font-medium text-zinc-500 hover:underline"
