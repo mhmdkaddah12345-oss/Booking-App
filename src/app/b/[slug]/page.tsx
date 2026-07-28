@@ -444,7 +444,7 @@ export default function BookingPage() {
         </div>
 
         {calendarOpen && (
-          <div className="mt-2 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
+          <div className="animate-step-in mt-2 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
             <div className="flex items-center justify-between">
               <button
                 onClick={goToPrevMonth}
@@ -508,6 +508,7 @@ export default function BookingPage() {
         <div className={`mt-6 ${cardClass}`}>
           <div className={cardAccentBarClass} />
           <div className="p-4">
+          <div key={`${selectedDate}-${serviceIdsKey}`} className="animate-step-in">
           {slotsLoading ? (
             <p className="text-sm text-zinc-500">{t.slotsCard.loadingTimes}</p>
           ) : dayClosed ? (
@@ -593,6 +594,7 @@ export default function BookingPage() {
               ))}
             </div>
           )}
+          </div>
 
           {selectedTime && !fullyBooked && (
             <div
@@ -600,7 +602,7 @@ export default function BookingPage() {
               onClick={() => setSelectedTime(null)}
             >
               <div
-                className={`w-full max-w-md ${cardClass} max-h-full overflow-y-auto`}
+                className={`animate-modal-in w-full max-w-md ${cardClass} max-h-full overflow-y-auto`}
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className={cardAccentBarClass} />
@@ -652,13 +654,27 @@ export default function BookingPage() {
           )}
 
           {successMessage && (
-            <div className="mt-4 rounded-lg bg-green-50 px-3 py-2 text-sm font-medium text-green-700">
-              <p>{successMessage}</p>
-              {bookedId && (
-                <Link href={`/manage/${bookedId}`} className="mt-1 block underline">
-                  {t.messages.manageLink}
-                </Link>
-              )}
+            <div className="animate-step-in mt-4 flex items-start gap-3 rounded-lg bg-cedar/10 px-3 py-3 text-sm font-medium text-cedar-deep">
+              <svg viewBox="0 0 24 24" fill="none" className="mt-0.5 h-5 w-5 shrink-0 text-cedar">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" className="animate-circle-pop" />
+                <path
+                  pathLength="1"
+                  d="M7.5 12.5l2.8 2.8L16.5 9"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="animate-check-draw"
+                />
+              </svg>
+              <div>
+                <p>{successMessage}</p>
+                {bookedId && (
+                  <Link href={`/manage/${bookedId}`} className="mt-1 block underline">
+                    {t.messages.manageLink}
+                  </Link>
+                )}
+              </div>
             </div>
           )}
           </div>

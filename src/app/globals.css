@@ -122,3 +122,64 @@ body {
     animation: none;
   }
 }
+
+/* Customer booking page: each step (slot grid reloading, the calendar
+   popover opening, the confirm-booking modal) gently settles in instead of
+   just popping into place. */
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-step-in {
+  animation: step-in 0.35s ease-out both;
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.animate-modal-in {
+  animation: modal-in 0.25s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-step-in,
+  .animate-modal-in {
+    animation: none;
+  }
+}
+
+/* Booking-confirmed checkmark — circle pops in, then the check stroke
+   draws itself using pathLength so no manual path-length math is needed. */
+@keyframes circle-pop {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-circle-pop {
+  transform-origin: center;
+  animation: circle-pop 0.3s ease-out both;
+}
+
+@keyframes check-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+.animate-check-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: check-draw 0.35s 0.15s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-circle-pop {
+    animation: none;
+  }
+  .animate-check-draw {
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+}
