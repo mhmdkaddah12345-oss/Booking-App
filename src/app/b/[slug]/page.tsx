@@ -363,7 +363,7 @@ export default function BookingPage() {
           </div>
         )}
 
-        <div className="relative mt-6">
+        <div className="animate-step-in relative mt-6">
           <label className="flex flex-col gap-1 text-sm text-zinc-600">
             {t.services.label}
             <button
@@ -411,7 +411,7 @@ export default function BookingPage() {
           )}
         </div>
 
-        <div className="mt-6 flex items-center gap-2">
+        <div className="animate-step-in mt-6 flex items-center gap-2" style={{ animationDelay: "90ms" }}>
           <div className="flex flex-1 gap-2 overflow-x-auto pb-2">
             {quickDays.map((d) => (
               <button
@@ -505,7 +505,7 @@ export default function BookingPage() {
           </div>
         )}
 
-        <div className={`mt-6 ${cardClass}`}>
+        <div className={`animate-step-in mt-6 ${cardClass}`} style={{ animationDelay: "180ms" }}>
           <div className={cardAccentBarClass} />
           <div className="p-4">
           <div key={`${selectedDate}-${serviceIdsKey}`} className="animate-step-in">
