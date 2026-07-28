@@ -363,7 +363,7 @@ export default function BookingPage() {
           </div>
         )}
 
-        <div className="animate-step-in relative mt-6">
+        <div className="animate-step-in relative z-30 mt-6">
           <label className="flex flex-col gap-1 text-sm text-zinc-600">
             {t.services.label}
             <button
