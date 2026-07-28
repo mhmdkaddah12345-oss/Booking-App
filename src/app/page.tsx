@@ -90,18 +90,33 @@ export default function LandingPage() {
   }, []);
 
   // Hero photo drifts slightly slower than the page scroll for a subtle
-  // sense of depth. The wrapper is oversized (-inset-y-16) so the
-  // translation never reveals an edge, and the section's own
-  // overflow-hidden clips it back down to the clip-path shape.
+  // sense of depth. The translate is applied via CSS transform (paint-time)
+  // rather than by resizing the image's box — resizing the box made
+  // object-cover recompute its crop against a taller container, which
+  // revealed more of the ceiling ductwork and made the framing look
+  // crooked. A small uniform scale-up keeps the translate from ever
+  // exposing an edge without touching the original framing.
+  //
+  // The photo's own ceiling duct also rises left-to-right, which reads as
+  // a tilted horizon in a full-bleed hero — HERO_ROTATE_DEG counter-rotates
+  // it level; HERO_SCALE is bumped up further to cover the corners that
+  // rotation exposes.
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const el = heroImageRef.current;
+    if (!el) return;
+    const HERO_ROTATE_DEG = 6;
+    const HERO_SCALE = 1.24;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function apply() {
+      const offset = reduceMotion ? 0 : Math.max(-40, Math.min(40, window.scrollY * 0.15));
+      el!.style.transform = `scale(${HERO_SCALE}) rotate(${HERO_ROTATE_DEG}deg) translateY(${offset}px)`;
+    }
+    apply();
+    if (reduceMotion) return;
     let raf = 0;
     function onScroll() {
       cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        const offset = Math.max(-48, Math.min(48, window.scrollY * 0.15));
-        if (heroImageRef.current) heroImageRef.current.style.transform = `translateY(${offset}px)`;
-      });
+      raf = requestAnimationFrame(apply);
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
@@ -153,7 +168,7 @@ export default function LandingPage() {
         className="relative flex min-h-[620px] items-center justify-center overflow-hidden px-6 pb-28 pt-24 text-center sm:min-h-[720px]"
         style={{ clipPath: "polygon(0 0, 100% 0, 100% 94%, 0 100%)" }}
       >
-        <div ref={heroImageRef} className="absolute -inset-y-16 inset-x-0">
+        <div ref={heroImageRef} className="absolute inset-0">
           <Image src="/images/hero-salon.jpg" alt="" fill priority className="object-cover" sizes="100vw" />
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/25" />
