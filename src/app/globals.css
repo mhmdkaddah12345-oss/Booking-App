@@ -93,7 +93,7 @@ body {
    there's nothing to scroll-trigger, just a one-time entrance. */
 @keyframes hero-in {
   from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: none; }
 }
 
 .animate-hero-in {
@@ -128,7 +128,7 @@ body {
    just popping into place. */
 @keyframes step-in {
   from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: none; }
 }
 
 .animate-step-in {
@@ -137,7 +137,7 @@ body {
 
 @keyframes modal-in {
   from { opacity: 0; transform: scale(0.96) translateY(4px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 1; transform: none; }
 }
 
 .animate-modal-in {
@@ -155,7 +155,7 @@ body {
    draws itself using pathLength so no manual path-length math is needed. */
 @keyframes circle-pop {
   from { opacity: 0; transform: scale(0.5); }
-  to { opacity: 1; transform: scale(1); }
+  to { opacity: 1; transform: none; }
 }
 
 .animate-circle-pop {
