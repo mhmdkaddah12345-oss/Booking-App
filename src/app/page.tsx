@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Wordmark from "@/components/Wordmark";
@@ -41,19 +41,74 @@ const FEATURE_ICONS = [IconBrowser, IconClock, IconUsers, IconRefresh, IconLink,
 // a small flourish that matches the terracotta accent used for the pricing
 // "best value" badge and the hero's glow blobs, so the header doesn't read
 // as plain unstyled text links.
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+function NavLink({ href, active, children }: { href: string; active?: boolean; children: React.ReactNode }) {
   return (
-    <Link href={href} className="group relative py-1 text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900">
+    <Link
+      href={href}
+      className={`group relative py-1 text-sm font-medium transition-colors ${
+        active ? "text-zinc-900" : "text-zinc-600 hover:text-zinc-900"
+      }`}
+    >
       {children}
-      <span className="absolute inset-x-0 -bottom-0.5 h-px origin-center scale-x-0 bg-[#b5654f] transition-transform duration-200 ease-out group-hover:scale-x-100" />
+      <span
+        className={`absolute inset-x-0 -bottom-0.5 h-px origin-center bg-[#b5654f] transition-transform duration-200 ease-out ${
+          active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+        }`}
+      />
     </Link>
   );
 }
+
+const NAV_SECTION_IDS = ["how-it-works", "features", "pricing", "faq"];
 
 export default function LandingPage() {
   const [lang, setLang] = useState<Lang>("en");
   const t = landingCopy[lang];
   const dir = lang === "ar" ? "rtl" : "ltr";
+
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const heroImageRef = useRef<HTMLDivElement>(null);
+
+  // Scroll-spy — highlights whichever section's heading is currently in the
+  // upper part of the viewport, so the nav reacts as you scroll instead of
+  // only on hover.
+  useEffect(() => {
+    const elements = NAV_SECTION_IDS.map((id) => document.getElementById(id)).filter(
+      (el): el is HTMLElement => el !== null
+    );
+    if (elements.length === 0) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setActiveSection(entry.target.id);
+        });
+      },
+      { rootMargin: "-96px 0px -65% 0px", threshold: 0 }
+    );
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  // Hero photo drifts slightly slower than the page scroll for a subtle
+  // sense of depth. The wrapper is oversized (-inset-y-16) so the
+  // translation never reveals an edge, and the section's own
+  // overflow-hidden clips it back down to the clip-path shape.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let raf = 0;
+    function onScroll() {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const offset = Math.max(-48, Math.min(48, window.scrollY * 0.15));
+        if (heroImageRef.current) heroImageRef.current.style.transform = `translateY(${offset}px)`;
+      });
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
 
   return (
     <div dir={dir} className={`flex min-h-screen flex-col bg-paper ${lang === "ar" ? "lang-ar" : ""}`}>
@@ -62,10 +117,18 @@ export default function LandingPage() {
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
           <Wordmark />
           <nav className="hidden items-center gap-7 md:flex">
-            <NavLink href="#how-it-works">{t.nav.howItWorks}</NavLink>
-            <NavLink href="#features">{t.nav.features}</NavLink>
-            <NavLink href="#pricing">{t.nav.pricing}</NavLink>
-            <NavLink href="#faq">{t.nav.faq}</NavLink>
+            <NavLink href="#how-it-works" active={activeSection === "how-it-works"}>
+              {t.nav.howItWorks}
+            </NavLink>
+            <NavLink href="#features" active={activeSection === "features"}>
+              {t.nav.features}
+            </NavLink>
+            <NavLink href="#pricing" active={activeSection === "pricing"}>
+              {t.nav.pricing}
+            </NavLink>
+            <NavLink href="#faq" active={activeSection === "faq"}>
+              {t.nav.faq}
+            </NavLink>
           </nav>
           <div className="flex items-center gap-4">
             <button
@@ -90,7 +153,9 @@ export default function LandingPage() {
         className="relative flex min-h-[620px] items-center justify-center overflow-hidden px-6 pb-28 pt-24 text-center sm:min-h-[720px]"
         style={{ clipPath: "polygon(0 0, 100% 0, 100% 94%, 0 100%)" }}
       >
-        <Image src="/images/hero-salon.jpg" alt="" fill priority className="object-cover" sizes="100vw" />
+        <div ref={heroImageRef} className="absolute -inset-y-16 inset-x-0">
+          <Image src="/images/hero-salon.jpg" alt="" fill priority className="object-cover" sizes="100vw" />
+        </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/25" />
         <div
           aria-hidden

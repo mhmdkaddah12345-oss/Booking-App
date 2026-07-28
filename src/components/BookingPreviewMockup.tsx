@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { landingCopy, Lang } from "@/lib/landingTranslations";
 
 // A working recreation of the real booking page's slot picker — not a
@@ -18,6 +18,10 @@ const SLOTS = [
   { time: "13:30", taken: false },
 ] as const;
 
+// First open slot — nudged once to invite a tap instead of relying solely
+// on the caption text below the grid.
+const NUDGE_TIME = "09:30";
+
 export default function BookingPreviewMockup({ lang = "en" }: { lang?: Lang }) {
   const t = landingCopy[lang].mockup;
   const services = t.services;
@@ -26,7 +30,13 @@ export default function BookingPreviewMockup({ lang = "en" }: { lang?: Lang }) {
   const [serviceMenuOpen, setServiceMenuOpen] = useState(false);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  const [showNudge, setShowNudge] = useState(false);
   const service = services[serviceIndex];
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowNudge(true), 2200);
+    return () => clearTimeout(timer);
+  }, []);
 
   function pickService(i: number) {
     setServiceIndex(i);
@@ -38,6 +48,7 @@ export default function BookingPreviewMockup({ lang = "en" }: { lang?: Lang }) {
   function pickTime(time: string) {
     setSelectedTime(time);
     setConfirmed(false);
+    setShowNudge(false);
   }
 
   return (
@@ -87,6 +98,7 @@ export default function BookingPreviewMockup({ lang = "en" }: { lang?: Lang }) {
         <div dir="ltr" className="mt-1 grid grid-cols-4 gap-1.5">
           {SLOTS.map((s) => {
             const isSelected = selectedTime === s.time;
+            const isNudged = showNudge && !selectedTime && s.time === NUDGE_TIME;
             return (
               <button
                 key={s.time}
@@ -98,7 +110,7 @@ export default function BookingPreviewMockup({ lang = "en" }: { lang?: Lang }) {
                     ? "scale-[1.05] bg-zinc-900 text-white"
                     : s.taken
                     ? "cursor-not-allowed bg-zinc-100 text-zinc-300 line-through"
-                    : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+                    : `bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50 ${isNudged ? "animate-nudge" : ""}`
                 }`}
               >
                 {s.time}

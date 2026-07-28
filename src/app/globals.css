@@ -105,3 +105,20 @@ body {
     animation: none;
   }
 }
+
+/* One-time nudge on the live demo mockup — invites a first tap instead of
+   relying solely on the caption text. Runs twice then stops on its own. */
+@keyframes nudge-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(181, 101, 79, 0.45); }
+  50% { transform: scale(1.08); box-shadow: 0 0 0 6px rgba(181, 101, 79, 0); }
+}
+
+.animate-nudge {
+  animation: nudge-pulse 0.9s ease-in-out 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-nudge {
+    animation: none;
+  }
+}
