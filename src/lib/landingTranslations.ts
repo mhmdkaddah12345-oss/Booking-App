@@ -6,6 +6,12 @@ export type Lang = "en" | "ar";
 export const landingCopy = {
   en: {
     logIn: "Log in",
+    nav: {
+      howItWorks: "How it works",
+      features: "Features",
+      pricing: "Pricing",
+      faq: "FAQ",
+    },
     hero: {
       badge: "Built for Lebanon's salons, clinics & gyms",
       headline: "Booking pages for local businesses",
@@ -131,6 +137,12 @@ export const landingCopy = {
   },
   ar: {
     logIn: "تسجيل الدخول",
+    nav: {
+      howItWorks: "كيف بيشتغل",
+      features: "الميزات",
+      pricing: "الأسعار",
+      faq: "الأسئلة الشائعة",
+    },
     hero: {
       badge: "مصمَّم لصالونات وعيادات ونوادي لبنان",
       headline: "صفحة حجز مواعيد لعملك",

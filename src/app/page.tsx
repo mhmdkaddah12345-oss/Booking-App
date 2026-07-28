@@ -48,6 +48,20 @@ export default function LandingPage() {
       <header className="sticky top-0 z-30 border-b border-zinc-200/0 bg-zinc-50/80 backdrop-blur-md transition-colors">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
           <Wordmark />
+          <nav className="hidden items-center gap-6 md:flex">
+            <Link href="#how-it-works" className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900">
+              {t.nav.howItWorks}
+            </Link>
+            <Link href="#features" className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900">
+              {t.nav.features}
+            </Link>
+            <Link href="#pricing" className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900">
+              {t.nav.pricing}
+            </Link>
+            <Link href="#faq" className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900">
+              {t.nav.faq}
+            </Link>
+          </nav>
           <div className="flex items-center gap-4">
             <button
               type="button"
@@ -215,7 +229,7 @@ export default function LandingPage() {
           grey-on-white grid) is what actually breaks the template feel. */}
       <section className="bg-zinc-800">
         <div className="mx-auto max-w-5xl px-6 py-20">
-          <Reveal className="w-full text-start">
+          <Reveal id="features" className="w-full scroll-mt-8 text-start">
             <h2 className="font-display text-center text-2xl font-semibold text-white sm:text-3xl">
               {t.features.heading}
             </h2>
@@ -306,7 +320,7 @@ export default function LandingPage() {
       {/* FAQ */}
       <section className="bg-paper">
         <div className="mx-auto max-w-2xl px-6 py-20">
-          <Reveal className="w-full text-start">
+          <Reveal id="faq" className="w-full scroll-mt-8 text-start">
             <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
               {t.faq.heading}
             </h2>
