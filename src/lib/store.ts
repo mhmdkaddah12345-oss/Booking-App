@@ -1017,6 +1017,24 @@ export async function updatePlatformSettings(paymentInstructions: string): Promi
   if (error) throw new Error(error.message);
 }
 
+export type ContactMessage = { id: string; name: string; email: string; message: string; createdAt: string };
+
+export async function createContactMessage(name: string, email: string, message: string): Promise<void> {
+  const { error } = await supabase.from("contact_messages").insert({ name, email, message });
+  if (error) throw new Error(error.message);
+}
+
+export async function getContactMessages(): Promise<ContactMessage[]> {
+  const { data } = await supabase.from("contact_messages").select("*").order("created_at", { ascending: false });
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    message: row.message,
+    createdAt: row.created_at,
+  }));
+}
+
 export async function confirmWaitlistPromotion(
   waitlistId: string,
   businessId: string

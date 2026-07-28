@@ -59,7 +59,85 @@ function NavLink({ href, active, children }: { href: string; active?: boolean; c
   );
 }
 
-const NAV_SECTION_IDS = ["how-it-works", "features", "pricing", "faq"];
+const NAV_SECTION_IDS = ["how-it-works", "features", "pricing", "faq", "contact"];
+
+function ContactForm({ lang }: { lang: Lang }) {
+  const t = landingCopy[lang].contact;
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, message }),
+      });
+      if (!res.ok) {
+        setError(t.genericError);
+        return;
+      }
+      setSubmitted(true);
+      setName("");
+      setEmail("");
+      setMessage("");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (submitted) {
+    return (
+      <p className="mx-auto max-w-md rounded-xl bg-cedar/10 px-4 py-3 text-center text-sm font-medium text-cedar-deep">
+        {t.success}
+      </p>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="mx-auto flex max-w-md flex-col gap-3">
+      <input
+        type="text"
+        required
+        placeholder={t.namePlaceholder}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="rounded-xl bg-white px-4 py-2.5 text-sm text-zinc-800 ring-1 ring-zinc-200 transition-colors placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400"
+      />
+      <input
+        type="email"
+        required
+        placeholder={t.emailPlaceholder}
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className="rounded-xl bg-white px-4 py-2.5 text-sm text-zinc-800 ring-1 ring-zinc-200 transition-colors placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400"
+      />
+      <textarea
+        required
+        rows={4}
+        placeholder={t.messagePlaceholder}
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        className="resize-none rounded-xl bg-white px-4 py-2.5 text-sm text-zinc-800 ring-1 ring-zinc-200 transition-colors placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400"
+      />
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      <button
+        type="submit"
+        disabled={submitting}
+        className="rounded-full bg-zinc-900 px-6 py-2.5 text-sm font-medium text-white transition-all duration-150 hover:scale-[1.02] hover:bg-zinc-700 active:scale-[0.98] disabled:opacity-50"
+      >
+        {submitting ? t.sending : t.send}
+      </button>
+    </form>
+  );
+}
 
 export default function LandingPage() {
   const [lang, setLang] = useState<Lang>("en");
@@ -143,6 +221,9 @@ export default function LandingPage() {
             </NavLink>
             <NavLink href="#faq" active={activeSection === "faq"}>
               {t.nav.faq}
+            </NavLink>
+            <NavLink href="#contact" active={activeSection === "contact"}>
+              {t.nav.contact}
             </NavLink>
           </nav>
           <div className="flex items-center gap-4">
@@ -433,6 +514,21 @@ export default function LandingPage() {
           >
             {t.closingCta.cta}
           </Link>
+        </div>
+      </section>
+
+      {/* Contact — a plain utility section, no band styling of its own,
+          since the closing CTA right above it is the page's last real
+          visual moment. */}
+      <section className="bg-paper">
+        <div className="mx-auto max-w-2xl px-6 py-20">
+          <Reveal id="contact" className="w-full scroll-mt-28 text-center">
+            <h2 className="font-display text-2xl font-semibold text-zinc-800 sm:text-3xl">{t.contact.heading}</h2>
+            <p className="mt-3 text-sm text-zinc-500">{t.contact.subtext}</p>
+            <div className="mt-8">
+              <ContactForm lang={lang} />
+            </div>
+          </Reveal>
         </div>
       </section>
 

@@ -11,6 +11,7 @@ export const landingCopy = {
       features: "Features",
       pricing: "Pricing",
       faq: "FAQ",
+      contact: "Contact",
     },
     hero: {
       badge: "Built for Lebanon's salons, clinics & gyms",
@@ -119,6 +120,17 @@ export const landingCopy = {
       body: "Set up your booking page today — it takes about two minutes.",
       cta: "Create your booking page",
     },
+    contact: {
+      heading: "Get in touch",
+      subtext: "Question about pricing, your business, or anything else? Send us a message.",
+      namePlaceholder: "Your name",
+      emailPlaceholder: "Your email",
+      messagePlaceholder: "How can we help?",
+      send: "Send message",
+      sending: "Sending...",
+      success: "Thanks — we'll get back to you shortly.",
+      genericError: "Something went wrong. Please try again.",
+    },
     footer: "Maw3ed — built for Lebanon's salons, clinics, and gyms.",
     mockup: {
       businessName: "Bella Salon",
@@ -142,6 +154,7 @@ export const landingCopy = {
       features: "الميزات",
       pricing: "الأسعار",
       faq: "الأسئلة الشائعة",
+      contact: "تواصل",
     },
     hero: {
       badge: "مصمَّم لصالونات وعيادات ونوادي لبنان",
@@ -249,6 +262,17 @@ export const landingCopy = {
       heading: "جاهز توقف تخسر حجوزات بسبب رسالة ما ردّيت عليها؟",
       body: "جهّز صفحة الحجز تبعك اليوم — بياخد حوالي دقيقتين.",
       cta: "أنشئ صفحة الحجز الخاصة فيك",
+    },
+    contact: {
+      heading: "تواصل معنا",
+      subtext: "عندك سؤال عن الأسعار أو عملك أو أي شي تاني؟ ابعتلنا رسالة.",
+      namePlaceholder: "اسمك",
+      emailPlaceholder: "إيميلك",
+      messagePlaceholder: "كيف فينا نساعدك؟",
+      send: "ابعت الرسالة",
+      sending: "عم يبعت...",
+      success: "شكراً — رح نتواصل معك قريباً.",
+      genericError: "في شي غلط. جرّب مرة تانية.",
     },
     footer: "Maw3ed — مصمَّم لصالونات وعيادات ونوادي لبنان.",
     mockup: {

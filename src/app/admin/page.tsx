@@ -11,8 +11,10 @@ import {
   listRowHoverClass,
   pulsingDotClass,
 } from "@/lib/ui";
-import { IconBuilding, IconCreditCard } from "@/components/icons";
+import { IconBuilding, IconCreditCard, IconChat } from "@/components/icons";
 import { PLANS, PlanId } from "@/lib/plans";
+
+type ContactMessage = { id: string; name: string; email: string; message: string; createdAt: string };
 
 type Business = {
   id: string;
@@ -64,6 +66,7 @@ export default function AdminPage() {
   const [paymentInstructions, setPaymentInstructions] = useState("");
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
+  const [contactMessages, setContactMessages] = useState<ContactMessage[] | null>(null);
 
   function load() {
     fetch("/api/admin/businesses")
@@ -72,6 +75,9 @@ export default function AdminPage() {
     fetch("/api/admin/settings")
       .then((r) => r.json())
       .then((data) => setPaymentInstructions(data.settings.paymentInstructions ?? ""));
+    fetch("/api/admin/contact-messages")
+      .then((r) => r.json())
+      .then((data) => setContactMessages(data.messages));
   }
 
   useEffect(() => {
@@ -305,6 +311,43 @@ export default function AdminPage() {
                 </li>
               ))}
               {businesses.length === 0 && <li className="text-sm text-zinc-400">No businesses yet.</li>}
+            </ul>
+          )}
+          </div>
+        </div>
+
+        <div className={`mt-6 ${cardClass}`}>
+          <div className={cardAccentBarClass} />
+          <div className="p-4">
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+            <IconChat className="h-4 w-4 text-zinc-500" />
+            Contact messages
+          </h2>
+          <p className="mt-1 text-xs text-zinc-500">Submissions from the landing page's Contact form.</p>
+          {!contactMessages ? (
+            <p className="mt-3 text-sm text-zinc-500">Loading...</p>
+          ) : (
+            <ul className="mt-3 flex flex-col gap-2">
+              {contactMessages.map((m) => (
+                <li key={m.id} className={`rounded-lg bg-zinc-50 px-3 py-3 text-sm ${listRowHoverClass}`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-medium text-zinc-800">
+                      {m.name} <span className="font-normal text-zinc-500">— {m.email}</span>
+                    </p>
+                    <p className="shrink-0 text-xs text-zinc-400">
+                      {new Date(m.createdAt).toLocaleString(undefined, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  <p className="mt-1 text-zinc-600">{m.message}</p>
+                </li>
+              ))}
+              {contactMessages.length === 0 && <li className="text-sm text-zinc-400">No messages yet.</li>}
             </ul>
           )}
           </div>
