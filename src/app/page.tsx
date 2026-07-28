@@ -222,8 +222,8 @@ export default function LandingPage() {
             {t.problem.points.map((body, i) => {
               const Icon = PAIN_ICONS[i];
               return (
-                <Reveal key={body} delayMs={120 + i * 100}>
-                  <div className="group rounded-xl bg-zinc-100 p-5 transition-all duration-200 hover:-translate-y-1 hover:bg-zinc-200/70 hover:shadow-sm">
+                <Reveal key={body} delayMs={120 + i * 100} className="h-full">
+                  <div className="group h-full rounded-xl bg-zinc-100 p-5 transition-all duration-200 hover:-translate-y-1 hover:bg-zinc-200/70 hover:shadow-sm">
                     <Icon className="h-6 w-6 text-zinc-500 transition-transform duration-200 group-hover:scale-110" />
                     <p className="mt-3 text-sm leading-relaxed text-zinc-600">{body}</p>
                   </div>
@@ -307,8 +307,8 @@ export default function LandingPage() {
             {t.features.items.map((f, i) => {
               const Icon = FEATURE_ICONS[i];
               return (
-                <Reveal key={f.title} delayMs={120 + i * 90}>
-                  <div className="group rounded-xl bg-white/5 p-6 ring-1 ring-white/10 transition-all duration-200 hover:-translate-y-1 hover:bg-white/[0.07]">
+                <Reveal key={f.title} delayMs={120 + i * 90} className="h-full">
+                  <div className="group h-full rounded-xl bg-white/5 p-6 ring-1 ring-white/10 transition-all duration-200 hover:-translate-y-1 hover:bg-white/[0.07]">
                     <div
                       className={`flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200 group-hover:scale-110 ${ICON_TINTS[i % ICON_TINTS.length]}`}
                     >
