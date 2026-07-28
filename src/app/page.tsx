@@ -37,6 +37,19 @@ const ICON_TINTS = [
 const PAIN_ICONS = [IconChat, IconCalendarX, IconAlert];
 const FEATURE_ICONS = [IconBrowser, IconClock, IconUsers, IconRefresh, IconLink, IconShieldCheck];
 
+// Underline grows from the center on hover instead of just a color swap —
+// a small flourish that matches the terracotta accent used for the pricing
+// "best value" badge and the hero's glow blobs, so the header doesn't read
+// as plain unstyled text links.
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link href={href} className="group relative py-1 text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900">
+      {children}
+      <span className="absolute inset-x-0 -bottom-0.5 h-px origin-center scale-x-0 bg-[#b5654f] transition-transform duration-200 ease-out group-hover:scale-x-100" />
+    </Link>
+  );
+}
+
 export default function LandingPage() {
   const [lang, setLang] = useState<Lang>("en");
   const t = landingCopy[lang];
@@ -48,19 +61,11 @@ export default function LandingPage() {
       <header className="sticky top-0 z-30 border-b border-zinc-200/0 bg-zinc-50/80 backdrop-blur-md transition-colors">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
           <Wordmark />
-          <nav className="hidden items-center gap-6 md:flex">
-            <Link href="#how-it-works" className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900">
-              {t.nav.howItWorks}
-            </Link>
-            <Link href="#features" className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900">
-              {t.nav.features}
-            </Link>
-            <Link href="#pricing" className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900">
-              {t.nav.pricing}
-            </Link>
-            <Link href="#faq" className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900">
-              {t.nav.faq}
-            </Link>
+          <nav className="hidden items-center gap-7 md:flex">
+            <NavLink href="#how-it-works">{t.nav.howItWorks}</NavLink>
+            <NavLink href="#features">{t.nav.features}</NavLink>
+            <NavLink href="#pricing">{t.nav.pricing}</NavLink>
+            <NavLink href="#faq">{t.nav.faq}</NavLink>
           </nav>
           <div className="flex items-center gap-4">
             <button
