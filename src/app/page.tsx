@@ -206,7 +206,7 @@ export default function LandingPage() {
               </h2>
               <p className="mt-4 text-sm leading-relaxed text-zinc-600 sm:text-base">{t.photoSplit.body}</p>
             </div>
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl sm:-mr-6 sm:aspect-[5/4] sm:rounded-l-2xl sm:rounded-r-none lg:-mr-[calc((100vw-64rem)/2+1.5rem)]">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl sm:-me-6 sm:aspect-[5/4] sm:rounded-s-2xl sm:rounded-e-none lg:-me-[calc((100vw-64rem)/2+1.5rem)]">
               <Image
                 src="/images/gym-interior.png"
                 alt="Modern gym interior with exercise equipment"
