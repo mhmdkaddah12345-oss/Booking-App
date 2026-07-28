@@ -85,7 +85,7 @@ export const landingCopy = {
     },
     pricing: {
       heading: "Simple, honest pricing",
-      subtext: "Every business starts with a free trial. Pay via OMT or Whish Money — LBP equivalent to market rate at time of payment.",
+      subtext: "Every business starts with a free trial. Pay via Whish Money — LBP equivalent to market rate at time of payment.",
       bestValue: "Best value",
       perMonth: "mo",
       periodMonth: "month",
@@ -216,7 +216,7 @@ export const landingCopy = {
     },
     pricing: {
       heading: "أسعار بسيطة وواضحة",
-      subtext: "كل عمل بيبلش بفترة تجربة مجانية. الدفع عبر OMT أو Whish Money — الليرة اللبنانية حسب سعر السوق وقت الدفع.",
+      subtext: "كل عمل بيبلش بفترة تجربة مجانية. الدفع عبر Whish Money — الليرة اللبنانية حسب سعر السوق وقت الدفع.",
       bestValue: "الأفضل قيمة",
       perMonth: "بالشهر",
       periodMonth: "بالشهر",

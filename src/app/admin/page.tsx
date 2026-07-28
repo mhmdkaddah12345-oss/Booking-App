@@ -315,10 +315,10 @@ export default function AdminPage() {
           <div className="flex flex-col gap-3 p-4">
           <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
             <IconCreditCard className="h-4 w-4 text-zinc-500" />
-            OMT / Whish Money details
+            Whish Money details
           </h2>
           <p className="text-xs text-zinc-500">
-            Shown to owners on their Plan page. E.g. OMT account name/number, Whish Money phone number.
+            Shown to owners on their Plan page. E.g. Whish Money phone number.
           </p>
           <textarea
             value={paymentInstructions}
@@ -327,7 +327,7 @@ export default function AdminPage() {
               setSettingsSaved(false);
             }}
             rows={4}
-            placeholder="OMT: ...&#10;Whish Money: ..."
+            placeholder="Whish Money: ..."
             className={inputClass}
           />
           <div className="flex items-center gap-3">
