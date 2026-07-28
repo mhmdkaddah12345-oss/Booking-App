@@ -174,7 +174,7 @@ export default function LandingPage() {
           monotony and gives the page a sense of moving through chapters. */}
       <section className="bg-zinc-100">
         <div className="mx-auto max-w-5xl px-6 py-20">
-          <Reveal id="how-it-works" className="w-full scroll-mt-8 text-start">
+          <Reveal id="how-it-works" className="w-full scroll-mt-28 text-start">
             <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
               {t.howItWorks.heading}
             </h2>
@@ -234,7 +234,7 @@ export default function LandingPage() {
           grey-on-white grid) is what actually breaks the template feel. */}
       <section className="bg-zinc-800">
         <div className="mx-auto max-w-5xl px-6 py-20">
-          <Reveal id="features" className="w-full scroll-mt-8 text-start">
+          <Reveal id="features" className="w-full scroll-mt-28 text-start">
             <h2 className="font-display text-center text-2xl font-semibold text-white sm:text-3xl">
               {t.features.heading}
             </h2>
@@ -274,7 +274,7 @@ export default function LandingPage() {
           style={{ animationDelay: "-9s" }}
         />
         <div className="relative mx-auto max-w-5xl px-6 py-20">
-          <Reveal id="pricing" className="w-full scroll-mt-8">
+          <Reveal id="pricing" className="w-full scroll-mt-28">
             <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
               {t.pricing.heading}
             </h2>
@@ -325,7 +325,7 @@ export default function LandingPage() {
       {/* FAQ */}
       <section className="bg-paper">
         <div className="mx-auto max-w-2xl px-6 py-20">
-          <Reveal id="faq" className="w-full scroll-mt-8 text-start">
+          <Reveal id="faq" className="w-full scroll-mt-28 text-start">
             <h2 className="font-display text-center text-2xl font-semibold text-zinc-800 sm:text-3xl">
               {t.faq.heading}
             </h2>
