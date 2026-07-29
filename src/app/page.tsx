@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import Script from "next/script";
 import Wordmark from "@/components/Wordmark";
 import InstallAppButton from "@/components/InstallAppButton";
 import StandaloneLoginRedirect from "@/components/StandaloneLoginRedirect";
@@ -60,6 +61,9 @@ function NavLink({ href, active, children }: { href: string; active?: boolean; c
 }
 
 const NAV_SECTION_IDS = ["how-it-works", "features", "pricing", "faq", "contact"];
+
+// GA4 — landing page only (not the rest of the app), per explicit request.
+const GA_MEASUREMENT_ID = "G-4S45BDW7ML";
 
 function ContactForm({ lang }: { lang: Lang }) {
   const t = landingCopy[lang].contact;
@@ -205,6 +209,15 @@ export default function LandingPage() {
 
   return (
     <div dir={dir} className={`flex min-h-screen flex-col bg-paper ${lang === "ar" ? "lang-ar" : ""}`}>
+      <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} strategy="afterInteractive" />
+      <Script id="ga4-init" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', '${GA_MEASUREMENT_ID}');
+        `}
+      </Script>
       <StandaloneLoginRedirect />
       <header className="sticky top-0 z-30 border-b border-zinc-200/0 bg-zinc-50/80 backdrop-blur-md transition-colors">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
