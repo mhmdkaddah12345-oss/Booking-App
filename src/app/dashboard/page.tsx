@@ -796,11 +796,14 @@ function ReserveModal({
     e.preventDefault();
     if (!selectedTime || selectedServiceIds.length === 0 || !customerName || !customerPhone) return;
     // Reserving can genuinely fail (the slot just got taken), so we can't
-    // open the wa.me URL directly before knowing the result — that would
-    // send a false "you're booked in" if the reserve fails. Instead open a
-    // blank tab now (still inside the click gesture, so not popup-blocked)
-    // and only point it at WhatsApp once the booking actually succeeds.
-    const waWindow = window.open("", "_blank");
+    // open the wa.me URL until we know the result — that would send a false
+    // "you're booked in" if the reserve fails. We used to pre-open a blank
+    // tab and redirect it later, but on iOS (especially inside the
+    // installed PWA) that blank tab gets disconnected from the app and its
+    // later location.href reassignment doesn't reliably fire, leaving a
+    // permanently stuck about:blank tab the owner had to close by hand.
+    // Navigating the current tab on success avoids ever creating that
+    // extra tab in the first place.
     setSubmitting(true);
     setError(null);
     try {
@@ -818,22 +821,19 @@ function ReserveModal({
       });
       const data = await res.json();
       if (!res.ok) {
-        waWindow?.close();
         setError(data.error === "slot_taken" ? t.slotTaken : t.genericError);
         return;
       }
-      if (waWindow) {
-        waWindow.location.href = whatsappLink(
-          customerPhone,
-          t.message.reserved({
-            customerName,
-            date,
-            time: selectedTime,
-            serviceName: selectedServices.map((s) => s.name).join(" + "),
-          })
-        );
-      }
       onCreated();
+      window.location.href = whatsappLink(
+        customerPhone,
+        t.message.reserved({
+          customerName,
+          date,
+          time: selectedTime,
+          serviceName: selectedServices.map((s) => s.name).join(" + "),
+        })
+      );
     } finally {
       setSubmitting(false);
     }
