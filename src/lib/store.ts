@@ -631,11 +631,18 @@ async function insertBookingForService(
       const event = initialStatus === "pending" ? "booking_requested" : "booking_confirmed";
       notify(event, { phone: customerPhone, name: customerName, date, time, bookingId: booking.id });
       if (initialStatus === "pending") {
-        notifyOwnerPush(
-          businessId,
-          "New booking request",
-          `${customerName} — ${date} at ${time} (${service.name})`
-        ).catch((err) => console.error("[push notify error]", err));
+        // Awaited (not fire-and-forget) — on Vercel, the serverless function
+        // can be frozen the instant the response is sent, which would kill
+        // an in-flight, un-awaited push send and made delivery intermittent.
+        try {
+          await notifyOwnerPush(
+            businessId,
+            "New booking request",
+            `${customerName} — ${date} at ${time} (${service.name})`
+          );
+        } catch (err) {
+          console.error("[push notify error]", err);
+        }
       }
       return { success: true, booking };
     }
@@ -929,11 +936,15 @@ export async function rescheduleBooking(
       }
 
       if (needsReconfirmation) {
-        notifyOwnerPush(
-          booking.businessId,
-          "Reschedule request",
-          `${updated.customerName} moved their appointment to ${newDate} at ${newTime} — needs your confirmation`
-        ).catch((err) => console.error("[push notify error]", err));
+        try {
+          await notifyOwnerPush(
+            booking.businessId,
+            "Reschedule request",
+            `${updated.customerName} moved their appointment to ${newDate} at ${newTime} — needs your confirmation`
+          );
+        } catch (err) {
+          console.error("[push notify error]", err);
+        }
       }
 
       return { success: true, booking: updated };
