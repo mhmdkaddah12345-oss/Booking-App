@@ -654,26 +654,42 @@ export default function BookingPage() {
           )}
 
           {successMessage && (
-            <div className="animate-step-in mt-4 flex items-start gap-3 rounded-lg bg-cedar/10 px-3 py-3 text-sm font-medium text-cedar-deep">
-              <svg viewBox="0 0 24 24" fill="none" className="mt-0.5 h-5 w-5 shrink-0 text-cedar">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" className="animate-circle-pop" />
-                <path
-                  pathLength="1"
-                  d="M7.5 12.5l2.8 2.8L16.5 9"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="animate-check-draw"
-                />
-              </svg>
-              <div>
-                <p>{successMessage}</p>
-                {bookedId && (
-                  <Link href={`/manage/${bookedId}`} className="mt-1 block underline">
-                    {t.messages.manageLink}
-                  </Link>
-                )}
+            <div
+              className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4 py-8"
+              onClick={() => setSuccessMessage(null)}
+            >
+              <div
+                className={`animate-modal-in w-full max-w-sm ${cardClass}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className={cardAccentBarClass} />
+                <div className="flex flex-col items-center gap-3 p-6 text-center">
+                  <svg viewBox="0 0 24 24" fill="none" className="h-12 w-12 shrink-0 text-cedar">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" className="animate-circle-pop" />
+                    <path
+                      pathLength="1"
+                      d="M7.5 12.5l2.8 2.8L16.5 9"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="animate-check-draw"
+                    />
+                  </svg>
+                  <p className="text-sm font-medium text-cedar-deep">{successMessage}</p>
+                  {bookedId && (
+                    <Link href={`/manage/${bookedId}`} className="text-sm font-medium text-zinc-600 underline">
+                      {t.messages.manageLink}
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setSuccessMessage(null)}
+                    className={`mt-1 ${primaryButtonClass}`}
+                  >
+                    {t.messages.close}
+                  </button>
+                </div>
               </div>
             </div>
           )}
