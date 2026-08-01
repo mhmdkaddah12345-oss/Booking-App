@@ -408,6 +408,26 @@ export async function removeEmployee(employeeId: string, businessId: string): Pr
   return { success: !error };
 }
 
+// Bookings are assigned per-employee, but a solo owner running the whole
+// business themselves shouldn't be forced to add themselves as "staff"
+// before they can take a single booking. If a business has no employees
+// yet, transparently provision one default row (self-healing — also
+// covers a business that later removes its only employee) so the
+// existing per-employee availability/assignment logic just works without
+// the owner ever needing to think about it.
+async function getOrCreateEmployees(businessId: string): Promise<{ id: string; name: string }[]> {
+  const { data: employees } = await supabase.from("employees").select("*").eq("business_id", businessId);
+  if (employees && employees.length > 0) return employees;
+
+  const { data: created, error } = await supabase
+    .from("employees")
+    .insert({ business_id: businessId, name: "Owner" })
+    .select()
+    .maybeSingle();
+  if (error || !created) return [];
+  return [created];
+}
+
 export async function isDayClosed(businessId: string, date: string): Promise<boolean> {
   const business = await getBusinessRowById(businessId);
   if (!business) return true;
@@ -451,6 +471,23 @@ function isEmployeeRangeFreeLocal(
   });
 }
 
+// Same idea as isEmployeeRangeFreeLocal, but for a solo business that
+// hasn't (and doesn't need to) add itself as an "employee" — capacity is
+// just one booking at a time, full stop, regardless of which employee_id
+// old/new bookings happen to reference.
+function isRangeFreeAcrossAnyBookingLocal(
+  bookingsThatDay: Booking[],
+  startMinutes: number,
+  durationMinutes: number
+): boolean {
+  const endMinutes = startMinutes + durationMinutes;
+  return !bookingsThatDay.some((b) => {
+    const bStart = timeToMinutes(b.time);
+    const bEnd = bStart + b.durationMinutes;
+    return rangesOverlap(startMinutes, endMinutes, bStart, bEnd);
+  });
+}
+
 async function getBookedBookingsForDate(businessId: string, date: string): Promise<Booking[]> {
   const { data } = await supabase
     .from("bookings")
@@ -474,7 +511,13 @@ async function getSlotsForDurationCore(
   const closed = (business.off_days as number[]).includes(new Date(y, m - 1, d).getDay());
   if (closed) return [];
 
-  const { data: employees } = await supabase.from("employees").select("*").eq("business_id", business.id);
+  // Read-only — never auto-provisions an employee row here. Two of these
+  // calls run concurrently (slots + fullyBooked, via Promise.all in the
+  // API route), so writing from here caused a duplicate-insert race the
+  // first time a still-staffless business got hit. A solo business (no
+  // employees added) is treated as a single implicit resource instead.
+  const { data: employeesRaw } = await supabase.from("employees").select("*").eq("business_id", business.id);
+  const employees = employeesRaw ?? [];
   const bookingsThatDay = await getBookedBookingsForDate(business.id, date);
 
   const startHour = business.start_hour as number;
@@ -487,9 +530,10 @@ async function getSlotsForDurationCore(
   const slots: SlotInfo[] = [];
   for (let start = startHour * 60; start + durationMinutes <= closeMinutes; start += slotGranularityMinutes) {
     if (date === today && start <= nowMinutes) continue;
-    const available = (employees ?? []).some((emp) =>
-      isEmployeeRangeFreeLocal(bookingsThatDay, emp.id, start, durationMinutes)
-    );
+    const available =
+      employees.length > 0
+        ? employees.some((emp) => isEmployeeRangeFreeLocal(bookingsThatDay, emp.id, start, durationMinutes))
+        : isRangeFreeAcrossAnyBookingLocal(bookingsThatDay, start, durationMinutes);
     slots.push({ time: minutesToTime(start), available });
   }
   return slots;
@@ -598,7 +642,7 @@ async function insertBookingForService(
     return { success: false, error: "business_locked" };
   }
 
-  const { data: employees } = await supabase.from("employees").select("*").eq("business_id", businessId);
+  const employees = await getOrCreateEmployees(businessId);
 
   // Try each employee in turn — the database's exclusion constraint is the
   // real safety net here (it rejects an overlapping insert even if two
@@ -606,7 +650,7 @@ async function insertBookingForService(
   // A "pending" booking holds the slot exactly like a "booked" one — the
   // exclusion constraint covers both — it just still needs the owner to
   // accept it before it's confirmed.
-  for (const emp of employees ?? []) {
+  for (const emp of employees) {
     const { data, error } = await supabase
       .from("bookings")
       .insert({
@@ -898,7 +942,7 @@ export async function rescheduleBooking(
     return { success: false, error: "not_found" };
   }
 
-  const { data: employees } = await supabase.from("employees").select("*").eq("business_id", booking.businessId);
+  const employees = await getOrCreateEmployees(booking.businessId);
 
   // A confirmed booking that actually moves to a new date/time needs the
   // owner to re-approve it, same as a fresh request — otherwise a customer
@@ -907,7 +951,7 @@ export async function rescheduleBooking(
   const isActualChange = booking.date !== newDate || booking.time !== newTime;
   const needsReconfirmation = booking.status === "booked" && isActualChange;
 
-  for (const emp of employees ?? []) {
+  for (const emp of employees) {
     const { data, error } = await supabase
       .from("bookings")
       .update({

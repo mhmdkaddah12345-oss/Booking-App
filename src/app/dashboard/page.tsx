@@ -15,7 +15,7 @@ import {
   inputClass,
 } from "@/lib/ui";
 import { IconChartBar, IconClock, IconUsers, IconCalendar, IconPlus } from "@/components/icons";
-import { whatsappLink } from "@/lib/whatsapp";
+import { whatsappLink, openWhatsApp } from "@/lib/whatsapp";
 import { useOwnerLang } from "@/lib/useOwnerLang";
 import { dashboardCopy, type Lang } from "@/lib/dashboardTranslations";
 
@@ -199,7 +199,7 @@ export default function DashboardPage() {
 
   async function handleCancel(id: string) {
     const booking = bookings.find((b) => b.id === id);
-    if (booking) window.open(whatsappLink(booking.customerPhone, t.message.cancelled(booking)), "_blank");
+    if (booking) openWhatsApp(whatsappLink(booking.customerPhone, t.message.cancelled(booking)));
     setBusyId(id);
     try {
       await fetch(`/api/bookings/${id}/cancel`, {
@@ -215,11 +215,10 @@ export default function DashboardPage() {
 
   async function handleAccept(id: string) {
     const booking = bookings.find((b) => b.id === id);
-    // Must open before the first await — browsers only allow window.open
-    // without popup-blocking while it's still inside the synchronous click
-    // gesture, and the booking data needed for the message is already in
-    // hand, so there's no need to wait for the confirm call to finish.
-    if (booking) window.open(whatsappLink(booking.customerPhone, t.message.accepted(booking)), "_blank");
+    // Fired before the first await — the booking data needed for the
+    // message is already in hand, so there's no need to wait for the
+    // confirm call to finish.
+    if (booking) openWhatsApp(whatsappLink(booking.customerPhone, t.message.accepted(booking)));
     setBusyId(id);
     try {
       await fetch(`/api/bookings/${id}/confirm`, { method: "POST" });
@@ -232,7 +231,7 @@ export default function DashboardPage() {
 
   async function handleDecline(id: string) {
     const booking = bookings.find((b) => b.id === id);
-    if (booking) window.open(whatsappLink(booking.customerPhone, t.message.declined(booking)), "_blank");
+    if (booking) openWhatsApp(whatsappLink(booking.customerPhone, t.message.declined(booking)));
     setBusyId(id);
     try {
       await fetch(`/api/bookings/${id}/decline`, { method: "POST" });
@@ -245,7 +244,7 @@ export default function DashboardPage() {
 
   async function handleConfirmWaitlist(id: string) {
     const entry = waitlist.find((w) => w.id === id);
-    if (entry) window.open(whatsappLink(entry.customerPhone, t.message.waitlistConfirmed(entry)), "_blank");
+    if (entry) openWhatsApp(whatsappLink(entry.customerPhone, t.message.waitlistConfirmed(entry)));
     setBusyId(id);
     try {
       await fetch(`/api/waitlist/${id}/confirm`, { method: "POST" });
@@ -808,15 +807,12 @@ function ReserveModal({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedTime || selectedServiceIds.length === 0 || !customerName || !customerPhone) return;
-    // Reserving can genuinely fail (the slot just got taken), so we can't
-    // open the wa.me URL until we know the result — that would send a false
-    // "you're booked in" if the reserve fails. We used to pre-open a blank
-    // tab and redirect it later, but on iOS (especially inside the
-    // installed PWA) that blank tab gets disconnected from the app and its
-    // later location.href reassignment doesn't reliably fire, leaving a
-    // permanently stuck about:blank tab the owner had to close by hand.
-    // Navigating the current tab on success avoids ever creating that
-    // extra tab in the first place.
+    // Reserving can genuinely fail (the slot just got taken), so we only
+    // open the wa.me link once we know the result — that would send a
+    // false "you're booked in" if the reserve fails. openWhatsApp clicks a
+    // real anchor rather than using window.open/location.href, which is
+    // what keeps this dashboard tab in place on iOS instead of leaving it
+    // stuck on about:blank or on wa.me once the owner switches back.
     setSubmitting(true);
     setError(null);
     try {
@@ -838,14 +834,16 @@ function ReserveModal({
         return;
       }
       onCreated();
-      window.location.href = whatsappLink(
-        customerPhone,
-        t.message.reserved({
-          customerName,
-          date,
-          time: selectedTime,
-          serviceName: selectedServices.map((s) => s.name).join(" + "),
-        })
+      openWhatsApp(
+        whatsappLink(
+          customerPhone,
+          t.message.reserved({
+            customerName,
+            date,
+            time: selectedTime,
+            serviceName: selectedServices.map((s) => s.name).join(" + "),
+          })
+        )
       );
     } finally {
       setSubmitting(false);
