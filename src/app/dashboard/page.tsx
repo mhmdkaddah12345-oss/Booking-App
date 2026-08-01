@@ -281,6 +281,14 @@ export default function DashboardPage() {
     .filter((b) => b.status === "pending")
     .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 
+  // A pending request nobody Accepted/Declined before its own appointment
+  // time arrived — flagged rather than auto-resolved, since silently
+  // declining would fire an unreviewed "sorry, can't accommodate" WhatsApp
+  // message to the customer.
+  function isMissed(booking: Booking) {
+    return new Date(`${booking.date}T${booking.time}`) < now;
+  }
+
   const selectedBooking = bookings.find((b) => b.id === selectedBookingId) ?? null;
 
   // fiveDays[0] is always today, so the current-time line only ever applies
@@ -387,6 +395,11 @@ export default function DashboardPage() {
                         </span>{" "}
                         — {b.customerName} ({b.customerPhone}) — {b.serviceName} ({b.durationMinutes} min,{" "}
                         {b.employeeName})
+                        {isMissed(b) && (
+                          <span className="ms-2 rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-600">
+                            {t.missed}
+                          </span>
+                        )}
                         {b.note && <span className="ms-2 italic text-zinc-500">&ldquo;{b.note}&rdquo;</span>}
                       </span>
                       <div className="flex gap-2">
