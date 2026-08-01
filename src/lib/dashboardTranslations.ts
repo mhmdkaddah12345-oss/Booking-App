@@ -54,6 +54,9 @@ export const dashboardCopy = {
     closedThatDay: "Closed that day.",
     fullyBookedThatDay: "Fully booked that day.",
     noTimesAvailable: "No times available.",
+    fullyBookedWaitlistPrompt: "You can still add them to the waitlist for that day.",
+    addToWaitlist: "Add to waitlist",
+    addingToWaitlist: "Adding...",
     customerName: "Customer name",
     customerPhone: "Customer phone",
     noteOptional: "Note (optional)",
@@ -75,6 +78,8 @@ export const dashboardCopy = {
         `Hi ${w.customerName}! A spot just opened up on ${w.date} at ${w.notifiedTime} for ${w.serviceName} — reply if you'd like it and we'll lock it in for you.`,
       waitlistConfirmed: (w: WaitlistMessageInput) =>
         `Hi ${w.customerName}! You're confirmed for ${w.date} at ${w.notifiedTime} for ${w.serviceName}. See you soon!`,
+      addedToWaitlist: (w: { customerName: string; date: string; serviceName: string }) =>
+        `Hi ${w.customerName}! We've added you to the waitlist for ${w.date} (${w.serviceName}) — we'll message you the moment a spot opens up.`,
     },
   },
   ar: {
@@ -126,6 +131,9 @@ export const dashboardCopy = {
     closedThatDay: "مسكرين بهالنهار.",
     fullyBookedThatDay: "محجوز بالكامل بهالنهار.",
     noTimesAvailable: "ما في أوقات متاحة.",
+    fullyBookedWaitlistPrompt: "بعدك فيك تضيفه للائحة الانتظار لهالنهار.",
+    addToWaitlist: "ضيف للائحة الانتظار",
+    addingToWaitlist: "عم يضيف...",
     customerName: "اسم الزبون",
     customerPhone: "رقم هاتف الزبون",
     noteOptional: "ملاحظة (اختياري)",
@@ -147,6 +155,8 @@ export const dashboardCopy = {
         `أهلين ${w.customerName}! هلق فتح موعد يوم ${w.date} الساعة ${w.notifiedTime} لـ${w.serviceName} — ردّ علينا إذا بدك ياه ومنثبتلك.`,
       waitlistConfirmed: (w: WaitlistMessageInput) =>
         `أهلين ${w.customerName}! تأكد موعدك يوم ${w.date} الساعة ${w.notifiedTime} لـ${w.serviceName}. منشوفك قريباً!`,
+      addedToWaitlist: (w: { customerName: string; date: string; serviceName: string }) =>
+        `أهلين ${w.customerName}! ضفناك للائحة الانتظار ليوم ${w.date} (${w.serviceName}) — رح نراسلك أول ما يفتح موعد.`,
     },
   },
 } as const;

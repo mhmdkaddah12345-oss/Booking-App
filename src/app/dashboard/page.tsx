@@ -850,6 +850,42 @@ function ReserveModal({
     }
   }
 
+  async function submitToWaitlist() {
+    if (selectedServiceIds.length === 0 || !customerName || !customerPhone) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/dashboard/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date,
+          serviceIds: selectedServiceIds,
+          customerName,
+          customerPhone,
+          note: note || undefined,
+        }),
+      });
+      if (!res.ok) {
+        setError(t.genericError);
+        return;
+      }
+      onCreated();
+      openWhatsApp(
+        whatsappLink(
+          customerPhone,
+          t.message.addedToWaitlist({
+            customerName,
+            date,
+            serviceName: selectedServices.map((s) => s.name).join(" + "),
+          })
+        )
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div
       dir={lang === "ar" ? "rtl" : "ltr"}
@@ -865,7 +901,17 @@ function ReserveModal({
             </button>
           </div>
 
-          <form onSubmit={submit} className="mt-4 flex flex-col gap-3">
+          <form
+            onSubmit={
+              fullyBooked
+                ? (e) => {
+                    e.preventDefault();
+                    submitToWaitlist();
+                  }
+                : submit
+            }
+            className="mt-4 flex flex-col gap-3"
+          >
             <label className="flex flex-col gap-1 text-sm text-zinc-600">
               {t.date}
               <input
@@ -929,7 +975,10 @@ function ReserveModal({
                 ) : dayClosed ? (
                   <p className="mt-1 text-sm text-zinc-400">{t.closedThatDay}</p>
                 ) : fullyBooked ? (
-                  <p className="mt-1 text-sm text-zinc-400">{t.fullyBookedThatDay}</p>
+                  <div>
+                    <p className="text-sm text-zinc-400">{t.fullyBookedThatDay}</p>
+                    <p className="mt-1 text-sm text-zinc-400">{t.fullyBookedWaitlistPrompt}</p>
+                  </div>
                 ) : slots.length === 0 ? (
                   <p className="mt-1 text-sm text-zinc-400">{t.noTimesAvailable}</p>
                 ) : (
@@ -988,10 +1037,22 @@ function ReserveModal({
             <div className="mt-1 flex gap-2">
               <button
                 type="submit"
-                disabled={submitting || !selectedTime || selectedServiceIds.length === 0 || !customerName || !customerPhone}
+                disabled={
+                  submitting ||
+                  selectedServiceIds.length === 0 ||
+                  !customerName ||
+                  !customerPhone ||
+                  (!fullyBooked && !selectedTime)
+                }
                 className={primaryButtonClass}
               >
-                {submitting ? t.reserving : t.reserve}
+                {fullyBooked
+                  ? submitting
+                    ? t.addingToWaitlist
+                    : t.addToWaitlist
+                  : submitting
+                  ? t.reserving
+                  : t.reserve}
               </button>
               <button type="button" onClick={onClose} className={ghostButtonClass}>
                 {t.cancel}
