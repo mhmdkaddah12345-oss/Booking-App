@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { primaryButtonClass, dangerButtonClass, ghostButtonClass, cardClass, cardAccentBarClass, pulsingDotClass } from "@/lib/ui";
 import { manageCopy, type Lang } from "@/lib/managePageTranslations";
+import SuppressInstallPrompt from "@/components/SuppressInstallPrompt";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
@@ -190,6 +191,7 @@ export default function ManageBookingPage() {
 
   return (
     <div dir={dir} className={`min-h-screen bg-zinc-50 px-4 py-8 ${lang === "ar" ? "lang-ar" : ""}`}>
+      <SuppressInstallPrompt />
       <div className="mx-auto max-w-xl">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-semibold text-zinc-900">{t.title}</h1>

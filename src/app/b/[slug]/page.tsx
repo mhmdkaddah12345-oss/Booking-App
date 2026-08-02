@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { inputClass, primaryButtonClass, ghostButtonClass, cardClass, cardAccentBarClass } from "@/lib/ui";
 import { bookingCopy, Lang } from "@/lib/bookingPageTranslations";
+import SuppressInstallPrompt from "@/components/SuppressInstallPrompt";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
@@ -282,6 +284,7 @@ export default function BookingPage() {
   if (notFound) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-8">
+        <SuppressInstallPrompt />
         <p className="text-sm text-zinc-500">{t.notFound}</p>
       </div>
     );
@@ -290,6 +293,7 @@ export default function BookingPage() {
   if (locked) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-8">
+        <SuppressInstallPrompt />
         <p className="text-sm text-zinc-500">{t.locked}</p>
       </div>
     );
@@ -297,6 +301,7 @@ export default function BookingPage() {
 
   return (
     <div dir={dir} className={`min-h-screen bg-zinc-50 px-4 py-8 ${lang === "ar" ? "lang-ar" : ""}`}>
+      <SuppressInstallPrompt />
       <div className="mx-auto max-w-xl">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -596,103 +601,108 @@ export default function BookingPage() {
           )}
           </div>
 
-          {selectedTime && !fullyBooked && (
-            <div
-              className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4 py-8"
-              onClick={() => setSelectedTime(null)}
-            >
+          {selectedTime &&
+            !fullyBooked &&
+            createPortal(
               <div
-                className={`animate-modal-in w-full max-w-md ${cardClass} max-h-full overflow-y-auto`}
-                onClick={(e) => e.stopPropagation()}
+                className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4 py-8"
+                onClick={() => setSelectedTime(null)}
               >
-                <div className={cardAccentBarClass} />
-                <form onSubmit={submitBooking} className="flex flex-col gap-3 p-5">
-                  <p className="text-sm font-medium text-zinc-800">
-                    {t.bookingModal.title(selectedDate, selectedTime)}
-                  </p>
-                  <input
-                    required
-                    placeholder={t.slotsCard.yourName}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className={inputClass}
-                  />
-                  <input
-                    required
-                    placeholder={t.slotsCard.phoneNumber}
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className={inputClass}
-                  />
-                  <textarea
-                    placeholder={t.slotsCard.notePlaceholder}
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    rows={2}
-                    className={inputClass}
-                  />
-                  {formError && <p className="text-sm text-red-600">{formError}</p>}
-                  <div className="flex gap-2">
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className={primaryButtonClass}
-                    >
-                      {submitting ? t.bookingModal.booking : t.bookingModal.confirmBooking}
-                    </button>
+                <div
+                  className={`animate-modal-in w-full max-w-md ${cardClass} max-h-full overflow-y-auto`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className={cardAccentBarClass} />
+                  <form onSubmit={submitBooking} className="flex flex-col gap-3 p-5">
+                    <p className="text-sm font-medium text-zinc-800">
+                      {t.bookingModal.title(selectedDate, selectedTime)}
+                    </p>
+                    <input
+                      required
+                      placeholder={t.slotsCard.yourName}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className={inputClass}
+                    />
+                    <input
+                      required
+                      placeholder={t.slotsCard.phoneNumber}
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className={inputClass}
+                    />
+                    <textarea
+                      placeholder={t.slotsCard.notePlaceholder}
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      rows={2}
+                      className={inputClass}
+                    />
+                    {formError && <p className="text-sm text-red-600">{formError}</p>}
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className={primaryButtonClass}
+                      >
+                        {submitting ? t.bookingModal.booking : t.bookingModal.confirmBooking}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedTime(null)}
+                        className={ghostButtonClass}
+                      >
+                        {t.slotsCard.cancel}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>,
+              document.body
+            )}
+
+          {successMessage &&
+            createPortal(
+              <div
+                className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4 py-8"
+                onClick={() => setSuccessMessage(null)}
+              >
+                <div
+                  className={`animate-modal-in w-full max-w-sm ${cardClass}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className={cardAccentBarClass} />
+                  <div className="flex flex-col items-center gap-3 p-6 text-center">
+                    <svg viewBox="0 0 24 24" fill="none" className="h-12 w-12 shrink-0 text-cedar">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" className="animate-circle-pop" />
+                      <path
+                        pathLength="1"
+                        d="M7.5 12.5l2.8 2.8L16.5 9"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="animate-check-draw"
+                      />
+                    </svg>
+                    <p className="text-sm font-medium text-cedar-deep">{successMessage}</p>
+                    {bookedId && (
+                      <Link href={`/manage/${bookedId}`} className="text-sm font-medium text-zinc-600 underline">
+                        {t.messages.manageLink}
+                      </Link>
+                    )}
                     <button
                       type="button"
-                      onClick={() => setSelectedTime(null)}
-                      className={ghostButtonClass}
+                      onClick={() => setSuccessMessage(null)}
+                      className={`mt-1 ${primaryButtonClass}`}
                     >
-                      {t.slotsCard.cancel}
+                      {t.messages.close}
                     </button>
                   </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {successMessage && (
-            <div
-              className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4 py-8"
-              onClick={() => setSuccessMessage(null)}
-            >
-              <div
-                className={`animate-modal-in w-full max-w-sm ${cardClass}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className={cardAccentBarClass} />
-                <div className="flex flex-col items-center gap-3 p-6 text-center">
-                  <svg viewBox="0 0 24 24" fill="none" className="h-12 w-12 shrink-0 text-cedar">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" className="animate-circle-pop" />
-                    <path
-                      pathLength="1"
-                      d="M7.5 12.5l2.8 2.8L16.5 9"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="animate-check-draw"
-                    />
-                  </svg>
-                  <p className="text-sm font-medium text-cedar-deep">{successMessage}</p>
-                  {bookedId && (
-                    <Link href={`/manage/${bookedId}`} className="text-sm font-medium text-zinc-600 underline">
-                      {t.messages.manageLink}
-                    </Link>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setSuccessMessage(null)}
-                    className={`mt-1 ${primaryButtonClass}`}
-                  >
-                    {t.messages.close}
-                  </button>
                 </div>
-              </div>
-            </div>
-          )}
+              </div>,
+              document.body
+            )}
           </div>
         </div>
 
