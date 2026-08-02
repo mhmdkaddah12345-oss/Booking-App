@@ -408,7 +408,7 @@ export default function BookingPage() {
         ) : (
           <div className="h-32 w-full bg-gradient-to-br from-zinc-900 via-[#b98b3e] to-cedar sm:h-40" />
         )}
-        <div className="mx-auto -mt-14 max-w-3xl px-4 sm:-mt-16">
+        <div className="relative z-10 mx-auto -mt-14 max-w-3xl px-4 sm:-mt-16">
           <div className={cardClass}>
             <div className={cardAccentBarClass} />
             <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-end sm:justify-between">
