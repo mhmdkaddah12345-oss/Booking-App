@@ -5,8 +5,11 @@ import Link from "next/link";
 import Wordmark from "@/components/Wordmark";
 import { inputClass, primaryButtonClass, cardClass, cardAccentBarClass } from "@/lib/ui";
 import { ownerLoginCopy, type Lang } from "@/lib/ownerLoginTranslations";
+import { whatsappLink } from "@/lib/whatsapp";
 
-const SUPPORT_EMAIL = "mhmdkaddah12345@gmail.com";
+// Temporary — email recovery may come back later, but for now password
+// recovery is handled manually over WhatsApp.
+const SUPPORT_PHONE = "76022857";
 
 export default function OwnerLoginPage() {
   const [lang, setLang] = useState<Lang>("en");
@@ -89,7 +92,16 @@ export default function OwnerLoginPage() {
           </button>
           {showForgotHelp && (
             <p className="rounded-lg bg-zinc-100 px-3 py-2 text-sm leading-relaxed text-zinc-600">
-              {t.forgotHelp(SUPPORT_EMAIL)}{" "}
+              {t.forgotHelp}{" "}
+              <a
+                href={whatsappLink(SUPPORT_PHONE, "")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-zinc-800 underline"
+              >
+                {SUPPORT_PHONE}
+              </a>{" "}
+              {t.forgotHelpSuffix} {t.alreadyHaveCode}{" "}
               <Link href="/dashboard/reset-with-code" className="font-medium text-zinc-800 underline">
                 {t.resetPassword}
               </Link>
