@@ -9,7 +9,7 @@ import { bookingCopy, Lang } from "@/lib/bookingPageTranslations";
 import SuppressInstallPrompt from "@/components/SuppressInstallPrompt";
 import { formatDisplayDate } from "@/lib/formatDate";
 import { whatsappLink } from "@/lib/whatsapp";
-import { IconChatBubble } from "@/components/icons";
+import { IconChatBubble, IconClock } from "@/components/icons";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
@@ -358,7 +358,7 @@ export default function BookingPage() {
       <header className="sticky top-0 z-40 border-b border-zinc-200 bg-paper/90 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-3 px-4">
           <span className="flex min-w-0 items-center gap-2 font-semibold text-zinc-900">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-zinc-900 via-[#b98b3e] to-cedar text-xs font-bold text-white">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-xs font-bold text-zinc-900">
               {initials(businessName) || "•"}
             </span>
             <span className="truncate">{businessName || t.loading}</span>
@@ -398,27 +398,35 @@ export default function BookingPage() {
         </div>
       </header>
 
-      <section className="relative overflow-hidden">
+      <section className="relative h-64 overflow-hidden sm:h-96">
         {heroImageUrl ? (
-          <div className="relative h-48 w-full sm:h-64">
+          <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={heroImageUrl} alt="" className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-          </div>
+            <img src={heroImageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/5 to-transparent" />
+          </>
         ) : (
-          <div className="h-32 w-full bg-gradient-to-br from-zinc-900 via-[#b98b3e] to-cedar sm:h-40" />
+          <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-[#b98b3e] to-cedar" />
         )}
-        <div className="relative z-10 mx-auto -mt-14 max-w-3xl px-4 sm:-mt-16">
-          <div className={cardClass}>
-            <div className={cardAccentBarClass} />
-            <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-end sm:justify-between">
-              <div className="min-w-0">
-                <h1 className="text-2xl font-semibold text-zinc-900">{businessName || t.loading}</h1>
-                {about && <p className="mt-1.5 max-w-xl text-sm text-zinc-600">{about}</p>}
+        <div className="absolute inset-0 flex items-center">
+          <div className="mx-auto w-full max-w-3xl px-4">
+            <div className={`max-w-md ${cardClass}`}>
+              <div className={cardAccentBarClass} />
+              <div className="p-6">
+                <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl">{businessName || t.loading}</h1>
+                <p className="mt-2 text-sm text-zinc-600">{about || t.heroFallbackSubtitle}</p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <a href="#services" className={primaryButtonClass}>
+                    {t.nav.bookNow}
+                  </a>
+                  <a
+                    href="#services"
+                    className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-50"
+                  >
+                    {t.viewServices}
+                  </a>
+                </div>
               </div>
-              <a href="#book" className={`${primaryButtonClass} shrink-0 text-center`}>
-                {t.nav.bookNow}
-              </a>
             </div>
           </div>
         </div>
@@ -494,22 +502,26 @@ export default function BookingPage() {
                   onClick={() => toggleService(s.id)}
                   className={`text-start ${cardClass} ${listRowHoverClass} ${selected ? "ring-2 ring-zinc-900" : ""}`}
                 >
-                  <div className={cardAccentBarClass} />
-                  <div className="flex items-center justify-between gap-3 p-4">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-zinc-800">{s.name}</p>
-                      <p className="mt-0.5 text-xs text-zinc-500">
-                        {s.durationMinutes} {lang === "ar" ? "د" : "min"}
-                        {s.priceUsd !== null ? ` · $${s.priceUsd}` : ""}
-                      </p>
-                    </div>
-                    <span
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                        selected ? "bg-zinc-900 text-white" : "bg-zinc-100 text-transparent"
-                      }`}
-                    >
-                      ✓
+                  <div className="flex flex-col gap-3 p-5">
+                    <p className="font-semibold text-zinc-800">{s.name}</p>
+                    <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600">
+                      <IconClock className="h-3.5 w-3.5" />
+                      {s.durationMinutes} {lang === "ar" ? "د" : "min"}
                     </span>
+                    <div className="flex items-center justify-between gap-3 border-t border-zinc-100 pt-3">
+                      {s.priceUsd !== null ? (
+                        <p className="text-xl font-bold text-zinc-900">${s.priceUsd}</p>
+                      ) : (
+                        <span />
+                      )}
+                      <span
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                          selected ? "bg-zinc-900 text-white" : "ring-1 ring-zinc-300 text-zinc-700"
+                        }`}
+                      >
+                        {selected ? `✓ ${t.services.selected}` : t.services.select}
+                      </span>
+                    </div>
                   </div>
                 </button>
               );
@@ -528,105 +540,11 @@ export default function BookingPage() {
         </section>
 
         <section id="book" className="scroll-mt-20">
-          <div className="mt-10 flex items-center gap-2">
-            <div className="flex flex-1 gap-2 overflow-x-auto pb-2">
-              {quickDays.map((d) => (
-                <button
-                  key={d.date}
-                  onClick={() => {
-                    setSelectedDate(d.date);
-                    setCalendarOpen(false);
-                  }}
-                  className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-150 hover:scale-[1.05] active:scale-95 ${
-                    selectedDate === d.date
-                      ? "bg-zinc-900 text-white"
-                      : d.closed
-                      ? "bg-white text-zinc-400 ring-1 ring-zinc-200 hover:bg-zinc-100"
-                      : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-100"
-                  }`}
-                >
-                  {d.label}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setCalendarOpen((open) => !open)}
-              aria-label={t.pickAnotherDate}
-              className={`shrink-0 rounded-full p-2 text-lg ring-1 transition-all duration-150 hover:scale-[1.05] active:scale-95 ${
-                calendarOpen ? "bg-zinc-900 text-white ring-zinc-900" : "bg-white text-zinc-600 ring-zinc-200 hover:bg-zinc-100"
-              }`}
-            >
-              📅
-            </button>
-          </div>
-
-          {calendarOpen && (
-            <div className="animate-step-in mt-2 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={goToPrevMonth}
-                  disabled={isAtCurrentMonth}
-                  className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-30"
-                >
-                  ‹
-                </button>
-                <p className="text-sm font-semibold text-zinc-800">
-                  {new Date(viewYear, viewMonth, 1).toLocaleDateString(dateLocale, { month: "long", year: "numeric" })}
-                </p>
-                <button
-                  onClick={goToNextMonth}
-                  className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                >
-                  ›
-                </button>
-              </div>
-
-              <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs font-medium text-zinc-400">
-                {t.weekdayLabels.map((w) => (
-                  <div key={w}>{w}</div>
-                ))}
-              </div>
-
-              <div className="mt-1 grid grid-cols-7 gap-1">
-                {cells.map((day, i) => {
-                  if (day === null) return <div key={`blank-${i}`} />;
-                  const dateStr = toDateStr(viewYear, viewMonth, day);
-                  const isPast = dateStr < todayStr;
-                  const isClosed = offDays.includes(new Date(viewYear, viewMonth, day).getDay());
-                  const isSelected = dateStr === selectedDate;
-                  return (
-                    <button
-                      key={dateStr}
-                      disabled={isPast}
-                      onClick={() => {
-                        setSelectedDate(dateStr);
-                        setCalendarOpen(false);
-                      }}
-                      className={`aspect-square rounded-lg text-sm font-medium transition-all duration-150 ${
-                        isPast
-                          ? "cursor-not-allowed text-zinc-200"
-                          : `hover:scale-[1.1] active:scale-95 ${
-                              isSelected
-                                ? "bg-zinc-900 text-white"
-                                : isClosed
-                                ? "text-zinc-300 hover:bg-zinc-100"
-                                : "text-zinc-700 hover:bg-zinc-100"
-                            }`
-                      }`}
-                    >
-                      {day}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
           <button
             type="button"
             onClick={() => setSlotsPopupOpen(true)}
             disabled={selectedServiceIds.length === 0}
-            className={`mt-4 w-full ${primaryButtonClass}`}
+            className={`mt-10 w-full ${primaryButtonClass}`}
           >
             {t.reserveButton}
           </button>
@@ -644,7 +562,7 @@ export default function BookingPage() {
                   <div className={cardAccentBarClass} />
                   <div className="p-5">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-medium text-zinc-800">{formatDisplayDate(selectedDate, lang)}</p>
+                      <p className="text-sm font-medium text-zinc-800">{t.reserveButton}</p>
                       <button
                         type="button"
                         onClick={() => setSlotsPopupOpen(false)}
@@ -654,7 +572,103 @@ export default function BookingPage() {
                         ✕
                       </button>
                     </div>
-                    <div key={`${selectedDate}-${serviceIdsKey}`} className="animate-step-in mt-3">
+
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="flex flex-1 gap-2 overflow-x-auto pb-2">
+                        {quickDays.map((d) => (
+                          <button
+                            key={d.date}
+                            onClick={() => {
+                              setSelectedDate(d.date);
+                              setCalendarOpen(false);
+                            }}
+                            className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-150 hover:scale-[1.05] active:scale-95 ${
+                              selectedDate === d.date
+                                ? "bg-zinc-900 text-white"
+                                : d.closed
+                                ? "bg-white text-zinc-400 ring-1 ring-zinc-200 hover:bg-zinc-100"
+                                : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-100"
+                            }`}
+                          >
+                            {d.label}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => setCalendarOpen((open) => !open)}
+                        aria-label={t.pickAnotherDate}
+                        className={`shrink-0 rounded-full p-2 text-lg ring-1 transition-all duration-150 hover:scale-[1.05] active:scale-95 ${
+                          calendarOpen ? "bg-zinc-900 text-white ring-zinc-900" : "bg-white text-zinc-600 ring-zinc-200 hover:bg-zinc-100"
+                        }`}
+                      >
+                        📅
+                      </button>
+                    </div>
+
+                    {calendarOpen && (
+                      <div className="animate-step-in mt-2 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
+                        <div className="flex items-center justify-between">
+                          <button
+                            onClick={goToPrevMonth}
+                            disabled={isAtCurrentMonth}
+                            className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-30"
+                          >
+                            ‹
+                          </button>
+                          <p className="text-sm font-semibold text-zinc-800">
+                            {new Date(viewYear, viewMonth, 1).toLocaleDateString(dateLocale, { month: "long", year: "numeric" })}
+                          </p>
+                          <button
+                            onClick={goToNextMonth}
+                            className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                          >
+                            ›
+                          </button>
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs font-medium text-zinc-400">
+                          {t.weekdayLabels.map((w) => (
+                            <div key={w}>{w}</div>
+                          ))}
+                        </div>
+
+                        <div className="mt-1 grid grid-cols-7 gap-1">
+                          {cells.map((day, i) => {
+                            if (day === null) return <div key={`blank-${i}`} />;
+                            const dateStr = toDateStr(viewYear, viewMonth, day);
+                            const isPast = dateStr < todayStr;
+                            const isClosed = offDays.includes(new Date(viewYear, viewMonth, day).getDay());
+                            const isSelected = dateStr === selectedDate;
+                            return (
+                              <button
+                                key={dateStr}
+                                disabled={isPast}
+                                onClick={() => {
+                                  setSelectedDate(dateStr);
+                                  setCalendarOpen(false);
+                                }}
+                                className={`aspect-square rounded-lg text-sm font-medium transition-all duration-150 ${
+                                  isPast
+                                    ? "cursor-not-allowed text-zinc-200"
+                                    : `hover:scale-[1.1] active:scale-95 ${
+                                        isSelected
+                                          ? "bg-zinc-900 text-white"
+                                          : isClosed
+                                          ? "text-zinc-300 hover:bg-zinc-100"
+                                          : "text-zinc-700 hover:bg-zinc-100"
+                                      }`
+                                }`}
+                              >
+                                {day}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    <p className="mt-3 text-xs font-medium text-zinc-400">{formatDisplayDate(selectedDate, lang)}</p>
+                    <div key={`${selectedDate}-${serviceIdsKey}`} className="animate-step-in mt-1">
                       {slotsLoading ? (
                         <p className="text-sm text-zinc-500">{t.slotsCard.loadingTimes}</p>
                       ) : dayClosed ? (
