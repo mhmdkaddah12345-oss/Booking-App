@@ -13,6 +13,7 @@ import {
 } from "@/lib/ui";
 import { IconBuilding, IconCreditCard, IconChat } from "@/components/icons";
 import { PLANS, PlanId } from "@/lib/plans";
+import { formatDisplayDateTime } from "@/lib/formatDate";
 
 type ContactMessage = { id: string; name: string; email: string; message: string; createdAt: string };
 
@@ -33,7 +34,7 @@ type Business = {
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  return formatDisplayDateTime(iso);
 }
 
 function StatusBadge({ business }: { business: Business }) {
@@ -335,7 +336,7 @@ export default function AdminPage() {
                       {m.name} <span className="font-normal text-zinc-500">— {m.email}</span>
                     </p>
                     <p className="shrink-0 text-xs text-zinc-400">
-                      {new Date(m.createdAt).toLocaleString(undefined, {
+                      {new Date(m.createdAt).toLocaleString("en-GB", {
                         year: "numeric",
                         month: "short",
                         day: "numeric",

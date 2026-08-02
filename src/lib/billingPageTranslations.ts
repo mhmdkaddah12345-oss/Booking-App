@@ -21,7 +21,7 @@ export const billingCopy = {
     thanksReported: "Thanks — we'll confirm your payment and extend your access shortly.",
     planNames: { monthly: "Monthly", half_year: "6 Months", yearly: "Yearly" } as Record<string, string>,
     langToggle: "العربية",
-    localeTag: undefined as string | undefined,
+    localeTag: "en-GB" as string | undefined,
   },
   ar: {
     title: "الاشتراك",

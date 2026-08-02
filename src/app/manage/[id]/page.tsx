@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { primaryButtonClass, dangerButtonClass, ghostButtonClass, cardClass, cardAccentBarClass, pulsingDotClass } from "@/lib/ui";
 import { manageCopy, type Lang } from "@/lib/managePageTranslations";
 import SuppressInstallPrompt from "@/components/SuppressInstallPrompt";
+import { formatDisplayDate } from "@/lib/formatDate";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
@@ -229,7 +230,7 @@ export default function ManageBookingPage() {
                 )}
               </div>
               <p className="mt-1 text-sm text-zinc-600">
-                {t.dateTime(booking.date, booking.time, booking.durationMinutes)}
+                {t.dateTime(formatDisplayDate(booking.date, lang), booking.time, booking.durationMinutes)}
               </p>
               <p className="mt-1 text-sm text-zinc-500">
                 {t.bookedUnder(booking.customerName, booking.customerPhone)}

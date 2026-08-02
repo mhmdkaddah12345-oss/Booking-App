@@ -18,6 +18,7 @@ import { IconChartBar, IconClock, IconUsers, IconCalendar, IconPlus } from "@/co
 import { whatsappLink, openWhatsApp } from "@/lib/whatsapp";
 import { useOwnerLang } from "@/lib/useOwnerLang";
 import { dashboardCopy, type Lang } from "@/lib/dashboardTranslations";
+import { formatDisplayDate } from "@/lib/formatDate";
 
 function greeting(t: { greetingMorning: string; greetingAfternoon: string; greetingEvening: string }) {
   const h = new Date().getHours();
@@ -199,7 +200,10 @@ export default function DashboardPage() {
 
   async function handleCancel(id: string) {
     const booking = bookings.find((b) => b.id === id);
-    if (booking) openWhatsApp(whatsappLink(booking.customerPhone, t.message.cancelled(booking)));
+    if (booking)
+      openWhatsApp(
+        whatsappLink(booking.customerPhone, t.message.cancelled({ ...booking, date: formatDisplayDate(booking.date, lang) }))
+      );
     setBusyId(id);
     try {
       await fetch(`/api/bookings/${id}/cancel`, {
@@ -218,7 +222,10 @@ export default function DashboardPage() {
     // Fired before the first await — the booking data needed for the
     // message is already in hand, so there's no need to wait for the
     // confirm call to finish.
-    if (booking) openWhatsApp(whatsappLink(booking.customerPhone, t.message.accepted(booking)));
+    if (booking)
+      openWhatsApp(
+        whatsappLink(booking.customerPhone, t.message.accepted({ ...booking, date: formatDisplayDate(booking.date, lang) }))
+      );
     setBusyId(id);
     try {
       await fetch(`/api/bookings/${id}/confirm`, { method: "POST" });
@@ -231,7 +238,10 @@ export default function DashboardPage() {
 
   async function handleDecline(id: string) {
     const booking = bookings.find((b) => b.id === id);
-    if (booking) openWhatsApp(whatsappLink(booking.customerPhone, t.message.declined(booking)));
+    if (booking)
+      openWhatsApp(
+        whatsappLink(booking.customerPhone, t.message.declined({ ...booking, date: formatDisplayDate(booking.date, lang) }))
+      );
     setBusyId(id);
     try {
       await fetch(`/api/bookings/${id}/decline`, { method: "POST" });
@@ -244,7 +254,10 @@ export default function DashboardPage() {
 
   async function handleConfirmWaitlist(id: string) {
     const entry = waitlist.find((w) => w.id === id);
-    if (entry) openWhatsApp(whatsappLink(entry.customerPhone, t.message.waitlistConfirmed(entry)));
+    if (entry)
+      openWhatsApp(
+        whatsappLink(entry.customerPhone, t.message.waitlistConfirmed({ ...entry, date: formatDisplayDate(entry.date, lang) }))
+      );
     setBusyId(id);
     try {
       await fetch(`/api/waitlist/${id}/confirm`, { method: "POST" });
@@ -390,7 +403,7 @@ export default function DashboardPage() {
                     >
                       <span className="text-zinc-700">
                         <span className="font-medium text-zinc-800">
-                          {b.date} at {b.time}
+                          {formatDisplayDate(b.date, lang)} at {b.time}
                         </span>{" "}
                         — {b.customerName} ({b.customerPhone}) — {b.serviceName} ({b.durationMinutes} min,{" "}
                         {b.employeeName})
@@ -570,8 +583,8 @@ export default function DashboardPage() {
                       )}
                     </div>
                     <p className="mt-1 text-sm text-zinc-600">
-                      {selectedBooking.date} at {selectedBooking.time} ({selectedBooking.durationMinutes} min) —{" "}
-                      {selectedBooking.employeeName}
+                      {formatDisplayDate(selectedBooking.date, lang)} at {selectedBooking.time} (
+                      {selectedBooking.durationMinutes} min) — {selectedBooking.employeeName}
                     </p>
                     <p className="mt-1 text-sm text-zinc-500">
                       {selectedBooking.customerName} ({selectedBooking.customerPhone})
@@ -637,7 +650,7 @@ export default function DashboardPage() {
                       }`}
                     >
                       <span className="text-zinc-700">
-                        <span className="font-medium text-zinc-800">{w.date}</span> — {w.customerName} (
+                        <span className="font-medium text-zinc-800">{formatDisplayDate(w.date, lang)}</span> — {w.customerName} (
                         {w.customerPhone}) — {w.serviceName} ({w.durationMinutes} min)
                         {w.status === "notified" && (
                           <span className="ms-2 font-medium text-amber-700">{t.notifiedFor(w.notifiedTime ?? "")}</span>
@@ -647,7 +660,10 @@ export default function DashboardPage() {
                       {w.status === "notified" && (
                         <div className="flex shrink-0 gap-2">
                           <a
-                            href={whatsappLink(w.customerPhone, t.message.waitlistSlotOpen(w))}
+                            href={whatsappLink(
+                              w.customerPhone,
+                              t.message.waitlistSlotOpen({ ...w, date: formatDisplayDate(w.date, lang) })
+                            )}
                             target="_blank"
                             rel="noopener noreferrer"
                             title={t.tellThemTitle}
@@ -687,7 +703,7 @@ export default function DashboardPage() {
                 <div className="mt-2 flex flex-col gap-4">
                   {laterDates.map((date) => (
                     <div key={date}>
-                      <p className="text-sm font-semibold text-zinc-700">{date}</p>
+                      <p className="text-sm font-semibold text-zinc-700">{formatDisplayDate(date, lang)}</p>
                       <ul className="mt-1 flex flex-col gap-2">
                         {bookingsByDate(date).map((b) => (
                           <li
@@ -839,7 +855,7 @@ function ReserveModal({
           customerPhone,
           t.message.reserved({
             customerName,
-            date,
+            date: formatDisplayDate(date, lang),
             time: selectedTime,
             serviceName: selectedServices.map((s) => s.name).join(" + "),
           })
@@ -876,7 +892,7 @@ function ReserveModal({
           customerPhone,
           t.message.addedToWaitlist({
             customerName,
-            date,
+            date: formatDisplayDate(date, lang),
             serviceName: selectedServices.map((s) => s.name).join(" + "),
           })
         )

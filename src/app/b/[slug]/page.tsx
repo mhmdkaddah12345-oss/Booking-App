@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { inputClass, primaryButtonClass, ghostButtonClass, cardClass, cardAccentBarClass } from "@/lib/ui";
 import { bookingCopy, Lang } from "@/lib/bookingPageTranslations";
 import SuppressInstallPrompt from "@/components/SuppressInstallPrompt";
+import { formatDisplayDate } from "@/lib/formatDate";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
@@ -189,7 +190,7 @@ export default function BookingPage() {
         return;
       }
       const data = await res.json();
-      setSuccessMessage(t.messages.requestSent(selectedDate, selectedTime));
+      setSuccessMessage(t.messages.requestSent(formatDisplayDate(selectedDate, lang), selectedTime));
       setBookedId(data.booking.id);
       setSelectedTime(null);
       setName("");
@@ -348,7 +349,7 @@ export default function BookingPage() {
                     >
                       <span className="text-zinc-700">
                         <span className="font-medium text-zinc-800">
-                          {b.date} {lang === "ar" ? "الساعة" : "at"} {b.time}
+                          {formatDisplayDate(b.date, lang)} {lang === "ar" ? "الساعة" : "at"} {b.time}
                         </span>{" "}
                         — {b.serviceName} ({b.durationMinutes} {lang === "ar" ? "د" : "min"})
                         {b.status === "pending" && (
@@ -615,7 +616,7 @@ export default function BookingPage() {
                   <div className={cardAccentBarClass} />
                   <form onSubmit={submitBooking} className="flex flex-col gap-3 p-5">
                     <p className="text-sm font-medium text-zinc-800">
-                      {t.bookingModal.title(selectedDate, selectedTime)}
+                      {t.bookingModal.title(formatDisplayDate(selectedDate, lang), selectedTime)}
                     </p>
                     <input
                       required
