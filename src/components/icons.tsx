@@ -163,6 +163,37 @@ export function IconPlus({ className }: IconProps) {
   );
 }
 
+export function IconImage({ className }: IconProps) {
+  return (
+    <svg {...common} className={className}>
+      <rect x="3" y="4" width="18" height="16" rx="2" {...strokeProps} />
+      <circle cx="8.5" cy="9.5" r="1.5" {...strokeProps} />
+      <path d="M4 16.5l5-5 4 4 3-3 4 4" {...strokeProps} />
+    </svg>
+  );
+}
+
+export function IconQuestion({ className }: IconProps) {
+  return (
+    <svg {...common} className={className}>
+      <circle cx="12" cy="12" r="8.5" {...strokeProps} />
+      <path d="M9.8 9.3a2.3 2.3 0 1 1 3.4 2c-.9.6-1.2 1-1.2 2" {...strokeProps} />
+      <path d="M12 16.7h.01" {...strokeProps} />
+    </svg>
+  );
+}
+
+export function IconChatBubble({ className }: IconProps) {
+  return (
+    <svg {...common} className={className}>
+      <path
+        d="M4 12c0-4.4 3.6-8 8-8s8 3.6 8 8-3.6 8-8 8c-1.1 0-2.1-.2-3-.6L5 20l1-3.8A7.9 7.9 0 0 1 4 12Z"
+        {...strokeProps}
+      />
+    </svg>
+  );
+}
+
 export function IconGear({ className }: IconProps) {
   return (
     <svg {...common} className={className}>

@@ -5,14 +5,16 @@ import Link from "next/link";
 import OwnerNav from "@/components/OwnerNav";
 import PushNotificationSettings from "@/components/PushNotificationSettings";
 import { inputClass, primaryButtonClass, cardClass, cardAccentBarClass, listRowHoverClass } from "@/lib/ui";
-import { IconLink, IconBell, IconBuilding, IconTag, IconUsers, IconLock } from "@/components/icons";
+import { IconLink, IconBell, IconBuilding, IconTag, IconUsers, IconLock, IconImage, IconQuestion } from "@/components/icons";
 import { useOwnerLang } from "@/lib/useOwnerLang";
 import { settingsCopy } from "@/lib/settingsPageTranslations";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
-type Service = { id: string; name: string; durationMinutes: number };
+type Service = { id: string; name: string; durationMinutes: number; priceUsd: number | null };
 type Employee = { id: string; name: string };
+type GalleryPhoto = { id: string; url: string };
+type Faq = { id: string; question: string; answer: string };
 type Business = {
   name: string;
   slug: string;
@@ -21,7 +23,14 @@ type Business = {
   services: Service[];
   employees: Employee[];
   offDays: number[];
+  about: string | null;
+  heroImageUrl: string | null;
+  accentColor: string | null;
+  gallery: GalleryPhoto[];
+  faqs: Faq[];
 };
+
+const DEFAULT_ACCENT_COLOR = "#b5654f";
 
 const DURATION_OPTIONS = [15, 30, 45, 60, 75, 90, 105, 120];
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, h) => h);
@@ -41,17 +50,32 @@ export default function SettingsPage() {
   const [startHour, setStartHour] = useState(9);
   const [endHour, setEndHour] = useState(18);
   const [offDays, setOffDays] = useState<number[]>([]);
+  const [accentColor, setAccentColor] = useState(DEFAULT_ACCENT_COLOR);
   const [savingDetails, setSavingDetails] = useState(false);
   const [detailsSaved, setDetailsSaved] = useState(false);
 
   const [newServiceName, setNewServiceName] = useState("");
   const [newServiceDuration, setNewServiceDuration] = useState(30);
+  const [newServicePrice, setNewServicePrice] = useState("");
   const [addingService, setAddingService] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   const [newEmployeeName, setNewEmployeeName] = useState("");
   const [addingEmployee, setAddingEmployee] = useState(false);
   const [removingEmployeeId, setRemovingEmployeeId] = useState<string | null>(null);
+
+  const [about, setAbout] = useState("");
+  const [savingAbout, setSavingAbout] = useState(false);
+  const [aboutSaved, setAboutSaved] = useState(false);
+  const [uploadingHero, setUploadingHero] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [removingPhotoId, setRemovingPhotoId] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
+  const [newFaqQuestion, setNewFaqQuestion] = useState("");
+  const [newFaqAnswer, setNewFaqAnswer] = useState("");
+  const [addingFaq, setAddingFaq] = useState(false);
+  const [removingFaqId, setRemovingFaqId] = useState<string | null>(null);
 
   const [linkCopied, setLinkCopied] = useState(false);
 
@@ -71,6 +95,8 @@ export default function SettingsPage() {
         setStartHour(data.business.startHour);
         setEndHour(data.business.endHour);
         setOffDays(data.business.offDays);
+        setAbout(data.business.about ?? "");
+        setAccentColor(data.business.accentColor ?? DEFAULT_ACCENT_COLOR);
       });
   }
 
@@ -86,7 +112,7 @@ export default function SettingsPage() {
       await fetch("/api/business", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, startHour, endHour, offDays }),
+        body: JSON.stringify({ name, startHour, endHour, offDays, accentColor }),
       });
       loadBusiness();
       setDetailsSaved(true);
@@ -105,13 +131,15 @@ export default function SettingsPage() {
     if (!newServiceName.trim()) return;
     setAddingService(true);
     try {
+      const priceUsd = newServicePrice.trim() === "" ? null : Number(newServicePrice);
       await fetch("/api/business/services", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newServiceName, durationMinutes: newServiceDuration }),
+        body: JSON.stringify({ name: newServiceName, durationMinutes: newServiceDuration, priceUsd }),
       });
       setNewServiceName("");
       setNewServiceDuration(30);
+      setNewServicePrice("");
       loadBusiness();
     } finally {
       setAddingService(false);
@@ -152,6 +180,88 @@ export default function SettingsPage() {
       loadBusiness();
     } finally {
       setRemovingEmployeeId(null);
+    }
+  }
+
+  async function saveAbout(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingAbout(true);
+    setAboutSaved(false);
+    try {
+      await fetch("/api/business", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ about }),
+      });
+      loadBusiness();
+      setAboutSaved(true);
+    } finally {
+      setSavingAbout(false);
+    }
+  }
+
+  async function uploadPhoto(file: File, kind: "hero" | "gallery") {
+    setPhotoError(null);
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError(t.uploadTooLarge);
+      return;
+    }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setPhotoError(t.uploadUnsupportedType);
+      return;
+    }
+    const setUploading = kind === "hero" ? setUploadingHero : setUploadingGallery;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("kind", kind);
+      const res = await fetch("/api/business/upload", { method: "POST", body: formData });
+      if (!res.ok) {
+        setPhotoError(t.uploadFailed);
+        return;
+      }
+      loadBusiness();
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function removeGalleryPhoto(id: string) {
+    setRemovingPhotoId(id);
+    try {
+      await fetch(`/api/business/gallery/${id}`, { method: "DELETE" });
+      loadBusiness();
+    } finally {
+      setRemovingPhotoId(null);
+    }
+  }
+
+  async function addFaq(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newFaqQuestion.trim() || !newFaqAnswer.trim()) return;
+    setAddingFaq(true);
+    try {
+      await fetch("/api/business/faqs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: newFaqQuestion, answer: newFaqAnswer }),
+      });
+      setNewFaqQuestion("");
+      setNewFaqAnswer("");
+      loadBusiness();
+    } finally {
+      setAddingFaq(false);
+    }
+  }
+
+  async function removeFaq(id: string) {
+    setRemovingFaqId(id);
+    try {
+      await fetch(`/api/business/faqs/${id}`, { method: "DELETE" });
+      loadBusiness();
+    } finally {
+      setRemovingFaqId(null);
     }
   }
 
@@ -315,6 +425,18 @@ export default function SettingsPage() {
                   ))}
                 </div>
               </div>
+              <label className="flex items-center gap-3 text-sm text-zinc-600">
+                {t.accentColorLabel}
+                <input
+                  type="color"
+                  value={accentColor}
+                  onChange={(e) => {
+                    setAccentColor(e.target.value);
+                    setDetailsSaved(false);
+                  }}
+                  className="h-9 w-14 cursor-pointer rounded-lg border border-zinc-300 bg-white p-1"
+                />
+              </label>
               <div className="flex items-center gap-3">
                 <button
                   type="submit"
@@ -344,7 +466,11 @@ export default function SettingsPage() {
                     className={`flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm ${listRowHoverClass}`}
                   >
                     <span className="text-zinc-700">
-                      {s.name} <span className="text-zinc-400">— {t.durationMin(s.durationMinutes)}</span>
+                      {s.name}{" "}
+                      <span className="text-zinc-400">
+                        — {t.durationMin(s.durationMinutes)}
+                        {s.priceUsd !== null ? ` · ${t.priceTag(s.priceUsd)}` : ""}
+                      </span>
                     </span>
                     <button
                       onClick={() => removeService(s.id)}
@@ -384,6 +510,18 @@ export default function SettingsPage() {
                       </option>
                     ))}
                   </select>
+                </label>
+                <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                  {t.price}
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    placeholder={t.pricePlaceholder}
+                    value={newServicePrice}
+                    onChange={(e) => setNewServicePrice(e.target.value)}
+                    className={`${inputClass} sm:w-24`}
+                  />
                 </label>
                 <button
                   type="submit"
@@ -445,6 +583,159 @@ export default function SettingsPage() {
                   {addingEmployee ? t.adding : t.addEmployee}
                 </button>
               </form>
+              </div>
+            </div>
+
+            <form onSubmit={saveAbout} className={`mt-6 ${cardClass}`}>
+              <div className={cardAccentBarClass} />
+              <div className="flex flex-col gap-3 p-4">
+                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                  <IconImage className="h-4 w-4 text-zinc-500" />
+                  {t.aboutPhotosTitle}
+                </h2>
+                <p className="text-xs text-zinc-500">{t.aboutPhotosBody}</p>
+
+                <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                  {t.aboutLabel}
+                  <textarea
+                    rows={3}
+                    placeholder={t.aboutPlaceholder}
+                    value={about}
+                    onChange={(e) => {
+                      setAbout(e.target.value);
+                      setAboutSaved(false);
+                    }}
+                    className={inputClass}
+                  />
+                </label>
+                <div className="flex items-center gap-3">
+                  <button type="submit" disabled={savingAbout} className={primaryButtonClass}>
+                    {savingAbout ? t.saving : t.save}
+                  </button>
+                  {aboutSaved && <span className="text-sm font-medium text-green-700">{t.saved}</span>}
+                </div>
+
+                <div className="border-t border-zinc-100 pt-4">
+                  <p className="text-sm text-zinc-600">{t.heroPhotoLabel}</p>
+                  <div className="mt-2 flex items-center gap-3">
+                    {business.heroImageUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={business.heroImageUrl}
+                        alt=""
+                        className="h-16 w-24 rounded-lg object-cover ring-1 ring-zinc-200"
+                      />
+                    )}
+                    <label className="cursor-pointer rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 ring-1 ring-zinc-300 hover:bg-zinc-100">
+                      {uploadingHero ? t.uploading : business.heroImageUrl ? t.replacePhoto : t.uploadPhoto}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        disabled={uploadingHero}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) uploadPhoto(file, "hero");
+                          e.target.value = "";
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="border-t border-zinc-100 pt-4">
+                  <p className="text-sm text-zinc-600">{t.galleryLabel}</p>
+                  <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                    {business.gallery.map((photo) => (
+                      <div key={photo.id} className="group relative aspect-square overflow-hidden rounded-lg ring-1 ring-zinc-200">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={photo.url} alt="" className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeGalleryPhoto(photo.id)}
+                          disabled={removingPhotoId === photo.id}
+                          className="absolute end-1 top-1 rounded-full bg-white/90 px-2 py-0.5 text-xs font-medium text-red-600 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 disabled:opacity-50"
+                        >
+                          {removingPhotoId === photo.id ? t.removing : t.remove}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {business.gallery.length === 0 && <p className="mt-2 text-sm text-zinc-400">{t.noGalleryYet}</p>}
+                  <label className="mt-3 inline-block cursor-pointer rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 ring-1 ring-zinc-300 hover:bg-zinc-100">
+                    {uploadingGallery ? t.uploading : t.addPhoto}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      disabled={uploadingGallery}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) uploadPhoto(file, "gallery");
+                        e.target.value = "";
+                      }}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {photoError && <p className="text-sm text-red-600">{photoError}</p>}
+              </div>
+            </form>
+
+            <div className={`mt-6 ${cardClass}`}>
+              <div className={cardAccentBarClass} />
+              <div className="p-4">
+                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                  <IconQuestion className="h-4 w-4 text-zinc-500" />
+                  {t.faqTitle}
+                </h2>
+                <p className="mt-1 text-xs text-zinc-500">{t.faqBody}</p>
+
+                <ul className="mt-3 flex flex-col gap-2">
+                  {business.faqs.map((faq) => (
+                    <li
+                      key={faq.id}
+                      className={`flex items-start justify-between gap-3 rounded-lg bg-zinc-50 px-3 py-2 text-sm ${listRowHoverClass}`}
+                    >
+                      <div>
+                        <p className="font-medium text-zinc-800">{faq.question}</p>
+                        <p className="mt-0.5 text-zinc-500">{faq.answer}</p>
+                      </div>
+                      <button
+                        onClick={() => removeFaq(faq.id)}
+                        disabled={removingFaqId === faq.id}
+                        className="shrink-0 rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                      >
+                        {removingFaqId === faq.id ? t.removing : t.remove}
+                      </button>
+                    </li>
+                  ))}
+                  {business.faqs.length === 0 && <li className="text-sm text-zinc-400">{t.noFaqsYet}</li>}
+                </ul>
+
+                <form onSubmit={addFaq} className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4">
+                  <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                    {t.question}
+                    <input
+                      placeholder={t.questionPlaceholder}
+                      value={newFaqQuestion}
+                      onChange={(e) => setNewFaqQuestion(e.target.value)}
+                      className={inputClass}
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                    {t.answer}
+                    <input
+                      placeholder={t.answerPlaceholder}
+                      value={newFaqAnswer}
+                      onChange={(e) => setNewFaqAnswer(e.target.value)}
+                      className={inputClass}
+                    />
+                  </label>
+                  <button type="submit" disabled={addingFaq} className={primaryButtonClass}>
+                    {addingFaq ? t.adding : t.addFaq}
+                  </button>
+                </form>
               </div>
             </div>
 

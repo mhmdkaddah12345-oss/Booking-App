@@ -16,11 +16,23 @@ export type Service = {
   id: string;
   name: string;
   durationMinutes: number;
+  priceUsd: number | null;
 };
 
 export type Employee = {
   id: string;
   name: string;
+};
+
+export type GalleryPhoto = {
+  id: string;
+  url: string;
+};
+
+export type Faq = {
+  id: string;
+  question: string;
+  answer: string;
 };
 
 export type SubscriptionStatus = "trial" | "active" | "expired";
@@ -35,6 +47,12 @@ export type BusinessConfig = {
   services: Service[];
   employees: Employee[];
   offDays: number[]; // days of week the business is closed, 0=Sunday .. 6=Saturday
+  about: string | null;
+  heroImageUrl: string | null;
+  accentColor: string | null;
+  gallery: GalleryPhoto[];
+  faqs: Faq[];
+  ownerPhone: string;
   subscriptionStatus: SubscriptionStatus;
   trialEndsAt: string;
   paidUntil: string | null;
@@ -146,7 +164,13 @@ export function isBusinessLocked(business: Record<string, unknown>): boolean {
   return computeSubscriptionFields(business).subscriptionStatus === "expired";
 }
 
-function mapBusinessConfig(business: Record<string, unknown>, services: Service[], employees: Employee[]): BusinessConfig {
+function mapBusinessConfig(
+  business: Record<string, unknown>,
+  services: Service[],
+  employees: Employee[],
+  gallery: GalleryPhoto[],
+  faqs: Faq[]
+): BusinessConfig {
   return {
     id: business.id as string,
     slug: business.slug as string,
@@ -155,8 +179,14 @@ function mapBusinessConfig(business: Record<string, unknown>, services: Service[
     endHour: business.end_hour as number,
     slotGranularityMinutes: business.slot_granularity_minutes as number,
     offDays: business.off_days as number[],
+    about: (business.about as string | null) ?? null,
+    heroImageUrl: (business.hero_image_url as string | null) ?? null,
+    accentColor: (business.accent_color as string | null) ?? null,
     services,
     employees,
+    gallery,
+    faqs,
+    ownerPhone: business.owner_phone as string,
     ...computeSubscriptionFields(business),
   };
 }
@@ -173,29 +203,38 @@ async function getBusinessRowBySlug(slug: string) {
   return data;
 }
 
-async function servicesAndEmployeesFor(businessId: string) {
-  const [{ data: services }, { data: employees }] = await Promise.all([
+async function businessContentFor(businessId: string) {
+  const [{ data: services }, { data: employees }, { data: gallery }, { data: faqs }] = await Promise.all([
     supabase.from("services").select("*").eq("business_id", businessId),
     supabase.from("employees").select("*").eq("business_id", businessId),
+    supabase.from("gallery_photos").select("*").eq("business_id", businessId).order("created_at"),
+    supabase.from("faqs").select("*").eq("business_id", businessId).order("sort_order"),
   ]);
   return {
-    services: (services ?? []).map((s) => ({ id: s.id, name: s.name, durationMinutes: s.duration_minutes })),
+    services: (services ?? []).map((s) => ({
+      id: s.id,
+      name: s.name,
+      durationMinutes: s.duration_minutes,
+      priceUsd: s.price_usd === null || s.price_usd === undefined ? null : Number(s.price_usd),
+    })),
     employees: (employees ?? []).map((e) => ({ id: e.id, name: e.name })),
+    gallery: (gallery ?? []).map((g) => ({ id: g.id, url: g.url })),
+    faqs: (faqs ?? []).map((f) => ({ id: f.id, question: f.question, answer: f.answer })),
   };
 }
 
 export async function getBusinessConfig(businessId: string): Promise<BusinessConfig | undefined> {
   const business = await getBusinessRowById(businessId);
   if (!business) return undefined;
-  const { services, employees } = await servicesAndEmployeesFor(business.id);
-  return mapBusinessConfig(business, services, employees);
+  const { services, employees, gallery, faqs } = await businessContentFor(business.id);
+  return mapBusinessConfig(business, services, employees, gallery, faqs);
 }
 
 export async function getBusinessConfigBySlug(slug: string): Promise<BusinessConfig | undefined> {
   const business = await getBusinessRowBySlug(slug);
   if (!business) return undefined;
-  const { services, employees } = await servicesAndEmployeesFor(business.id);
-  return mapBusinessConfig(business, services, employees);
+  const { services, employees, gallery, faqs } = await businessContentFor(business.id);
+  return mapBusinessConfig(business, services, employees, gallery, faqs);
 }
 
 export function slugify(name: string): string {
@@ -365,27 +404,117 @@ export async function resetPasswordWithCode(
 
 export async function updateBusinessConfig(
   businessId: string,
-  updates: Partial<Pick<BusinessConfig, "name" | "startHour" | "endHour" | "offDays">>
+  updates: Partial<Pick<BusinessConfig, "name" | "startHour" | "endHour" | "offDays" | "about" | "accentColor">>
 ): Promise<BusinessConfig | undefined> {
   const dbUpdates: Record<string, unknown> = {};
   if (updates.name !== undefined) dbUpdates.name = updates.name;
   if (updates.startHour !== undefined) dbUpdates.start_hour = updates.startHour;
   if (updates.endHour !== undefined) dbUpdates.end_hour = updates.endHour;
   if (updates.offDays !== undefined) dbUpdates.off_days = updates.offDays;
+  if (updates.about !== undefined) dbUpdates.about = updates.about;
+  if (updates.accentColor !== undefined) dbUpdates.accent_color = updates.accentColor;
 
   const { error } = await supabase.from("business").update(dbUpdates).eq("id", businessId);
   if (error) throw new Error(error.message);
   return getBusinessConfig(businessId);
 }
 
-export async function addService(businessId: string, name: string, durationMinutes: number): Promise<Service> {
+const MEDIA_BUCKET = "business-media";
+
+/**
+ * Shared upload for both the hero photo and gallery photos — validated at
+ * the API route (size/type), stored under the business's own folder so
+ * cleanup and per-tenant isolation are trivial.
+ */
+export async function uploadBusinessImage(
+  businessId: string,
+  kind: "hero" | "gallery",
+  file: Blob,
+  extension: string
+): Promise<{ url: string; path: string }> {
+  const path = `${businessId}/${kind}/${randomBytes(16).toString("hex")}.${extension}`;
+  const { error } = await supabase.storage.from(MEDIA_BUCKET).upload(path, file, {
+    contentType: file.type || undefined,
+  });
+  if (error) throw new Error(error.message);
+  const { data } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
+  return { url: data.publicUrl, path };
+}
+
+async function deleteBusinessImage(path: string): Promise<void> {
+  await supabase.storage.from(MEDIA_BUCKET).remove([path]);
+}
+
+export async function setHeroImage(businessId: string, url: string, path: string): Promise<void> {
+  const { data: current } = await supabase
+    .from("business")
+    .select("hero_image_path")
+    .eq("id", businessId)
+    .maybeSingle();
+  const { error } = await supabase
+    .from("business")
+    .update({ hero_image_url: url, hero_image_path: path })
+    .eq("id", businessId);
+  if (error) throw new Error(error.message);
+  if (current?.hero_image_path) await deleteBusinessImage(current.hero_image_path);
+}
+
+export async function addGalleryPhoto(businessId: string, url: string, path: string): Promise<GalleryPhoto> {
   const { data, error } = await supabase
-    .from("services")
-    .insert({ business_id: businessId, name, duration_minutes: durationMinutes })
+    .from("gallery_photos")
+    .insert({ business_id: businessId, url, storage_path: path })
     .select()
     .single();
   if (error) throw new Error(error.message);
-  return { id: data.id, name: data.name, durationMinutes: data.duration_minutes };
+  return { id: data.id, url: data.url };
+}
+
+export async function removeGalleryPhoto(photoId: string, businessId: string): Promise<{ success: boolean }> {
+  const { data } = await supabase
+    .from("gallery_photos")
+    .select("storage_path")
+    .eq("id", photoId)
+    .eq("business_id", businessId)
+    .maybeSingle();
+  const { error } = await supabase.from("gallery_photos").delete().eq("id", photoId).eq("business_id", businessId);
+  if (error) return { success: false };
+  if (data?.storage_path) await deleteBusinessImage(data.storage_path);
+  return { success: true };
+}
+
+export async function addFaq(businessId: string, question: string, answer: string): Promise<Faq> {
+  const { data, error } = await supabase
+    .from("faqs")
+    .insert({ business_id: businessId, question, answer })
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return { id: data.id, question: data.question, answer: data.answer };
+}
+
+export async function removeFaq(faqId: string, businessId: string): Promise<{ success: boolean }> {
+  const { error } = await supabase.from("faqs").delete().eq("id", faqId).eq("business_id", businessId);
+  return { success: !error };
+}
+
+export async function addService(
+  businessId: string,
+  name: string,
+  durationMinutes: number,
+  priceUsd?: number | null
+): Promise<Service> {
+  const { data, error } = await supabase
+    .from("services")
+    .insert({ business_id: businessId, name, duration_minutes: durationMinutes, price_usd: priceUsd ?? null })
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return {
+    id: data.id,
+    name: data.name,
+    durationMinutes: data.duration_minutes,
+    priceUsd: data.price_usd === null || data.price_usd === undefined ? null : Number(data.price_usd),
+  };
 }
 
 export async function removeService(serviceId: string, businessId: string): Promise<{ success: boolean }> {
@@ -578,7 +707,14 @@ async function getServiceForBusiness(serviceId: string, businessId: string): Pro
     .eq("id", serviceId)
     .eq("business_id", businessId)
     .maybeSingle();
-  return data ? { id: data.id, name: data.name, durationMinutes: data.duration_minutes } : undefined;
+  return data
+    ? {
+        id: data.id,
+        name: data.name,
+        durationMinutes: data.duration_minutes,
+        priceUsd: data.price_usd === null || data.price_usd === undefined ? null : Number(data.price_usd),
+      }
+    : undefined;
 }
 
 /**

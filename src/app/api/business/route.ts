@@ -24,12 +24,21 @@ export async function PATCH(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   const body = await request.json();
-  const { name, startHour, endHour, offDays } = body ?? {};
-  const updates: { name?: string; startHour?: number; endHour?: number; offDays?: number[] } = {};
+  const { name, startHour, endHour, offDays, about, accentColor } = body ?? {};
+  const updates: {
+    name?: string;
+    startHour?: number;
+    endHour?: number;
+    offDays?: number[];
+    about?: string;
+    accentColor?: string;
+  } = {};
   if (typeof name === "string") updates.name = name;
   if (typeof startHour === "number") updates.startHour = startHour;
   if (typeof endHour === "number") updates.endHour = endHour;
   if (Array.isArray(offDays)) updates.offDays = offDays;
+  if (typeof about === "string") updates.about = about;
+  if (typeof accentColor === "string" && /^#[0-9a-fA-F]{6}$/.test(accentColor)) updates.accentColor = accentColor;
 
   const business = await updateBusinessConfig(auth.businessId, updates);
   return NextResponse.json({ business });

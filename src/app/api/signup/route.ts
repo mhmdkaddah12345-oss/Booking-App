@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createBusiness, isSlugTaken, slugify } from "@/lib/store";
+import { createBusiness, updateBusinessConfig, addService, isSlugTaken, slugify } from "@/lib/store";
 import { notifyAdminOfNewSignup } from "@/lib/adminAlerts";
+
+type SignupService = { name: string; durationMinutes: number; priceUsd?: number | null };
 
 // "www" specifically would never resolve — middleware treats www.maw3edapp.com
 // as the root domain, not a tenant subdomain — and the rest are just
@@ -21,7 +23,23 @@ async function uniqueSlugFor(businessName: string): Promise<string> {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { businessName, email, phone } = body ?? {};
+  const {
+    businessName,
+    email,
+    phone,
+    services,
+    startHour,
+    endHour,
+    offDays,
+  }: {
+    businessName: string;
+    email: string;
+    phone: string;
+    services?: SignupService[];
+    startHour?: number;
+    endHour?: number;
+    offDays?: number[];
+  } = body ?? {};
 
   if (!businessName || !email || !phone) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
@@ -34,6 +52,18 @@ export async function POST(request: NextRequest) {
   const result = await createBusiness(businessName, slug, email, phone);
   if (!result.success) {
     return NextResponse.json({ error: result.error }, { status: 409 });
+  }
+
+  if (startHour !== undefined || endHour !== undefined || offDays !== undefined) {
+    await updateBusinessConfig(result.businessId, { startHour, endHour, offDays });
+  }
+
+  if (Array.isArray(services)) {
+    for (const s of services) {
+      if (s?.name && typeof s.durationMinutes === "number" && s.durationMinutes > 0) {
+        await addService(result.businessId, s.name, s.durationMinutes, s.priceUsd ?? null);
+      }
+    }
   }
 
   await notifyAdminOfNewSignup({ name: businessName, email, phone, slug });
