@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Wordmark from "./Wordmark";
 import type { Lang } from "@/lib/useOwnerLang";
+import { IconChartBar, IconGear, IconCreditCard } from "./icons";
 
 const TAB_LABELS = {
   en: { dashboard: "Dashboard", settings: "Settings", billing: "Plan", logOut: "Log out", langToggle: "العربية" },
@@ -10,9 +11,9 @@ const TAB_LABELS = {
 } as const;
 
 const TABS = [
-  { href: "/dashboard", key: "dashboard" },
-  { href: "/dashboard/settings", key: "settings" },
-  { href: "/dashboard/billing", key: "billing" },
+  { href: "/dashboard", key: "dashboard", Icon: IconChartBar },
+  { href: "/dashboard/settings", key: "settings", Icon: IconGear },
+  { href: "/dashboard/billing", key: "billing", Icon: IconCreditCard },
 ] as const;
 
 export default function OwnerNav({
@@ -31,14 +32,16 @@ export default function OwnerNav({
       <div className="flex flex-wrap items-center gap-1">
         {TABS.map((tab) => {
           const isCurrent = tab.key === current;
+          const Icon = tab.Icon;
           return (
             <Link
               key={tab.href}
               href={tab.href}
-              className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                 isCurrent ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-100"
               }`}
             >
+              <Icon className="h-4 w-4" />
               {labels[tab.key]}
             </Link>
           );
