@@ -161,7 +161,6 @@ export default function BookingPage() {
         setLocked(data.business.subscriptionStatus === "expired");
         setOffDays(data.business.offDays);
         setServices(data.business.services);
-        setSelectedServiceIds(data.business.services[0] ? [data.business.services[0].id] : []);
       });
   }, [slug]);
 
@@ -381,12 +380,13 @@ export default function BookingPage() {
           </nav>
           <div className="flex shrink-0 items-center gap-2">
             {LangToggle}
-            <a
-              href="#book"
+            <button
+              type="button"
+              onClick={() => setSlotsPopupOpen(true)}
               className="hidden rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-zinc-700 sm:inline-block"
             >
               {t.nav.bookNow}
-            </a>
+            </button>
           </div>
         </div>
       </header>
@@ -409,9 +409,9 @@ export default function BookingPage() {
                 <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl">{businessName || t.loading}</h1>
                 <p className="mt-2 text-sm text-zinc-600">{about || t.heroFallbackSubtitle}</p>
                 <div className="mt-4 flex flex-wrap gap-3">
-                  <a href="#services" className={primaryButtonClass}>
+                  <button type="button" onClick={() => setSlotsPopupOpen(true)} className={primaryButtonClass}>
                     {t.nav.bookNow}
-                  </a>
+                  </button>
                   <a
                     href="#services"
                     className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-50"
@@ -492,7 +492,10 @@ export default function BookingPage() {
                 <button
                   type="button"
                   key={s.id}
-                  onClick={() => toggleService(s.id)}
+                  onClick={() => {
+                    toggleService(s.id);
+                    setSlotsPopupOpen(true);
+                  }}
                   className={`text-start ${cardClass} ${listRowHoverClass} ${selected ? "ring-2 ring-zinc-900" : ""}`}
                 >
                   <div className="flex flex-col gap-3 p-5">
@@ -521,22 +524,12 @@ export default function BookingPage() {
             })}
             {services.length === 0 && <p className="text-sm text-zinc-400">{t.loading}</p>}
           </div>
-          {selectedServiceIds.length === 0 && (
-            <p className="mt-2 text-xs text-red-600">{t.services.pickAtLeastOne}</p>
-          )}
-          {selectedServiceIds.length > 0 && (
-            <p className="mt-2 text-xs text-zinc-500">
-              {selectedServices.map((s) => s.name).join(" + ")} — {totalDurationMinutes} {lang === "ar" ? "د" : "min"}
-              {totalPriceUsd !== null ? ` · $${totalPriceUsd}` : ""}
-            </p>
-          )}
         </section>
 
         <section id="book" className="scroll-mt-20">
           <button
             type="button"
             onClick={() => setSlotsPopupOpen(true)}
-            disabled={selectedServiceIds.length === 0}
             className={`mt-10 w-full ${primaryButtonClass}`}
           >
             {t.reserveButton}
@@ -566,15 +559,40 @@ export default function BookingPage() {
                   </div>
 
                   <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-5 sm:flex-row">
-                    <div className="shrink-0 border-b border-zinc-100 pb-4 sm:w-52 sm:border-b-0 sm:border-e sm:pb-0 sm:pe-5">
-                      <p className="font-semibold text-zinc-800">
-                        {selectedServices.map((s) => s.name).join(" + ")}
-                      </p>
-                      <p className="mt-2 flex items-center gap-1.5 text-sm text-zinc-600">
-                        <IconClock className="h-4 w-4" />
-                        {totalDurationMinutes} {lang === "ar" ? "د" : "min"}
-                      </p>
-                      {totalPriceUsd !== null && <p className="mt-1 text-sm text-zinc-600">${totalPriceUsd}</p>}
+                    <div className="shrink-0 border-b border-zinc-100 pb-4 sm:w-56 sm:border-b-0 sm:border-e sm:pb-0 sm:pe-5">
+                      <p className="text-sm font-semibold text-zinc-800">{t.services.label}</p>
+                      <div className="mt-2 flex flex-col gap-1.5">
+                        {services.map((s) => {
+                          const selected = selectedServiceIds.includes(s.id);
+                          return (
+                            <button
+                              type="button"
+                              key={s.id}
+                              onClick={() => toggleService(s.id)}
+                              className={`flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-start text-sm transition-colors ${
+                                selected ? "bg-zinc-900 text-white" : "bg-zinc-50 text-zinc-700 hover:bg-zinc-100"
+                              }`}
+                            >
+                              <span className="min-w-0 truncate">{s.name}</span>
+                              <span className={`shrink-0 text-xs ${selected ? "text-white/80" : "text-zinc-400"}`}>
+                                {s.durationMinutes}
+                                {lang === "ar" ? "د" : "m"}
+                                {s.priceUsd !== null ? ` · $${s.priceUsd}` : ""}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {selectedServiceIds.length > 0 && (
+                        <div className="mt-3 border-t border-zinc-100 pt-3 text-sm text-zinc-600">
+                          <p className="flex items-center gap-1.5">
+                            <IconClock className="h-4 w-4" />
+                            {totalDurationMinutes} {lang === "ar" ? "د" : "min"}
+                          </p>
+                          {totalPriceUsd !== null && <p className="mt-1">${totalPriceUsd}</p>}
+                        </div>
+                      )}
                     </div>
 
                     <div className="min-w-0 flex-1">
@@ -636,7 +654,9 @@ export default function BookingPage() {
                       <div className="mt-5 border-t border-zinc-100 pt-4">
                         <p className="text-sm font-semibold text-zinc-800">{formatDisplayDate(selectedDate, lang)}</p>
                         <div key={`${selectedDate}-${serviceIdsKey}`} className="animate-step-in mt-3">
-                          {slotsLoading ? (
+                          {selectedServiceIds.length === 0 ? (
+                            <p className="text-sm text-zinc-500">{t.services.pickAtLeastOne}</p>
+                          ) : slotsLoading ? (
                             <p className="text-sm text-zinc-500">{t.slotsCard.loadingTimes}</p>
                           ) : dayClosed ? (
                             <p className="text-sm font-medium text-zinc-800">{t.slotsCard.closedDay}</p>
@@ -718,7 +738,7 @@ export default function BookingPage() {
                     </div>
                   </div>
 
-                  {!dayClosed && !fullyBooked && (
+                  {selectedServiceIds.length > 0 && !dayClosed && !fullyBooked && (
                     <div className="border-t border-zinc-100 p-5 pt-4">
                       <button
                         type="button"
@@ -912,9 +932,9 @@ export default function BookingPage() {
               <span className="text-lg font-semibold text-white">{businessName}</span>
             </div>
             <nav dir="ltr" className="flex flex-wrap gap-6 text-sm">
-              <a href="#book" className="hover:text-white">
+              <button type="button" onClick={() => setSlotsPopupOpen(true)} className="hover:text-white">
                 {t.nav.bookNow}
-              </a>
+              </button>
               <a href="#services" className="hover:text-white">
                 {t.nav.services}
               </a>
