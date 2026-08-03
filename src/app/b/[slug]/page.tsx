@@ -46,6 +46,11 @@ function formatHour(h: number) {
   return `${h.toString().padStart(2, "0")}:00`;
 }
 
+function formatTime12h(time: string, locale: string | undefined) {
+  const [h, m] = time.split(":").map(Number);
+  return new Date(2000, 0, 1, h, m).toLocaleTimeString(locale ?? "en-US", { hour: "numeric", minute: "2-digit" });
+}
+
 function initials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return "";
@@ -93,7 +98,6 @@ export default function BookingPage() {
   const [dayClosed, setDayClosed] = useState(false);
   const [slotsLoading, setSlotsLoading] = useState(false);
 
-  const [calendarOpen, setCalendarOpen] = useState(false);
   const [slotsPopupOpen, setSlotsPopupOpen] = useState(false);
 
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -309,17 +313,6 @@ export default function BookingPage() {
     ...Array.from({ length: leadingBlanks }, () => null),
     ...Array.from({ length: numDays }, (_, i) => i + 1),
   ];
-
-  const quickDays = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    const date = toDateStr(d.getFullYear(), d.getMonth(), d.getDate());
-    return {
-      date,
-      label: d.toLocaleDateString(dateLocale, { weekday: "short", day: "numeric" }),
-      closed: offDays.includes(d.getDay()),
-    };
-  });
 
   const LangToggle = (
     <button
@@ -556,199 +549,187 @@ export default function BookingPage() {
                 onClick={() => setSlotsPopupOpen(false)}
               >
                 <div
-                  className={`animate-modal-in w-full max-w-md ${cardClass} max-h-full overflow-y-auto`}
+                  className={`animate-modal-in flex w-full max-w-2xl flex-col sm:max-h-[85vh] ${cardClass}`}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className={cardAccentBarClass} />
-                  <div className="p-5">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-medium text-zinc-800">{t.reserveButton}</p>
-                      <button
-                        type="button"
-                        onClick={() => setSlotsPopupOpen(false)}
-                        aria-label={t.slotsCard.cancel}
-                        className="rounded-full px-2 py-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
-                      >
-                        ✕
-                      </button>
+                  <div className="flex items-center justify-between gap-3 px-5 pt-4">
+                    <p className="text-sm font-semibold text-zinc-800">{t.pickDateTime}</p>
+                    <button
+                      type="button"
+                      onClick={() => setSlotsPopupOpen(false)}
+                      aria-label={t.slotsCard.cancel}
+                      className="rounded-full px-2 py-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-5 sm:flex-row">
+                    <div className="shrink-0 border-b border-zinc-100 pb-4 sm:w-52 sm:border-b-0 sm:border-e sm:pb-0 sm:pe-5">
+                      <p className="font-semibold text-zinc-800">
+                        {selectedServices.map((s) => s.name).join(" + ")}
+                      </p>
+                      <p className="mt-2 flex items-center gap-1.5 text-sm text-zinc-600">
+                        <IconClock className="h-4 w-4" />
+                        {totalDurationMinutes} {lang === "ar" ? "د" : "min"}
+                      </p>
+                      {totalPriceUsd !== null && <p className="mt-1 text-sm text-zinc-600">${totalPriceUsd}</p>}
                     </div>
 
-                    <div className="mt-3 flex items-center gap-2">
-                      <div className="flex flex-1 gap-2 overflow-x-auto pb-2">
-                        {quickDays.map((d) => (
-                          <button
-                            key={d.date}
-                            onClick={() => {
-                              setSelectedDate(d.date);
-                              setCalendarOpen(false);
-                            }}
-                            className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-150 hover:scale-[1.05] active:scale-95 ${
-                              selectedDate === d.date
-                                ? "bg-zinc-900 text-white"
-                                : d.closed
-                                ? "bg-white text-zinc-400 ring-1 ring-zinc-200 hover:bg-zinc-100"
-                                : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-100"
-                            }`}
-                          >
-                            {d.label}
-                          </button>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between">
+                        <button
+                          onClick={goToPrevMonth}
+                          disabled={isAtCurrentMonth}
+                          className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-30"
+                        >
+                          ‹
+                        </button>
+                        <p className="text-sm font-semibold text-zinc-800">
+                          {new Date(viewYear, viewMonth, 1).toLocaleDateString(dateLocale, { month: "long", year: "numeric" })}
+                        </p>
+                        <button
+                          onClick={goToNextMonth}
+                          className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                        >
+                          ›
+                        </button>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs font-medium text-zinc-400">
+                        {t.weekdayLabels.map((w) => (
+                          <div key={w}>{w}</div>
                         ))}
                       </div>
-                      <button
-                        onClick={() => setCalendarOpen((open) => !open)}
-                        aria-label={t.pickAnotherDate}
-                        className={`shrink-0 rounded-full p-2 text-lg ring-1 transition-all duration-150 hover:scale-[1.05] active:scale-95 ${
-                          calendarOpen ? "bg-zinc-900 text-white ring-zinc-900" : "bg-white text-zinc-600 ring-zinc-200 hover:bg-zinc-100"
-                        }`}
-                      >
-                        📅
-                      </button>
-                    </div>
 
-                    {calendarOpen && (
-                      <div className="animate-step-in mt-2 rounded-xl bg-paper p-4 ring-1 ring-zinc-200">
-                        <div className="flex items-center justify-between">
-                          <button
-                            onClick={goToPrevMonth}
-                            disabled={isAtCurrentMonth}
-                            className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-30"
-                          >
-                            ‹
-                          </button>
-                          <p className="text-sm font-semibold text-zinc-800">
-                            {new Date(viewYear, viewMonth, 1).toLocaleDateString(dateLocale, { month: "long", year: "numeric" })}
-                          </p>
-                          <button
-                            onClick={goToNextMonth}
-                            className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                          >
-                            ›
-                          </button>
-                        </div>
-
-                        <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs font-medium text-zinc-400">
-                          {t.weekdayLabels.map((w) => (
-                            <div key={w}>{w}</div>
-                          ))}
-                        </div>
-
-                        <div className="mt-1 grid grid-cols-7 gap-1">
-                          {cells.map((day, i) => {
-                            if (day === null) return <div key={`blank-${i}`} />;
-                            const dateStr = toDateStr(viewYear, viewMonth, day);
-                            const isPast = dateStr < todayStr;
-                            const isClosed = offDays.includes(new Date(viewYear, viewMonth, day).getDay());
-                            const isSelected = dateStr === selectedDate;
-                            return (
-                              <button
-                                key={dateStr}
-                                disabled={isPast}
-                                onClick={() => {
-                                  setSelectedDate(dateStr);
-                                  setCalendarOpen(false);
-                                }}
-                                className={`aspect-square rounded-lg text-sm font-medium transition-all duration-150 ${
-                                  isPast
-                                    ? "cursor-not-allowed text-zinc-200"
-                                    : `hover:scale-[1.1] active:scale-95 ${
-                                        isSelected
-                                          ? "bg-zinc-900 text-white"
-                                          : isClosed
-                                          ? "text-zinc-300 hover:bg-zinc-100"
-                                          : "text-zinc-700 hover:bg-zinc-100"
-                                      }`
-                                }`}
-                              >
-                                {day}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    <p className="mt-3 text-xs font-medium text-zinc-400">{formatDisplayDate(selectedDate, lang)}</p>
-                    <div key={`${selectedDate}-${serviceIdsKey}`} className="animate-step-in mt-1">
-                      {slotsLoading ? (
-                        <p className="text-sm text-zinc-500">{t.slotsCard.loadingTimes}</p>
-                      ) : dayClosed ? (
-                        <p className="text-sm font-medium text-zinc-800">{t.slotsCard.closedDay}</p>
-                      ) : fullyBooked ? (
-                        <div>
-                          <p className="text-sm font-medium text-zinc-800">{t.slotsCard.fullyBooked}</p>
-                          <p className="mt-1 text-sm text-zinc-500">{t.slotsCard.waitlistPrompt}</p>
-                          {!joiningWaitlist ? (
+                      <div className="mt-1 grid grid-cols-7 gap-1">
+                        {cells.map((day, i) => {
+                          if (day === null) return <div key={`blank-${i}`} />;
+                          const dateStr = toDateStr(viewYear, viewMonth, day);
+                          const isPast = dateStr < todayStr;
+                          const isClosed = offDays.includes(new Date(viewYear, viewMonth, day).getDay());
+                          const isSelected = dateStr === selectedDate;
+                          return (
                             <button
-                              onClick={() => {
-                                setJoiningWaitlist(true);
-                                setSuccessMessage(null);
-                              }}
-                              className={`mt-3 ${primaryButtonClass}`}
-                            >
-                              {t.slotsCard.joinWaitlist}
-                            </button>
-                          ) : (
-                            <form onSubmit={submitWaitlist} className="mt-3 flex flex-col gap-3">
-                              <input
-                                required
-                                placeholder={t.slotsCard.yourName}
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                className={inputClass}
-                              />
-                              <input
-                                required
-                                placeholder={t.slotsCard.phoneNumber}
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
-                                className={inputClass}
-                              />
-                              <textarea
-                                placeholder={t.slotsCard.notePlaceholder}
-                                value={note}
-                                onChange={(e) => setNote(e.target.value)}
-                                rows={2}
-                                className={inputClass}
-                              />
-                              {formError && <p className="text-sm text-red-600">{formError}</p>}
-                              <div className="flex gap-2">
-                                <button type="submit" disabled={submitting} className={primaryButtonClass}>
-                                  {submitting ? t.slotsCard.joining : t.slotsCard.confirmWaitlistSpot}
-                                </button>
-                                <button type="button" onClick={() => setJoiningWaitlist(false)} className={ghostButtonClass}>
-                                  {t.slotsCard.cancel}
-                                </button>
-                              </div>
-                            </form>
-                          )}
-                        </div>
-                      ) : (
-                        <div dir="ltr" className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                          {slots.map((slot) => (
-                            <button
-                              key={slot.time}
-                              disabled={!slot.available}
-                              onClick={() => {
-                                setSelectedTime(slot.time);
-                                setSlotsPopupOpen(false);
-                                setSuccessMessage(null);
-                                setFormError(null);
-                              }}
-                              className={`rounded-lg px-2 py-2 text-sm font-medium transition-all duration-150 ${
-                                !slot.available
-                                  ? "cursor-not-allowed bg-zinc-100 text-zinc-300 line-through"
-                                  : selectedTime === slot.time
-                                  ? "scale-[1.05] bg-zinc-900 text-white"
-                                  : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:scale-[1.05] hover:bg-zinc-100 active:scale-95"
+                              key={dateStr}
+                              disabled={isPast}
+                              onClick={() => setSelectedDate(dateStr)}
+                              className={`aspect-square rounded-lg text-sm font-medium transition-all duration-150 ${
+                                isPast
+                                  ? "cursor-not-allowed text-zinc-200"
+                                  : `hover:scale-[1.1] active:scale-95 ${
+                                      isSelected
+                                        ? "bg-zinc-900 text-white"
+                                        : isClosed
+                                        ? "text-zinc-300 hover:bg-zinc-100"
+                                        : "text-zinc-700 hover:bg-zinc-100"
+                                    }`
                               }`}
                             >
-                              {slot.time}
+                              {day}
                             </button>
-                          ))}
+                          );
+                        })}
+                      </div>
+
+                      <div className="mt-5 border-t border-zinc-100 pt-4">
+                        <p className="text-sm font-semibold text-zinc-800">{formatDisplayDate(selectedDate, lang)}</p>
+                        <div key={`${selectedDate}-${serviceIdsKey}`} className="animate-step-in mt-3">
+                          {slotsLoading ? (
+                            <p className="text-sm text-zinc-500">{t.slotsCard.loadingTimes}</p>
+                          ) : dayClosed ? (
+                            <p className="text-sm font-medium text-zinc-800">{t.slotsCard.closedDay}</p>
+                          ) : fullyBooked ? (
+                            <div>
+                              <p className="text-sm font-medium text-zinc-800">{t.slotsCard.fullyBooked}</p>
+                              <p className="mt-1 text-sm text-zinc-500">{t.slotsCard.waitlistPrompt}</p>
+                              {!joiningWaitlist ? (
+                                <button
+                                  onClick={() => {
+                                    setJoiningWaitlist(true);
+                                    setSuccessMessage(null);
+                                  }}
+                                  className={`mt-3 ${primaryButtonClass}`}
+                                >
+                                  {t.slotsCard.joinWaitlist}
+                                </button>
+                              ) : (
+                                <form onSubmit={submitWaitlist} className="mt-3 flex flex-col gap-3">
+                                  <input
+                                    required
+                                    placeholder={t.slotsCard.yourName}
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    className={inputClass}
+                                  />
+                                  <input
+                                    required
+                                    placeholder={t.slotsCard.phoneNumber}
+                                    value={phone}
+                                    onChange={(e) => setPhone(e.target.value)}
+                                    className={inputClass}
+                                  />
+                                  <textarea
+                                    placeholder={t.slotsCard.notePlaceholder}
+                                    value={note}
+                                    onChange={(e) => setNote(e.target.value)}
+                                    rows={2}
+                                    className={inputClass}
+                                  />
+                                  {formError && <p className="text-sm text-red-600">{formError}</p>}
+                                  <div className="flex gap-2">
+                                    <button type="submit" disabled={submitting} className={primaryButtonClass}>
+                                      {submitting ? t.slotsCard.joining : t.slotsCard.confirmWaitlistSpot}
+                                    </button>
+                                    <button type="button" onClick={() => setJoiningWaitlist(false)} className={ghostButtonClass}>
+                                      {t.slotsCard.cancel}
+                                    </button>
+                                  </div>
+                                </form>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex max-h-64 flex-col gap-2 overflow-y-auto pe-1">
+                              {slots.map((slot) => (
+                                <button
+                                  key={slot.time}
+                                  disabled={!slot.available}
+                                  onClick={() => {
+                                    setSelectedTime(slot.time);
+                                    setSuccessMessage(null);
+                                    setFormError(null);
+                                  }}
+                                  className={`w-full rounded-xl px-4 py-2.5 text-start text-sm font-medium transition-all duration-150 ${
+                                    !slot.available
+                                      ? "cursor-not-allowed bg-zinc-100 text-zinc-300 line-through"
+                                      : selectedTime === slot.time
+                                      ? "bg-zinc-900 text-white"
+                                      : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-100"
+                                  }`}
+                                >
+                                  {formatTime12h(slot.time, dateLocale)}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
+
+                  {!dayClosed && !fullyBooked && (
+                    <div className="border-t border-zinc-100 p-5 pt-4">
+                      <button
+                        type="button"
+                        disabled={!selectedTime}
+                        onClick={() => setSlotsPopupOpen(false)}
+                        className={`w-full ${primaryButtonClass}`}
+                      >
+                        {t.continueButton}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>,
               document.body
@@ -757,6 +738,7 @@ export default function BookingPage() {
           <>
             {selectedTime &&
                 !fullyBooked &&
+                !slotsPopupOpen &&
                 createPortal(
                   <div
                     className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4 py-8"

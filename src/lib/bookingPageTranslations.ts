@@ -28,8 +28,9 @@ export const bookingCopy = {
     },
     viewServices: "View services",
     heroFallbackSubtitle: "Book your appointment in seconds.",
-    pickAnotherDate: "Pick another date",
     reserveButton: "Reserve",
+    pickDateTime: "Pick a date & time",
+    continueButton: "Continue",
     weekdayLabels: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
     weekdaysFull: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
     slotsCard: {
@@ -103,8 +104,9 @@ export const bookingCopy = {
     },
     viewServices: "شوف الخدمات",
     heroFallbackSubtitle: "احجز موعدك بثواني.",
-    pickAnotherDate: "اختار تاريخ تاني",
     reserveButton: "احجز",
+    pickDateTime: "اختار تاريخ ووقت",
+    continueButton: "التالي",
     weekdayLabels: ["ح", "ن", "ث", "ر", "خ", "ج", "س"],
     weekdaysFull: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
     slotsCard: {
