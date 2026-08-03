@@ -900,10 +900,59 @@ export default function BookingPage() {
           </section>
         )}
 
-        <p className="mt-10 text-center text-xs text-zinc-400">
-          {t.poweredBy} <a href={`https://${ROOT_DOMAIN}`} className="font-medium text-zinc-500 hover:underline">Maw3ed</a>
-        </p>
       </div>
+
+      <footer className="mt-10 bg-black text-zinc-300">
+        <div className="mx-auto max-w-3xl px-4 py-10">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-sm font-bold text-white">
+                {initials(businessName) || "•"}
+              </span>
+              <span className="text-lg font-semibold text-white">{businessName}</span>
+            </div>
+            <nav dir="ltr" className="flex flex-wrap gap-6 text-sm">
+              <a href="#book" className="hover:text-white">
+                {t.nav.bookNow}
+              </a>
+              <a href="#services" className="hover:text-white">
+                {t.nav.services}
+              </a>
+              {whatsappHref && (
+                <a href="#contact" className="hover:text-white">
+                  {t.nav.contact}
+                </a>
+              )}
+            </nav>
+          </div>
+
+          {whatsappHref && (
+            <div className="mt-4">
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={t.whatsappLabel}
+                className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-white transition-colors hover:bg-white/20"
+              >
+                <IconChatBubble className="h-5 w-5" />
+              </a>
+            </div>
+          )}
+
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5 text-xs text-zinc-400">
+            <span>
+              © {new Date().getFullYear()} {businessName}
+            </span>
+            <span>
+              {t.poweredBy}{" "}
+              <a href={`https://${ROOT_DOMAIN}`} className="font-semibold text-white hover:underline">
+                Maw3ed
+              </a>
+            </span>
+          </div>
+        </div>
+      </footer>
 
       {whatsappHref && (
         <a
