@@ -26,6 +26,7 @@ type Business = {
   about: string | null;
   heroImageUrl: string | null;
   accentColor: string | null;
+  ownerPhone: string;
   gallery: GalleryPhoto[];
   faqs: Faq[];
 };
@@ -51,6 +52,7 @@ export default function SettingsPage() {
   const [endHour, setEndHour] = useState(18);
   const [offDays, setOffDays] = useState<number[]>([]);
   const [accentColor, setAccentColor] = useState(DEFAULT_ACCENT_COLOR);
+  const [ownerPhone, setOwnerPhone] = useState("");
   const [savingDetails, setSavingDetails] = useState(false);
   const [detailsSaved, setDetailsSaved] = useState(false);
 
@@ -97,6 +99,7 @@ export default function SettingsPage() {
         setOffDays(data.business.offDays);
         setAbout(data.business.about ?? "");
         setAccentColor(data.business.accentColor ?? DEFAULT_ACCENT_COLOR);
+        setOwnerPhone(data.business.ownerPhone ?? "");
       });
   }
 
@@ -112,7 +115,7 @@ export default function SettingsPage() {
       await fetch("/api/business", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, startHour, endHour, offDays, accentColor }),
+        body: JSON.stringify({ name, startHour, endHour, offDays, accentColor, ownerPhone }),
       });
       loadBusiness();
       setDetailsSaved(true);
@@ -372,6 +375,20 @@ export default function SettingsPage() {
                   }}
                   className={inputClass}
                 />
+              </label>
+              <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                {t.ownerPhoneLabel}
+                <input
+                  type="tel"
+                  placeholder={t.ownerPhonePlaceholder}
+                  value={ownerPhone}
+                  onChange={(e) => {
+                    setOwnerPhone(e.target.value);
+                    setDetailsSaved(false);
+                  }}
+                  className={inputClass}
+                />
+                <span className="text-xs text-zinc-400">{t.ownerPhoneHint}</span>
               </label>
               <div className="flex gap-3">
                 <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">

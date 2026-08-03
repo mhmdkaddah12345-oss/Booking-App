@@ -404,7 +404,7 @@ export async function resetPasswordWithCode(
 
 export async function updateBusinessConfig(
   businessId: string,
-  updates: Partial<Pick<BusinessConfig, "name" | "startHour" | "endHour" | "offDays" | "about" | "accentColor">>
+  updates: Partial<Pick<BusinessConfig, "name" | "startHour" | "endHour" | "offDays" | "about" | "accentColor" | "ownerPhone">>
 ): Promise<BusinessConfig | undefined> {
   const dbUpdates: Record<string, unknown> = {};
   if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -413,6 +413,7 @@ export async function updateBusinessConfig(
   if (updates.offDays !== undefined) dbUpdates.off_days = updates.offDays;
   if (updates.about !== undefined) dbUpdates.about = updates.about;
   if (updates.accentColor !== undefined) dbUpdates.accent_color = updates.accentColor;
+  if (updates.ownerPhone !== undefined) dbUpdates.owner_phone = updates.ownerPhone;
 
   const { error } = await supabase.from("business").update(dbUpdates).eq("id", businessId);
   if (error) throw new Error(error.message);
