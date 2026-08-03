@@ -190,6 +190,9 @@ export function IconChatBubble({ className }: IconProps) {
         d="M4 12c0-4.4 3.6-8 8-8s8 3.6 8 8-3.6 8-8 8c-1.1 0-2.1-.2-3-.6L5 20l1-3.8A7.9 7.9 0 0 1 4 12Z"
         {...strokeProps}
       />
+      <path d="M8.7 8.7c1.9 3.1 4.5 5.7 7.6 7.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" fill="none" />
+      <circle cx="8.2" cy="8.2" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="16.2" cy="16.2" r="1.3" fill="currentColor" stroke="none" />
     </svg>
   );
 }
