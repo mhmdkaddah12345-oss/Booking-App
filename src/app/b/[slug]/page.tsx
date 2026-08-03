@@ -549,7 +549,7 @@ export default function BookingPage() {
                 onClick={() => setSlotsPopupOpen(false)}
               >
                 <div
-                  className={`animate-modal-in flex w-full max-w-2xl flex-col sm:max-h-[85vh] ${cardClass}`}
+                  className={`animate-modal-in flex max-h-[90vh] w-full max-w-2xl flex-col ${cardClass}`}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className={cardAccentBarClass} />
