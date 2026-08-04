@@ -390,7 +390,7 @@ export default function BookingPage() {
             <button
               type="button"
               onClick={() => setSlotsPopupOpen(true)}
-              className="hidden rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-zinc-700 sm:inline-block"
+              className="rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-zinc-700"
             >
               {t.nav.bookNow}
             </button>
