@@ -49,6 +49,7 @@ export type BusinessConfig = {
   offDays: number[]; // days of week the business is closed, 0=Sunday .. 6=Saturday
   about: string | null;
   heroImageUrl: string | null;
+  logoUrl: string | null;
   accentColor: string | null;
   gallery: GalleryPhoto[];
   faqs: Faq[];
@@ -181,6 +182,7 @@ function mapBusinessConfig(
     offDays: business.off_days as number[],
     about: (business.about as string | null) ?? null,
     heroImageUrl: (business.hero_image_url as string | null) ?? null,
+    logoUrl: (business.logo_url as string | null) ?? null,
     accentColor: (business.accent_color as string | null) ?? null,
     services,
     employees,
@@ -429,7 +431,7 @@ const MEDIA_BUCKET = "business-media";
  */
 export async function uploadBusinessImage(
   businessId: string,
-  kind: "hero" | "gallery",
+  kind: "hero" | "gallery" | "logo",
   file: Blob,
   extension: string
 ): Promise<{ url: string; path: string }> {
@@ -458,6 +460,20 @@ export async function setHeroImage(businessId: string, url: string, path: string
     .eq("id", businessId);
   if (error) throw new Error(error.message);
   if (current?.hero_image_path) await deleteBusinessImage(current.hero_image_path);
+}
+
+export async function setLogoImage(businessId: string, url: string, path: string): Promise<void> {
+  const { data: current } = await supabase.from("business").select("logo_path").eq("id", businessId).maybeSingle();
+  const { error } = await supabase.from("business").update({ logo_url: url, logo_path: path }).eq("id", businessId);
+  if (error) throw new Error(error.message);
+  if (current?.logo_path) await deleteBusinessImage(current.logo_path);
+}
+
+export async function removeLogoImage(businessId: string): Promise<void> {
+  const { data: current } = await supabase.from("business").select("logo_path").eq("id", businessId).maybeSingle();
+  const { error } = await supabase.from("business").update({ logo_url: null, logo_path: null }).eq("id", businessId);
+  if (error) throw new Error(error.message);
+  if (current?.logo_path) await deleteBusinessImage(current.logo_path);
 }
 
 export async function addGalleryPhoto(businessId: string, url: string, path: string): Promise<GalleryPhoto> {

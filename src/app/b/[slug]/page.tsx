@@ -69,6 +69,7 @@ export default function BookingPage() {
   const [businessName, setBusinessName] = useState<string>("");
   const [about, setAbout] = useState<string | null>(null);
   const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [accentColor, setAccentColor] = useState<string | null>(null);
   const [gallery, setGallery] = useState<GalleryPhoto[]>([]);
   const [faqs, setFaqs] = useState<Faq[]>([]);
@@ -152,6 +153,7 @@ export default function BookingPage() {
         setBusinessName(data.business.name);
         setAbout(data.business.about ?? null);
         setHeroImageUrl(data.business.heroImageUrl ?? null);
+        setLogoUrl(data.business.logoUrl ?? null);
         setAccentColor(data.business.accentColor ?? null);
         setGallery(data.business.gallery ?? []);
         setFaqs(data.business.faqs ?? []);
@@ -350,9 +352,14 @@ export default function BookingPage() {
       <header className="sticky top-0 z-40 border-b border-zinc-200 bg-paper/90 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-3 px-4">
           <span className="flex min-w-0 items-center gap-2 font-semibold text-zinc-900">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-xs font-bold text-zinc-900">
-              {initials(businessName) || "•"}
-            </span>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-lg object-cover" />
+            ) : (
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-xs font-bold text-zinc-900">
+                {initials(businessName) || "•"}
+              </span>
+            )}
             <span className="truncate">{businessName || t.loading}</span>
           </span>
           <nav dir="ltr" className="hidden items-center gap-4 text-sm font-medium text-zinc-600 sm:flex">
@@ -926,9 +933,14 @@ export default function BookingPage() {
         <div className="mx-auto max-w-3xl px-4 py-10">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-sm font-bold text-white">
-                {initials(businessName) || "•"}
-              </span>
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt="" className="h-10 w-10 shrink-0 rounded-xl object-cover" />
+              ) : (
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-sm font-bold text-white">
+                  {initials(businessName) || "•"}
+                </span>
+              )}
               <span className="text-lg font-semibold text-white">{businessName}</span>
             </div>
             <nav dir="ltr" className="flex flex-wrap gap-6 text-sm">

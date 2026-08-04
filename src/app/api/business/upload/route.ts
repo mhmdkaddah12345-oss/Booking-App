@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { uploadBusinessImage, setHeroImage, addGalleryPhoto } from "@/lib/store";
+import { uploadBusinessImage, setHeroImage, setLogoImage, addGalleryPhoto } from "@/lib/store";
 import { requireOwner } from "@/lib/ownerAuth";
 
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   const file = formData.get("file");
   const kind = formData.get("kind");
 
-  if (!(file instanceof Blob) || (kind !== "hero" && kind !== "gallery")) {
+  if (!(file instanceof Blob) || (kind !== "hero" && kind !== "gallery" && kind !== "logo")) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
   if (file.size > MAX_BYTES) {
@@ -32,6 +32,11 @@ export async function POST(request: NextRequest) {
 
   if (kind === "hero") {
     await setHeroImage(auth.businessId, url, path);
+    return NextResponse.json({ url }, { status: 201 });
+  }
+
+  if (kind === "logo") {
+    await setLogoImage(auth.businessId, url, path);
     return NextResponse.json({ url }, { status: 201 });
   }
 

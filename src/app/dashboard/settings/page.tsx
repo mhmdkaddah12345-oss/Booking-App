@@ -25,6 +25,7 @@ type Business = {
   offDays: number[];
   about: string | null;
   heroImageUrl: string | null;
+  logoUrl: string | null;
   accentColor: string | null;
   ownerPhone: string;
   gallery: GalleryPhoto[];
@@ -69,6 +70,8 @@ export default function SettingsPage() {
   const [about, setAbout] = useState("");
   const [savingAbout, setSavingAbout] = useState(false);
   const [aboutSaved, setAboutSaved] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [removingLogo, setRemovingLogo] = useState(false);
   const [uploadingHero, setUploadingHero] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [removingPhotoId, setRemovingPhotoId] = useState<string | null>(null);
@@ -203,7 +206,7 @@ export default function SettingsPage() {
     }
   }
 
-  async function uploadPhoto(file: File, kind: "hero" | "gallery") {
+  async function uploadPhoto(file: File, kind: "hero" | "gallery" | "logo") {
     setPhotoError(null);
     if (file.size > 5 * 1024 * 1024) {
       setPhotoError(t.uploadTooLarge);
@@ -213,7 +216,7 @@ export default function SettingsPage() {
       setPhotoError(t.uploadUnsupportedType);
       return;
     }
-    const setUploading = kind === "hero" ? setUploadingHero : setUploadingGallery;
+    const setUploading = kind === "hero" ? setUploadingHero : kind === "logo" ? setUploadingLogo : setUploadingGallery;
     setUploading(true);
     try {
       const formData = new FormData();
@@ -237,6 +240,16 @@ export default function SettingsPage() {
       loadBusiness();
     } finally {
       setRemovingPhotoId(null);
+    }
+  }
+
+  async function removeLogo() {
+    setRemovingLogo(true);
+    try {
+      await fetch("/api/business/logo", { method: "DELETE" });
+      loadBusiness();
+    } finally {
+      setRemovingLogo(false);
     }
   }
 
@@ -630,6 +643,44 @@ export default function SettingsPage() {
                     {savingAbout ? t.saving : t.save}
                   </button>
                   {aboutSaved && <span className="text-sm font-medium text-green-700">{t.saved}</span>}
+                </div>
+
+                <div className="border-t border-zinc-100 pt-4">
+                  <p className="text-sm text-zinc-600">{t.logoLabel}</p>
+                  <div className="mt-2 flex items-center gap-3">
+                    {business.logoUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={business.logoUrl}
+                        alt=""
+                        className="h-14 w-14 rounded-xl object-cover ring-1 ring-zinc-200"
+                      />
+                    )}
+                    <label className="cursor-pointer rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 ring-1 ring-zinc-300 hover:bg-zinc-100">
+                      {uploadingLogo ? t.uploading : business.logoUrl ? t.replacePhoto : t.uploadPhoto}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        disabled={uploadingLogo}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) uploadPhoto(file, "logo");
+                          e.target.value = "";
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                    {business.logoUrl && (
+                      <button
+                        type="button"
+                        onClick={removeLogo}
+                        disabled={removingLogo}
+                        className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+                      >
+                        {removingLogo ? t.removing : t.remove}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="border-t border-zinc-100 pt-4">
