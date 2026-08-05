@@ -76,6 +76,7 @@ export default function BookingPage() {
   const [startHour, setStartHour] = useState(9);
   const [endHour, setEndHour] = useState(18);
   const [ownerPhone, setOwnerPhone] = useState("");
+  const [pageLoading, setPageLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [locked, setLocked] = useState(false);
   const [offDays, setOffDays] = useState<number[]>([]);
@@ -163,7 +164,8 @@ export default function BookingPage() {
         setLocked(data.business.subscriptionStatus === "expired");
         setOffDays(data.business.offDays);
         setServices(data.business.services);
-      });
+      })
+      .finally(() => setPageLoading(false));
   }, [slug]);
 
   // The site's whole warm palette is layered on the "zinc-900" CSS variable
@@ -324,6 +326,15 @@ export default function BookingPage() {
       {t.langToggle}
     </button>
   );
+
+  if (pageLoading) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-zinc-50">
+        <SuppressInstallPrompt />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900" />
+      </div>
+    );
+  }
 
   if (notFound) {
     return (
