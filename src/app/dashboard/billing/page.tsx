@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import OwnerNav from "@/components/OwnerNav";
-import { primaryButtonClass, cardClass, cardAccentBarClass, pulsingDotClass } from "@/lib/ui";
+import { cardClass, cardAccentBarClass, pulsingDotClass } from "@/lib/ui";
 import { IconShieldCheck, IconCreditCard, IconWhish } from "@/components/icons";
 import { PLANS, PlanId, WHISH_PAY_LINKS } from "@/lib/plans";
 import { useOwnerLang } from "@/lib/useOwnerLang";
@@ -30,7 +30,6 @@ export default function BillingPage() {
 
   const [billing, setBilling] = useState<BillingInfo | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("monthly");
-  const [reporting, setReporting] = useState(false);
   const [reported, setReported] = useState(false);
 
   function load() {
@@ -44,18 +43,13 @@ export default function BillingPage() {
   }, []);
 
   async function reportPayment() {
-    setReporting(true);
-    try {
-      await fetch("/api/dashboard/billing", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: selectedPlan }),
-      });
-      setReported(true);
-      load();
-    } finally {
-      setReporting(false);
-    }
+    await fetch("/api/dashboard/billing", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan: selectedPlan }),
+    });
+    setReported(true);
+    load();
   }
 
   return (
@@ -166,18 +160,12 @@ export default function BillingPage() {
                   href={WHISH_PAY_LINKS[selectedPlan]}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => reportPayment()}
                   className="mt-3 flex w-fit items-center gap-2 rounded-full bg-[#ED1C4D] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#d5183f]"
                 >
                   <IconWhish className="h-5 w-5" />
                   {t.payWithWhish(PLANS[selectedPlan].priceUsd)}
                 </a>
-                <button
-                  onClick={reportPayment}
-                  disabled={reporting}
-                  className={`mt-3 ${primaryButtonClass}`}
-                >
-                  {reporting ? t.reporting : t.sentPayment}
-                </button>
                 {reported && <p className="mt-2 text-sm text-zinc-500">{t.thanksReported}</p>}
               </div>
             </div>
