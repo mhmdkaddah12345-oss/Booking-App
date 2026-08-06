@@ -64,6 +64,7 @@ export default function ManageBookingPage() {
 
   const [rescheduling, setRescheduling] = useState(false);
   const [offDays, setOffDays] = useState<number[]>([]);
+  const [accentColor, setAccentColor] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState("");
   const [slots, setSlots] = useState<Slot[]>([]);
   const [fullyBooked, setFullyBooked] = useState(false);
@@ -91,6 +92,7 @@ export default function ManageBookingPage() {
           setBooking(data.booking);
           setSlug(data.business.slug);
           setOffDays(data.business.offDays);
+          setAccentColor(data.business.accentColor);
         }
       })
       .finally(() => setLoading(false));
@@ -100,6 +102,18 @@ export default function ManageBookingPage() {
     loadBooking();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
+
+  // Same CSS-variable override the booking page uses, so this page picks up
+  // the business's chosen accent instead of the default palette — set on
+  // <html> (not a wrapper div) because the reschedule modal is a portal
+  // straight into document.body, outside any wrapper's DOM subtree.
+  useEffect(() => {
+    if (!accentColor) return;
+    document.documentElement.style.setProperty("--zinc-900", accentColor);
+    return () => {
+      document.documentElement.style.removeProperty("--zinc-900");
+    };
+  }, [accentColor]);
 
   useEffect(() => {
     if (!rescheduling || !selectedDate || !booking || !slug) return;

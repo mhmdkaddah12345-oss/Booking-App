@@ -8,7 +8,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
   const business = await getBusinessConfig(booking.businessId);
-  return NextResponse.json({ booking, business: { slug: business?.slug, offDays: business?.offDays ?? [] } });
+  return NextResponse.json({
+    booking,
+    business: { slug: business?.slug, offDays: business?.offDays ?? [], accentColor: business?.accentColor ?? null },
+  });
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
