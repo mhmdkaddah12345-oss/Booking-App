@@ -10,6 +10,8 @@ export const bookingCopy = {
     locked: "This booking page is temporarily unavailable.",
     subtitle: "Choose a service, then pick a day and time.",
     findToggle: "Already booked? Find your appointment",
+    myBooking: "My booking",
+    findModalTitle: "Find your appointment",
     find: {
       phoneLabel: "Phone number",
       phonePlaceholder: "Phone number you booked with",
@@ -86,6 +88,8 @@ export const bookingCopy = {
     locked: "صفحة الحجز هيدي مو متاحة حالياً.",
     subtitle: "اختار خدمة، بعدين حدد يوم ووقت.",
     findToggle: "حجزت قبل؟ دوّر عموعدك",
+    myBooking: "موعدي",
+    findModalTitle: "دوّر عموعدك",
     find: {
       phoneLabel: "رقم الهاتف",
       phonePlaceholder: "رقم الهاتف يلي حجزت فيه",

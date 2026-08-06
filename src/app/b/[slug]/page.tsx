@@ -400,6 +400,13 @@ export default function BookingPage() {
             {LangToggle}
             <button
               type="button"
+              onClick={() => setFindOpen(true)}
+              className="rounded-full px-3 py-1.5 text-xs font-semibold text-zinc-700 ring-1 ring-zinc-300 transition-colors hover:bg-zinc-100"
+            >
+              {t.myBooking}
+            </button>
+            <button
+              type="button"
               onClick={() => setSlotsPopupOpen(true)}
               className="rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-zinc-700"
             >
@@ -443,64 +450,77 @@ export default function BookingPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-3xl px-4 pb-14 pt-8">
-        <button
-          type="button"
-          onClick={() => setFindOpen((v) => !v)}
-          className="text-sm font-medium text-zinc-600 underline"
-        >
-          {t.findToggle}
-        </button>
-
-        {findOpen && (
-          <div className={`mt-2 ${cardClass}`}>
-            <div className={cardAccentBarClass} />
-            <div className="p-4">
-              <form onSubmit={handleFindBookings} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-                <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
-                  {t.find.phoneLabel}
-                  <input
-                    required
-                    placeholder={t.find.phonePlaceholder}
-                    value={findPhone}
-                    onChange={(e) => setFindPhone(e.target.value)}
-                    className={inputClass}
-                  />
-                </label>
-                <button type="submit" disabled={findLoading} className={primaryButtonClass}>
-                  {findLoading ? t.find.searching : t.find.findButton}
-                </button>
-              </form>
-              {findError && <p className="mt-3 text-sm text-red-600">{findError}</p>}
-              {foundBookings && (
-                <ul className="mt-3 flex flex-col gap-2">
-                  {foundBookings.map((b) => (
-                    <li
-                      key={b.id}
-                      className="flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm"
-                    >
-                      <span className="text-zinc-700">
-                        <span className="font-medium text-zinc-800">
-                          {formatDisplayDate(b.date, lang)} {lang === "ar" ? "الساعة" : "at"} {b.time}
-                        </span>{" "}
-                        — {b.serviceName} ({b.durationMinutes} {lang === "ar" ? "د" : "min"})
-                        {b.status === "pending" && (
-                          <span className="ms-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                            {t.find.pending}
-                          </span>
-                        )}
-                      </span>
-                      <Link href={`/manage/${b.id}`} className="font-medium text-zinc-700 underline">
-                        {t.find.manage}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
+      {findOpen &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4 py-8"
+            onClick={() => setFindOpen(false)}
+          >
+            <div
+              className={`animate-modal-in w-full max-w-md ${cardClass} max-h-full overflow-y-auto`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className={cardAccentBarClass} />
+              <div className="p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-zinc-800">{t.findModalTitle}</p>
+                  <button
+                    type="button"
+                    onClick={() => setFindOpen(false)}
+                    aria-label={t.slotsCard.cancel}
+                    className="rounded-full px-2 py-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <form onSubmit={handleFindBookings} className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+                  <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
+                    {t.find.phoneLabel}
+                    <input
+                      required
+                      placeholder={t.find.phonePlaceholder}
+                      value={findPhone}
+                      onChange={(e) => setFindPhone(e.target.value)}
+                      className={inputClass}
+                    />
+                  </label>
+                  <button type="submit" disabled={findLoading} className={primaryButtonClass}>
+                    {findLoading ? t.find.searching : t.find.findButton}
+                  </button>
+                </form>
+                {findError && <p className="mt-3 text-sm text-red-600">{findError}</p>}
+                {foundBookings && (
+                  <ul className="mt-3 flex flex-col gap-2">
+                    {foundBookings.map((b) => (
+                      <li
+                        key={b.id}
+                        className="flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm"
+                      >
+                        <span className="text-zinc-700">
+                          <span className="font-medium text-zinc-800">
+                            {formatDisplayDate(b.date, lang)} {lang === "ar" ? "الساعة" : "at"} {b.time}
+                          </span>{" "}
+                          — {b.serviceName} ({b.durationMinutes} {lang === "ar" ? "د" : "min"})
+                          {b.status === "pending" && (
+                            <span className="ms-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                              {t.find.pending}
+                            </span>
+                          )}
+                        </span>
+                        <Link href={`/manage/${b.id}`} className="font-medium text-zinc-700 underline">
+                          {t.find.manage}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
+      <div className="mx-auto max-w-3xl px-4 pb-14 pt-8">
         <section id="services" className="scroll-mt-20">
           <h2 className="mt-10 text-lg font-semibold text-zinc-900">{t.services.label}</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
