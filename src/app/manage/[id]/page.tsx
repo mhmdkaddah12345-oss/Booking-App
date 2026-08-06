@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useParams } from "next/navigation";
 import { primaryButtonClass, dangerButtonClass, ghostButtonClass, cardClass, cardAccentBarClass, pulsingDotClass } from "@/lib/ui";
 import { manageCopy, type Lang } from "@/lib/managePageTranslations";
@@ -40,6 +41,11 @@ function firstWeekdayOfMonth(year: number, month: number) {
   return new Date(year, month, 1).getDay();
 }
 
+function formatTime12h(time: string, locale: string | undefined) {
+  const [h, m] = time.split(":").map(Number);
+  return new Date(2000, 0, 1, h, m).toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" });
+}
+
 export default function ManageBookingPage() {
   const params = useParams<{ id: string }>();
   const bookingId = params.id;
@@ -58,7 +64,6 @@ export default function ManageBookingPage() {
 
   const [rescheduling, setRescheduling] = useState(false);
   const [offDays, setOffDays] = useState<number[]>([]);
-  const [calendarOpen, setCalendarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [slots, setSlots] = useState<Slot[]>([]);
   const [fullyBooked, setFullyBooked] = useState(false);
@@ -180,15 +185,6 @@ export default function ManageBookingPage() {
   ];
 
   const dateLocale = t.localeTag;
-  const quickDays = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    return {
-      date: toDateStr(d.getFullYear(), d.getMonth(), d.getDate()),
-      label: d.toLocaleDateString(dateLocale, { weekday: "short", day: "numeric" }),
-      closed: offDays.includes(d.getDay()),
-    };
-  });
 
   return (
     <div dir={dir} className={`min-h-screen bg-zinc-50 px-4 py-8 ${lang === "ar" ? "lang-ar" : ""}`}>
@@ -279,143 +275,123 @@ export default function ManageBookingPage() {
                 </div>
               )}
 
-              {rescheduling && (
-                <div className="mt-4 border-t border-zinc-100 pt-4">
-                  <div className="flex items-center gap-2">
-                    <div className="flex flex-1 gap-2 overflow-x-auto pb-2">
-                      {quickDays.map((d) => (
-                        <button
-                          key={d.date}
-                          onClick={() => {
-                            setSelectedDate(d.date);
-                            setCalendarOpen(false);
-                          }}
-                          className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-150 hover:scale-[1.05] active:scale-95 ${
-                            selectedDate === d.date
-                              ? "bg-zinc-900 text-white"
-                              : d.closed
-                              ? "bg-white text-zinc-400 ring-1 ring-zinc-200 hover:bg-zinc-100"
-                              : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-100"
-                          }`}
-                        >
-                          {d.label}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() => setCalendarOpen((open) => !open)}
-                      aria-label={t.pickAnotherDate}
-                      className={`shrink-0 rounded-full p-2 text-lg ring-1 transition-all duration-150 hover:scale-[1.05] active:scale-95 ${
-                        calendarOpen
-                          ? "bg-zinc-900 text-white ring-zinc-900"
-                          : "bg-white text-zinc-600 ring-zinc-200 hover:bg-zinc-100"
-                      }`}
-                    >
-                      📅
-                    </button>
-                  </div>
-
-                  {calendarOpen && (
-                    <div className="mt-2 rounded-xl bg-zinc-50 p-4 ring-1 ring-zinc-200">
-                      <div className="flex items-center justify-between">
-                        <button
-                          onClick={goToPrevMonth}
-                          disabled={isAtCurrentMonth}
-                          className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-30"
-                        >
-                          ‹
-                        </button>
-                        <p className="text-sm font-semibold text-zinc-800">
-                          {new Date(viewYear, viewMonth, 1).toLocaleDateString(dateLocale, {
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </p>
-                        <button
-                          onClick={goToNextMonth}
-                          className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
-                        >
-                          ›
-                        </button>
-                      </div>
-
-                      <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs font-medium text-zinc-400">
-                        {t.weekdayLabels.map((w) => (
-                          <div key={w}>{w}</div>
-                        ))}
-                      </div>
-
-                      <div className="mt-1 grid grid-cols-7 gap-1">
-                        {cells.map((day, i) => {
-                          if (day === null) return <div key={`blank-${i}`} />;
-                          const dateStr = toDateStr(viewYear, viewMonth, day);
-                          const isPast = dateStr < todayStr;
-                          const isClosed = offDays.includes(new Date(viewYear, viewMonth, day).getDay());
-                          const isSelected = dateStr === selectedDate;
-                          return (
-                            <button
-                              key={dateStr}
-                              disabled={isPast}
-                              onClick={() => {
-                                setSelectedDate(dateStr);
-                                setCalendarOpen(false);
-                              }}
-                              className={`aspect-square rounded-lg text-sm font-medium transition-all duration-150 ${
-                                isPast
-                                  ? "cursor-not-allowed text-zinc-200"
-                                  : `hover:scale-[1.1] active:scale-95 ${
-                                      isSelected
-                                        ? "bg-zinc-900 text-white"
-                                        : isClosed
-                                        ? "text-zinc-300 hover:bg-zinc-100"
-                                        : "text-zinc-700 hover:bg-zinc-100"
-                                    }`
-                              }`}
-                            >
-                              {day}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="mt-3">
-                    {slotsLoading ? (
-                      <p className="text-sm text-zinc-500">{t.loadingTimes}</p>
-                    ) : dayClosed ? (
-                      <p className="text-sm text-zinc-600">{t.closedDay}</p>
-                    ) : fullyBooked ? (
-                      <p className="text-sm text-zinc-600">{t.fullyBookedDay}</p>
-                    ) : (
-                      <div dir="ltr" className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                        {slots.map((slot) => (
-                          <button
-                            key={slot.time}
-                            disabled={!slot.available}
-                            onClick={() => handlePickNewSlot(slot.time)}
-                            className={`rounded-lg px-2 py-2 text-sm font-medium transition-all duration-150 ${
-                              !slot.available
-                                ? "cursor-not-allowed bg-zinc-100 text-zinc-300 line-through"
-                                : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:scale-[1.05] hover:bg-zinc-100 active:scale-95"
-                            }`}
-                          >
-                            {slot.time}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {rescheduleError && <p className="mt-2 text-sm text-red-600">{rescheduleError}</p>}
-                  </div>
-
-                  <button
+              {rescheduling &&
+                createPortal(
+                  <div
+                    className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4 py-8"
                     onClick={() => setRescheduling(false)}
-                    className={`mt-3 ${ghostButtonClass}`}
                   >
-                    {t.cancelReschedule}
-                  </button>
-                </div>
-              )}
+                    <div
+                      className={`animate-modal-in flex max-h-[90vh] w-full max-w-md flex-col ${cardClass}`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className={cardAccentBarClass} />
+                      <div className="flex items-center justify-between gap-3 px-5 pt-4">
+                        <p className="text-sm font-semibold text-zinc-800">{t.pickNewDateTime}</p>
+                        <button
+                          type="button"
+                          onClick={() => setRescheduling(false)}
+                          aria-label={t.close}
+                          className="rounded-full px-2 py-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <div className="min-h-0 flex-1 overflow-y-auto p-5">
+                        <div className="flex items-center justify-between">
+                          <button
+                            onClick={goToPrevMonth}
+                            disabled={isAtCurrentMonth}
+                            className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-30"
+                          >
+                            ‹
+                          </button>
+                          <p className="text-sm font-semibold text-zinc-800">
+                            {new Date(viewYear, viewMonth, 1).toLocaleDateString(dateLocale, {
+                              month: "long",
+                              year: "numeric",
+                            })}
+                          </p>
+                          <button
+                            onClick={goToNextMonth}
+                            className="rounded-full px-3 py-1 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+                          >
+                            ›
+                          </button>
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs font-medium text-zinc-400">
+                          {t.weekdayLabels.map((w) => (
+                            <div key={w}>{w}</div>
+                          ))}
+                        </div>
+
+                        <div className="mt-1 grid grid-cols-7 gap-1">
+                          {cells.map((day, i) => {
+                            if (day === null) return <div key={`blank-${i}`} />;
+                            const dateStr = toDateStr(viewYear, viewMonth, day);
+                            const isPast = dateStr < todayStr;
+                            const isClosed = offDays.includes(new Date(viewYear, viewMonth, day).getDay());
+                            const isSelected = dateStr === selectedDate;
+                            return (
+                              <button
+                                key={dateStr}
+                                disabled={isPast}
+                                onClick={() => setSelectedDate(dateStr)}
+                                className={`aspect-square rounded-lg text-sm font-medium transition-all duration-150 ${
+                                  isPast
+                                    ? "cursor-not-allowed text-zinc-200"
+                                    : `hover:scale-[1.1] active:scale-95 ${
+                                        isSelected
+                                          ? "bg-zinc-900 text-white"
+                                          : isClosed
+                                          ? "text-zinc-300 hover:bg-zinc-100"
+                                          : "text-zinc-700 hover:bg-zinc-100"
+                                      }`
+                                }`}
+                              >
+                                {day}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <div className="mt-5 border-t border-zinc-100 pt-4">
+                          <p className="text-sm font-semibold text-zinc-800">{formatDisplayDate(selectedDate, lang)}</p>
+                          <div className="mt-3">
+                            {slotsLoading ? (
+                              <p className="text-sm text-zinc-500">{t.loadingTimes}</p>
+                            ) : dayClosed ? (
+                              <p className="text-sm text-zinc-600">{t.closedDay}</p>
+                            ) : fullyBooked ? (
+                              <p className="text-sm text-zinc-600">{t.fullyBookedDay}</p>
+                            ) : (
+                              <div className="flex max-h-64 flex-col gap-2 overflow-y-auto pe-1">
+                                {slots.map((slot) => (
+                                  <button
+                                    key={slot.time}
+                                    disabled={!slot.available}
+                                    onClick={() => handlePickNewSlot(slot.time)}
+                                    className={`w-full rounded-xl px-4 py-2.5 text-start text-sm font-medium transition-all duration-150 ${
+                                      !slot.available
+                                        ? "cursor-not-allowed bg-zinc-100 text-zinc-300 line-through"
+                                        : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-100"
+                                    }`}
+                                  >
+                                    {formatTime12h(slot.time, dateLocale)}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                            {rescheduleError && <p className="mt-2 text-sm text-red-600">{rescheduleError}</p>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>,
+                  document.body
+                )}
               </div>
             </div>
           )
