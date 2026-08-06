@@ -29,3 +29,12 @@ export const PLANS: Record<
 export function isPlanId(value: unknown): value is PlanId {
   return value === "monthly" || value === "half_year" || value === "yearly";
 }
+
+// Whish Money "Payment Link" checkout pages — one per plan tier since each
+// link is created for a fixed amount. Regenerate and update here if the
+// owner's Whish account/number changes.
+export const WHISH_PAY_LINKS: Record<PlanId, string> = {
+  monthly: "https://whish.money/pay/tWUI9NFKZ",
+  half_year: "https://whish.money/pay/wWpINQihA",
+  yearly: "https://whish.money/pay/3WAIdQG7I",
+};

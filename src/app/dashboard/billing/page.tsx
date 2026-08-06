@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import OwnerNav from "@/components/OwnerNav";
 import { primaryButtonClass, cardClass, cardAccentBarClass, pulsingDotClass } from "@/lib/ui";
-import { IconShieldCheck, IconCreditCard } from "@/components/icons";
-import { PLANS, PlanId } from "@/lib/plans";
+import { IconShieldCheck, IconCreditCard, IconWhish } from "@/components/icons";
+import { PLANS, PlanId, WHISH_PAY_LINKS } from "@/lib/plans";
 import { useOwnerLang } from "@/lib/useOwnerLang";
 import { billingCopy } from "@/lib/billingPageTranslations";
 
@@ -162,6 +162,15 @@ export default function BillingPage() {
                 <p className="mt-2 text-sm text-zinc-600">
                   {t.sendingFor(t.planNames[selectedPlan] ?? PLANS[selectedPlan].label, PLANS[selectedPlan].priceUsd)}
                 </p>
+                <a
+                  href={WHISH_PAY_LINKS[selectedPlan]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 flex w-fit items-center gap-2 rounded-full bg-[#ED1C4D] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#d5183f]"
+                >
+                  <IconWhish className="h-5 w-5" />
+                  {t.payWithWhish(PLANS[selectedPlan].priceUsd)}
+                </a>
                 <button
                   onClick={reportPayment}
                   disabled={reporting}

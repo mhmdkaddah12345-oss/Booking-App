@@ -197,6 +197,22 @@ export function IconChatBubble({ className }: IconProps) {
   );
 }
 
+export function IconWhish({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
+      <circle cx="12" cy="12" r="10.5" fill="#ED1C4D" />
+      <path
+        d="M7 8.5v6.2c0 .8.9 1.2 1.5.7l1.9-1.7a.7.7 0 0 1 .9 0l1.9 1.7c.6.5 1.5.1 1.5-.7V8.5"
+        stroke="#fff"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
 export function IconGear({ className }: IconProps) {
   return (
     <svg {...common} className={className}>
