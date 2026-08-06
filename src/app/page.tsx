@@ -12,17 +12,21 @@ import FaqAccordion from "@/components/FaqAccordion";
 import BookingPreviewMockup from "@/components/BookingPreviewMockup";
 import { PLANS, PlanId } from "@/lib/plans";
 import { landingCopy, Lang } from "@/lib/landingTranslations";
+import { whatsappLink } from "@/lib/whatsapp";
 import {
   IconAlert,
   IconBrowser,
   IconCalendarX,
   IconChat,
+  IconChatBubble,
   IconClock,
   IconLink,
   IconRefresh,
   IconShieldCheck,
   IconUsers,
 } from "@/components/icons";
+
+const CONTACT_WHATSAPP_NUMBER = "79070947";
 
 // Cycles feature-card icon tints through the brand's three accent notes
 // (terracotta, gold, cedar — the same trio in cardAccentBarClass) so the
@@ -545,7 +549,18 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="-mt-1 bg-paper px-6 pb-8 pt-10 text-center text-xs text-zinc-400">{t.footer}</footer>
+      <footer className="-mt-1 bg-paper px-6 pb-8 pt-10 text-center text-xs text-zinc-400">
+        <a
+          href={whatsappLink(CONTACT_WHATSAPP_NUMBER, t.whatsappPrefill)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 transition-colors hover:bg-zinc-200"
+        >
+          <IconChatBubble className="h-4 w-4 text-[#25D366]" />
+          {t.whatsappLabel} · {CONTACT_WHATSAPP_NUMBER}
+        </a>
+        <p className="mt-4">{t.footer}</p>
+      </footer>
     </div>
   );
 }

@@ -132,6 +132,8 @@ export const landingCopy = {
       genericError: "Something went wrong. Please try again.",
     },
     footer: "Maw3ed — built for Lebanon's salons, clinics, and gyms.",
+    whatsappLabel: "Chat with us on WhatsApp",
+    whatsappPrefill: "Hi Maw3ed! I have a question.",
     mockup: {
       businessName: "Bella Salon",
       servicesLabel: "Services",
@@ -275,6 +277,8 @@ export const landingCopy = {
       genericError: "في شي غلط. جرّب مرة تانية.",
     },
     footer: "Maw3ed — مصمَّم لصالونات وعيادات ونوادي لبنان.",
+    whatsappLabel: "احكينا عالواتساب",
+    whatsappPrefill: "مرحبا Maw3ed! عندي سؤال.",
     mockup: {
       businessName: "صالون بيلا",
       servicesLabel: "الخدمات",
