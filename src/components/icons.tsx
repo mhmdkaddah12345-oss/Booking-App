@@ -213,6 +213,14 @@ export function IconWhish({ className }: IconProps) {
   );
 }
 
+export function IconChevronDown({ className }: IconProps) {
+  return (
+    <svg {...common} className={className}>
+      <path d="M6 9.5 12 15.5 18 9.5" {...strokeProps} />
+    </svg>
+  );
+}
+
 export function IconGear({ className }: IconProps) {
   return (
     <svg {...common} className={className}>

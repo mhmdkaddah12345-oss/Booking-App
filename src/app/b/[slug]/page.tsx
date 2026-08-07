@@ -9,7 +9,7 @@ import { bookingCopy, Lang } from "@/lib/bookingPageTranslations";
 import SuppressInstallPrompt from "@/components/SuppressInstallPrompt";
 import { formatDisplayDate } from "@/lib/formatDate";
 import { whatsappLink } from "@/lib/whatsapp";
-import { IconChatBubble, IconClock } from "@/components/icons";
+import { IconChatBubble, IconChevronDown, IconClock } from "@/components/icons";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
@@ -907,17 +907,37 @@ export default function BookingPage() {
 
         {faqs.length > 0 && (
           <section id="faq" className="scroll-mt-20">
-            <h2 className="mt-10 text-lg font-semibold text-zinc-900">{t.faqTitle}</h2>
-            <div className="mt-3 flex flex-col gap-2">
-              {faqs.map((faq) => (
-                <details key={faq.id} className={`${cardClass} group`}>
-                  <div className={cardAccentBarClass} />
-                  <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-zinc-800 marker:content-none">
-                    {faq.question}
-                  </summary>
-                  <p className="px-4 pb-3 text-sm text-zinc-600">{faq.answer}</p>
-                </details>
-              ))}
+            <div className="mt-10 grid gap-6 sm:grid-cols-[220px_1fr] sm:gap-10">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-900">{t.faqTitle}</p>
+                <h2 className="mt-2 text-2xl font-semibold leading-tight text-zinc-900">{t.faqHeading}</h2>
+                <p className="mt-3 text-sm text-zinc-500">
+                  {t.faqSubtext}{" "}
+                  {whatsappHref && (
+                    <a
+                      href={whatsappHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-zinc-900 underline"
+                    >
+                      {t.faqWhatsappLink}
+                    </a>
+                  )}
+                </p>
+              </div>
+              <div className="flex flex-col gap-3">
+                {faqs.map((faq) => (
+                  <details key={faq.id} className="group rounded-2xl bg-white px-5 py-4 shadow-sm ring-1 ring-zinc-100">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 marker:content-none">
+                      <span className="text-sm font-semibold text-zinc-900">{faq.question}</span>
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-900/10 text-zinc-900 transition-transform duration-200 group-open:rotate-180">
+                        <IconChevronDown className="h-3.5 w-3.5" />
+                      </span>
+                    </summary>
+                    <p className="mt-3 text-sm text-zinc-600">{faq.answer}</p>
+                  </details>
+                ))}
+              </div>
             </div>
           </section>
         )}
