@@ -1184,9 +1184,12 @@ export async function rescheduleBooking(
   // A confirmed booking that actually moves to a new date/time needs the
   // owner to re-approve it, same as a fresh request — otherwise a customer
   // could shift a shift-covering appointment to a time the owner never
-  // agreed to without them ever seeing it.
+  // agreed to without them ever seeing it. That protection doesn't apply
+  // when the owner is the one making the change (requireBusinessId is only
+  // ever set by the authenticated dashboard path) — they don't need to
+  // re-approve their own edit.
   const isActualChange = booking.date !== newDate || booking.time !== newTime;
-  const needsReconfirmation = booking.status === "booked" && isActualChange;
+  const needsReconfirmation = !requireBusinessId && booking.status === "booked" && isActualChange;
 
   for (const emp of employees) {
     const { data, error } = await supabase

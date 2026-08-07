@@ -32,6 +32,10 @@ export const dashboardCopy = {
     cancelBooking: "Cancel booking",
     cancelling: "Cancelling...",
     close: "Close",
+    reschedule: "Reschedule",
+    rescheduleModalTitle: "Reschedule appointment",
+    rescheduling: "Rescheduling...",
+    confirmNewTime: "Confirm new time",
     waitlist: "Waitlist",
     noOneWaiting: "No one is waiting.",
     notifiedFor: (time: string) => `— notified for ${time}`,
@@ -75,6 +79,8 @@ export const dashboardCopy = {
         `Hi ${b.customerName}, we're sorry but your appointment on ${b.date} at ${b.time} for ${b.serviceName} has had to be cancelled. Apologies for the inconvenience — feel free to book another time that works for you.`,
       reserved: (b: MessageInput) =>
         `Hi ${b.customerName}! We've booked you in on ${b.date} at ${b.time} for ${b.serviceName}. See you soon!`,
+      rescheduled: (b: MessageInput) =>
+        `Hi ${b.customerName}! Your appointment for ${b.serviceName} has been moved to ${b.date} at ${b.time}. See you then!`,
       waitlistSlotOpen: (w: WaitlistMessageInput) =>
         `Hi ${w.customerName}! A spot just opened up on ${w.date} at ${w.notifiedTime} for ${w.serviceName} — reply if you'd like it and we'll lock it in for you.`,
       waitlistConfirmed: (w: WaitlistMessageInput) =>
@@ -111,6 +117,10 @@ export const dashboardCopy = {
     cancelBooking: "إلغاء الموعد",
     cancelling: "عم يلغي...",
     close: "إغلاق",
+    reschedule: "أجّل",
+    rescheduleModalTitle: "أجّل الموعد",
+    rescheduling: "عم يأجّل...",
+    confirmNewTime: "أكّد الوقت الجديد",
     waitlist: "لائحة الانتظار",
     noOneWaiting: "ما في حدا عم ينتظر.",
     notifiedFor: (time: string) => `— انبعتلو إشعار لساعة ${time}`,
@@ -153,6 +163,8 @@ export const dashboardCopy = {
         `أهلين ${b.customerName}، معذرة موعدك يوم ${b.date} الساعة ${b.time} لـ${b.serviceName} انلغى. آسفين عالإزعاج — احجز وقت تاني بيناسبك.`,
       reserved: (b: MessageInput) =>
         `أهلين ${b.customerName}! حجزنالك يوم ${b.date} الساعة ${b.time} لـ${b.serviceName}. منشوفك قريباً!`,
+      rescheduled: (b: MessageInput) =>
+        `أهلين ${b.customerName}! موعدك لـ${b.serviceName} انتقل ليوم ${b.date} الساعة ${b.time}. منشوفك وقتها!`,
       waitlistSlotOpen: (w: WaitlistMessageInput) =>
         `أهلين ${w.customerName}! هلق فتح موعد يوم ${w.date} الساعة ${w.notifiedTime} لـ${w.serviceName} — ردّ علينا إذا بدك ياه ومنثبتلك.`,
       waitlistConfirmed: (w: WaitlistMessageInput) =>

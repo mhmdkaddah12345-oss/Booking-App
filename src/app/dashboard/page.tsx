@@ -152,6 +152,7 @@ export default function DashboardPage() {
   const [now, setNow] = useState(() => new Date());
 
   const [reserveOpen, setReserveOpen] = useState(false);
+  const [reschedulingBooking, setReschedulingBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
@@ -654,6 +655,15 @@ export default function DashboardPage() {
                           {busyId === selectedBooking.id ? t.cancelling : t.cancelBooking}
                         </button>
                       )}
+                      <button
+                        onClick={() => {
+                          setReschedulingBooking(selectedBooking);
+                          setSelectedBookingId(null);
+                        }}
+                        className={ghostButtonClass}
+                      >
+                        {t.reschedule}
+                      </button>
                       <button onClick={() => setSelectedBookingId(null)} className={ghostButtonClass}>
                         {t.close}
                       </button>
@@ -788,6 +798,18 @@ export default function DashboardPage() {
           onClose={() => setReserveOpen(false)}
           onCreated={() => {
             setReserveOpen(false);
+            loadDashboard({ silent: true });
+          }}
+        />
+      )}
+
+      {reschedulingBooking && (
+        <RescheduleModal
+          booking={reschedulingBooking}
+          lang={lang}
+          onClose={() => setReschedulingBooking(null)}
+          onRescheduled={() => {
+            setReschedulingBooking(null);
             loadDashboard({ silent: true });
           }}
         />
@@ -1104,6 +1126,161 @@ function ReserveModal({
                   : submitting
                   ? t.reserving
                   : t.reserve}
+              </button>
+              <button type="button" onClick={onClose} className={ghostButtonClass}>
+                {t.cancel}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RescheduleModal({
+  booking,
+  lang,
+  onClose,
+  onRescheduled,
+}: {
+  booking: Booking;
+  lang: Lang;
+  onClose: () => void;
+  onRescheduled: () => void;
+}) {
+  const t = dashboardCopy[lang];
+
+  const todayStr = (() => {
+    const d = new Date();
+    return toDateStr(d.getFullYear(), d.getMonth(), d.getDate());
+  })();
+
+  const [date, setDate] = useState(booking.date >= todayStr ? booking.date : todayStr);
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [fullyBooked, setFullyBooked] = useState(false);
+  const [dayClosed, setDayClosed] = useState(false);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSlotsLoading(true);
+    setSelectedTime(null);
+    setError(null);
+    fetch(`/api/dashboard/slots?date=${date}&durationMinutes=${booking.durationMinutes}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setSlots(data.slots ?? []);
+        setFullyBooked(data.fullyBooked);
+        setDayClosed(data.closed);
+      })
+      .finally(() => setSlotsLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date]);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedTime) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/bookings/${booking.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-dashboard-action": "1" },
+        body: JSON.stringify({ date, time: selectedTime }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error === "slot_taken" ? t.slotTaken : t.genericError);
+        return;
+      }
+      onRescheduled();
+      openWhatsApp(
+        whatsappLink(
+          booking.customerPhone,
+          t.message.rescheduled({
+            customerName: booking.customerName,
+            date: formatDisplayDate(date, lang),
+            time: selectedTime,
+            serviceName: booking.serviceName,
+          })
+        )
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div
+      dir={lang === "ar" ? "rtl" : "ltr"}
+      className={`fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4 py-8 ${lang === "ar" ? "lang-ar" : ""}`}
+    >
+      <div className={`w-full max-w-md ${cardClass} max-h-full overflow-y-auto`}>
+        <div className={cardAccentBarClass} />
+        <div className="p-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-zinc-900">{t.rescheduleModalTitle}</h2>
+            <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600" aria-label={t.close}>
+              ✕
+            </button>
+          </div>
+          <p className="mt-1 text-sm text-zinc-600">
+            {booking.serviceName} — {booking.customerName} ({booking.customerPhone})
+          </p>
+
+          <form onSubmit={submit} className="mt-4 flex flex-col gap-3">
+            <label className="flex flex-col gap-1 text-sm text-zinc-600">
+              {t.date}
+              <input
+                type="date"
+                min={todayStr}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className={inputClass}
+              />
+            </label>
+
+            <div>
+              <p className="text-sm text-zinc-600">{t.time}</p>
+              {slotsLoading ? (
+                <p className="mt-1 text-sm text-zinc-400">{t.loadingTimes}</p>
+              ) : dayClosed ? (
+                <p className="mt-1 text-sm text-zinc-400">{t.closedThatDay}</p>
+              ) : fullyBooked ? (
+                <p className="mt-1 text-sm text-zinc-400">{t.fullyBookedThatDay}</p>
+              ) : slots.length === 0 ? (
+                <p className="mt-1 text-sm text-zinc-400">{t.noTimesAvailable}</p>
+              ) : (
+                <div dir="ltr" className="mt-1 grid grid-cols-4 gap-2">
+                  {slots.map((slot) => (
+                    <button
+                      key={slot.time}
+                      type="button"
+                      disabled={!slot.available}
+                      onClick={() => setSelectedTime(slot.time)}
+                      className={`rounded-lg px-2 py-2 text-sm font-medium transition-all duration-150 ${
+                        !slot.available
+                          ? "cursor-not-allowed bg-zinc-100 text-zinc-300 line-through"
+                          : selectedTime === slot.time
+                          ? "scale-[1.05] bg-zinc-900 text-white"
+                          : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:scale-[1.05] hover:bg-zinc-100 active:scale-95"
+                      }`}
+                    >
+                      {slot.time}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {error && <p className="text-sm text-red-600">{error}</p>}
+
+            <div className="mt-1 flex gap-2">
+              <button type="submit" disabled={submitting || !selectedTime} className={primaryButtonClass}>
+                {submitting ? t.rescheduling : t.confirmNewTime}
               </button>
               <button type="button" onClick={onClose} className={ghostButtonClass}>
                 {t.cancel}
