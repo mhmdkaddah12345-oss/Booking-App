@@ -67,6 +67,7 @@ type Booking = {
 };
 
 type Employee = { id: string; name: string };
+type ScheduleException = { id: string; date: string; startTime: string | null; endTime: string | null; note: string | null };
 type Service = { id: string; name: string; durationMinutes: number };
 type Slot = { time: string; available: boolean };
 
@@ -140,6 +141,7 @@ export default function DashboardPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [waitlist, setWaitlist] = useState<WaitlistEntry[]>([]);
+  const [scheduleExceptions, setScheduleExceptions] = useState<ScheduleException[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
@@ -158,8 +160,12 @@ export default function DashboardPage() {
 
   function loadDashboard(opts: { silent?: boolean } = {}) {
     if (!opts.silent) setLoading(true);
-    Promise.all([fetch("/api/business").then((r) => r.json()), fetch("/api/dashboard").then((r) => r.json())])
-      .then(([businessData, dashboardData]) => {
+    Promise.all([
+      fetch("/api/business").then((r) => r.json()),
+      fetch("/api/dashboard").then((r) => r.json()),
+      fetch("/api/business/schedule-exceptions").then((r) => r.json()),
+    ])
+      .then(([businessData, dashboardData, exceptionsData]) => {
         setStartHour(businessData.business.startHour);
         setEndHour(businessData.business.endHour);
         setOffDays(businessData.business.offDays);
@@ -171,6 +177,7 @@ export default function DashboardPage() {
         setBookings(dashboardData.bookings);
         setWaitlist(dashboardData.waitlist);
         setStats(dashboardData.stats);
+        setScheduleExceptions(exceptionsData.exceptions ?? []);
       })
       .finally(() => {
         if (!opts.silent) setLoading(false);
@@ -267,6 +274,12 @@ export default function DashboardPage() {
     }
   }
 
+  const fullDayExceptionDates = new Set(
+    scheduleExceptions.filter((e) => !e.startTime && !e.endTime).map((e) => e.date)
+  );
+  const busyExceptionsFor = (date: string) =>
+    scheduleExceptions.filter((e) => e.date === date && e.startTime && e.endTime);
+
   const today = new Date();
   const fiveDays = Array.from({ length: 5 }, (_, i) => {
     const d = new Date(today);
@@ -275,7 +288,7 @@ export default function DashboardPage() {
     return {
       date,
       label: d.toLocaleDateString(dateLocale, { weekday: "short", month: "short", day: "numeric" }),
-      closed: offDays.includes(d.getDay()),
+      closed: offDays.includes(d.getDay()) || fullDayExceptionDates.has(date),
     };
   });
   const lastGridDate = fiveDays[fiveDays.length - 1].date;
@@ -508,6 +521,28 @@ export default function DashboardPage() {
                           style={{ top: i * ROW_HEIGHT_PX }}
                         />
                       ))}
+                      {busyExceptionsFor(day.date).map((ex) => {
+                        const startMinutesFromOpen = timeToMinutes(ex.startTime!) - startHour * 60;
+                        const endMinutesFromOpen = timeToMinutes(ex.endTime!) - startHour * 60;
+                        const topPx = (startMinutesFromOpen / 60) * ROW_HEIGHT_PX;
+                        const heightPx = Math.max(((endMinutesFromOpen - startMinutesFromOpen) / 60) * ROW_HEIGHT_PX, 18);
+                        return (
+                          <div
+                            key={ex.id}
+                            title={ex.note ?? t.busyBlockDefaultLabel}
+                            className="pointer-events-none absolute inset-x-0 z-10 flex items-center justify-center overflow-hidden rounded-md px-1 text-center text-[10px] font-medium text-zinc-600 ring-1 ring-inset ring-zinc-300"
+                            style={{
+                              top: topPx,
+                              height: heightPx,
+                              backgroundColor: "rgba(113,113,122,0.12)",
+                              backgroundImage:
+                                "repeating-linear-gradient(45deg, rgba(63,63,70,0.12), rgba(63,63,70,0.12) 4px, transparent 4px, transparent 9px)",
+                            }}
+                          >
+                            <span className="truncate">{ex.note || t.busyBlockDefaultLabel}</span>
+                          </div>
+                        );
+                      })}
                       {dayIndex === 0 && showNowLine && (
                         <div
                           className="pointer-events-none absolute left-0 right-0 z-20 flex items-center"
