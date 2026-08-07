@@ -60,13 +60,17 @@ export default function SettingsPage() {
 
   const [business, setBusiness] = useState<Business | null>(null);
   const [name, setName] = useState("");
+  const [ownerPhone, setOwnerPhone] = useState("");
+  const [savingBasicInfo, setSavingBasicInfo] = useState(false);
+  const [basicInfoSaved, setBasicInfoSaved] = useState(false);
+
   const [startHour, setStartHour] = useState(9);
   const [endHour, setEndHour] = useState(18);
   const [offDays, setOffDays] = useState<number[]>([]);
+  const [savingHours, setSavingHours] = useState(false);
+  const [hoursSaved, setHoursSaved] = useState(false);
+
   const [accentColor, setAccentColor] = useState(DEFAULT_ACCENT_COLOR);
-  const [ownerPhone, setOwnerPhone] = useState("");
-  const [savingDetails, setSavingDetails] = useState(false);
-  const [detailsSaved, setDetailsSaved] = useState(false);
 
   const [newServiceName, setNewServiceName] = useState("");
   const [newServiceDuration, setNewServiceDuration] = useState(30);
@@ -137,26 +141,43 @@ export default function SettingsPage() {
     loadExceptions();
   }, []);
 
-  async function saveDetails(e: React.FormEvent) {
+  async function saveBasicInfo(e: React.FormEvent) {
     e.preventDefault();
-    setSavingDetails(true);
-    setDetailsSaved(false);
+    setSavingBasicInfo(true);
+    setBasicInfoSaved(false);
     try {
       await fetch("/api/business", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, startHour, endHour, offDays, accentColor, ownerPhone }),
+        body: JSON.stringify({ name, ownerPhone }),
       });
       loadBusiness();
-      setDetailsSaved(true);
+      setBasicInfoSaved(true);
     } finally {
-      setSavingDetails(false);
+      setSavingBasicInfo(false);
+    }
+  }
+
+  async function saveHours(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingHours(true);
+    setHoursSaved(false);
+    try {
+      await fetch("/api/business", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ startHour, endHour, offDays }),
+      });
+      loadBusiness();
+      setHoursSaved(true);
+    } finally {
+      setSavingHours(false);
     }
   }
 
   function toggleOffDay(day: number) {
     setOffDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
-    setDetailsSaved(false);
+    setHoursSaved(false);
   }
 
   async function addService(e: React.FormEvent) {
@@ -224,7 +245,7 @@ export default function SettingsPage() {
       await fetch("/api/business", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ about }),
+        body: JSON.stringify({ about, accentColor }),
       });
       loadBusiness();
       setAboutSaved(true);
@@ -388,13 +409,18 @@ export default function SettingsPage() {
           <p className="mt-6 text-sm text-zinc-500">{t.loading}</p>
         ) : (
           <>
-            <div className={`mt-6 ${cardClass}`}>
+            <div className="mt-8">
+              <h2 className="text-base font-semibold text-zinc-900">{t.sectionBookingPage}</h2>
+              <p className="mt-0.5 text-xs text-zinc-500">{t.sectionBookingPageBody}</p>
+            </div>
+
+            <div className={`mt-4 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="p-4">
-                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                <h3 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconLink className="h-4 w-4 text-zinc-500" />
                   {t.bookingPageTitle}
-                </h2>
+                </h3>
                 <p className="mt-1 text-sm text-zinc-600">{t.bookingPageBody}</p>
                 <div className="mt-3 flex items-center gap-2">
                   <code dir="ltr" className="flex-1 truncate rounded-lg bg-zinc-50 px-3 py-2 text-sm font-medium text-zinc-800 ring-1 ring-zinc-200">
@@ -421,229 +447,212 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className={`mt-6 ${cardClass}`}>
-              <div className={cardAccentBarClass} />
-              <div className="p-4">
-                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
-                  <IconBell className="h-4 w-4 text-zinc-500" />
-                  {t.notificationsTitle}
-                </h2>
-                <p className="mt-1 text-sm text-zinc-600">{t.notificationsBody}</p>
-                <div className="mt-3">
-                  <PushNotificationSettings />
-                </div>
-              </div>
-            </div>
-
-            <form onSubmit={saveDetails} className={`mt-6 ${cardClass}`}>
+            <form onSubmit={saveBasicInfo} className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="flex flex-col gap-3 p-4">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
-                <IconBuilding className="h-4 w-4 text-zinc-500" />
-                {t.businessDetailsTitle}
-              </h2>
-              <label className="flex flex-col gap-1 text-sm text-zinc-600">
-                {t.businessName}
-                <input
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value);
-                    setDetailsSaved(false);
-                  }}
-                  className={inputClass}
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-sm text-zinc-600">
-                {t.ownerPhoneLabel}
-                <input
-                  type="tel"
-                  placeholder={t.ownerPhonePlaceholder}
-                  value={ownerPhone}
-                  onChange={(e) => {
-                    setOwnerPhone(e.target.value);
-                    setDetailsSaved(false);
-                  }}
-                  className={inputClass}
-                />
-                <span className="text-xs text-zinc-400">{t.ownerPhoneHint}</span>
-              </label>
-              <div className="flex gap-3">
-                <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
-                  {t.opensAt}
-                  <select
-                    value={startHour}
+                <h3 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                  <IconBuilding className="h-4 w-4 text-zinc-500" />
+                  {t.basicInfoTitle}
+                </h3>
+                <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                  {t.businessName}
+                  <input
+                    value={name}
                     onChange={(e) => {
-                      setStartHour(Number(e.target.value));
-                      setDetailsSaved(false);
+                      setName(e.target.value);
+                      setBasicInfoSaved(false);
                     }}
                     className={inputClass}
-                  >
-                    {HOUR_OPTIONS.map((h) => (
-                      <option key={h} value={h}>
-                        {formatHour(h)}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </label>
-                <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
-                  {t.closesAt}
-                  <select
-                    value={endHour}
+                <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                  {t.ownerPhoneLabel}
+                  <input
+                    type="tel"
+                    placeholder={t.ownerPhonePlaceholder}
+                    value={ownerPhone}
                     onChange={(e) => {
-                      setEndHour(Number(e.target.value));
-                      setDetailsSaved(false);
+                      setOwnerPhone(e.target.value);
+                      setBasicInfoSaved(false);
                     }}
                     className={inputClass}
-                  >
-                    {HOUR_OPTIONS.map((h) => (
-                      <option key={h} value={h}>
-                        {formatHour(h)}
-                      </option>
-                    ))}
-                  </select>
+                  />
+                  <span className="text-xs text-zinc-400">{t.ownerPhoneHint}</span>
                 </label>
-              </div>
-              <div className="flex flex-col gap-1 text-sm text-zinc-600">
-                {t.closedOn}
-                <div className="flex flex-wrap gap-3">
-                  {WEEKDAY_VALUES.map((value) => (
-                    <label key={value} className="flex items-center gap-1.5 text-sm text-zinc-700">
-                      <input
-                        type="checkbox"
-                        checked={offDays.includes(value)}
-                        onChange={() => toggleOffDay(value)}
-                        className="h-4 w-4 rounded border-zinc-300"
-                      />
-                      {t.weekdays[value]}
-                    </label>
-                  ))}
+                <div className="flex items-center gap-3">
+                  <button type="submit" disabled={savingBasicInfo} className={primaryButtonClass}>
+                    {savingBasicInfo ? t.saving : t.save}
+                  </button>
+                  {basicInfoSaved && <span className="text-sm font-medium text-green-700">{t.saved}</span>}
                 </div>
-              </div>
-              <label className="flex items-center gap-3 text-sm text-zinc-600">
-                {t.accentColorLabel}
-                <input
-                  type="color"
-                  value={accentColor}
-                  onChange={(e) => {
-                    setAccentColor(e.target.value);
-                    setDetailsSaved(false);
-                  }}
-                  className="h-9 w-14 cursor-pointer rounded-lg border border-zinc-300 bg-white p-1"
-                />
-              </label>
-              <div className="flex items-center gap-3">
-                <button
-                  type="submit"
-                  disabled={savingDetails}
-                  className={primaryButtonClass}
-                >
-                  {savingDetails ? t.saving : t.save}
-                </button>
-                {detailsSaved && <span className="text-sm font-medium text-green-700">{t.saved}</span>}
-              </div>
               </div>
             </form>
 
             <div className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="p-4">
-                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                <h3 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconCalendarX className="h-4 w-4 text-zinc-500" />
-                  {t.timeOffTitle}
-                </h2>
-                <p className="mt-1 text-xs text-zinc-500">{t.timeOffBody}</p>
+                  {t.hoursAvailabilityTitle}
+                </h3>
 
-                <ul className="mt-3 flex flex-col gap-2">
-                  {scheduleExceptions.map((ex) => (
-                    <li
-                      key={ex.id}
-                      className={`flex items-center justify-between gap-3 rounded-lg bg-zinc-50 px-3 py-2 text-sm ${listRowHoverClass}`}
-                    >
-                      <span className="text-zinc-700">
-                        {ex.startTime && ex.endTime
-                          ? t.exceptionBusyRange(ex.date, ex.startTime, ex.endTime)
-                          : t.exceptionClosedAllDay(ex.date)}
-                        {ex.note && <span className="text-zinc-400"> — {ex.note}</span>}
-                      </span>
-                      <button
-                        onClick={() => removeException(ex.id)}
-                        disabled={removingExceptionId === ex.id}
-                        className="shrink-0 rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                <form onSubmit={saveHours} className="mt-3 flex flex-col gap-3">
+                  <div className="flex gap-3">
+                    <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
+                      {t.opensAt}
+                      <select
+                        value={startHour}
+                        onChange={(e) => {
+                          setStartHour(Number(e.target.value));
+                          setHoursSaved(false);
+                        }}
+                        className={inputClass}
                       >
-                        {removingExceptionId === ex.id ? t.removing : t.remove}
-                      </button>
-                    </li>
-                  ))}
-                  {scheduleExceptions.length === 0 && <li className="text-sm text-zinc-400">{t.noExceptionsYet}</li>}
-                </ul>
-
-                <form onSubmit={addException} className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4">
-                  <label className="flex flex-col gap-1 text-sm text-zinc-600">
-                    {t.dateLabel}
-                    <input
-                      type="date"
-                      required
-                      value={newExceptionDate}
-                      onChange={(e) => setNewExceptionDate(e.target.value)}
-                      className={inputClass}
-                    />
-                  </label>
-                  <label className="flex items-center gap-1.5 text-sm text-zinc-700">
-                    <input
-                      type="checkbox"
-                      checked={newExceptionAllDay}
-                      onChange={(e) => setNewExceptionAllDay(e.target.checked)}
-                      className="h-4 w-4 rounded border-zinc-300"
-                    />
-                    {t.allDayLabel}
-                  </label>
-                  {!newExceptionAllDay && (
-                    <div className="flex gap-3">
-                      <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
-                        {t.fromLabel}
-                        <input
-                          type="time"
-                          required
-                          value={newExceptionStart}
-                          onChange={(e) => setNewExceptionStart(e.target.value)}
-                          className={inputClass}
-                        />
-                      </label>
-                      <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
-                        {t.toLabel}
-                        <input
-                          type="time"
-                          required
-                          value={newExceptionEnd}
-                          onChange={(e) => setNewExceptionEnd(e.target.value)}
-                          className={inputClass}
-                        />
-                      </label>
+                        {HOUR_OPTIONS.map((h) => (
+                          <option key={h} value={h}>
+                            {formatHour(h)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
+                      {t.closesAt}
+                      <select
+                        value={endHour}
+                        onChange={(e) => {
+                          setEndHour(Number(e.target.value));
+                          setHoursSaved(false);
+                        }}
+                        className={inputClass}
+                      >
+                        {HOUR_OPTIONS.map((h) => (
+                          <option key={h} value={h}>
+                            {formatHour(h)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <div className="flex flex-col gap-1 text-sm text-zinc-600">
+                    {t.closedOn}
+                    <div className="flex flex-wrap gap-3">
+                      {WEEKDAY_VALUES.map((value) => (
+                        <label key={value} className="flex items-center gap-1.5 text-sm text-zinc-700">
+                          <input
+                            type="checkbox"
+                            checked={offDays.includes(value)}
+                            onChange={() => toggleOffDay(value)}
+                            className="h-4 w-4 rounded border-zinc-300"
+                          />
+                          {t.weekdays[value]}
+                        </label>
+                      ))}
                     </div>
-                  )}
-                  <label className="flex flex-col gap-1 text-sm text-zinc-600">
-                    {t.exceptionNoteLabel}
-                    <input
-                      placeholder={t.exceptionNotePlaceholder}
-                      value={newExceptionNote}
-                      onChange={(e) => setNewExceptionNote(e.target.value)}
-                      className={inputClass}
-                    />
-                  </label>
-                  <button type="submit" disabled={addingException} className={`self-start ${primaryButtonClass}`}>
-                    {addingException ? t.adding : t.addException}
-                  </button>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button type="submit" disabled={savingHours} className={primaryButtonClass}>
+                      {savingHours ? t.saving : t.save}
+                    </button>
+                    {hoursSaved && <span className="text-sm font-medium text-green-700">{t.saved}</span>}
+                  </div>
                 </form>
+
+                <div className="mt-4 border-t border-zinc-100 pt-4">
+                  <p className="text-sm font-medium text-zinc-700">{t.timeOffTitle}</p>
+                  <p className="mt-1 text-xs text-zinc-500">{t.timeOffBody}</p>
+
+                  <ul className="mt-3 flex flex-col gap-2">
+                    {scheduleExceptions.map((ex) => (
+                      <li
+                        key={ex.id}
+                        className={`flex items-center justify-between gap-3 rounded-lg bg-zinc-50 px-3 py-2 text-sm ${listRowHoverClass}`}
+                      >
+                        <span className="text-zinc-700">
+                          {ex.startTime && ex.endTime
+                            ? t.exceptionBusyRange(ex.date, ex.startTime, ex.endTime)
+                            : t.exceptionClosedAllDay(ex.date)}
+                          {ex.note && <span className="text-zinc-400"> — {ex.note}</span>}
+                        </span>
+                        <button
+                          onClick={() => removeException(ex.id)}
+                          disabled={removingExceptionId === ex.id}
+                          className="shrink-0 rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                        >
+                          {removingExceptionId === ex.id ? t.removing : t.remove}
+                        </button>
+                      </li>
+                    ))}
+                    {scheduleExceptions.length === 0 && <li className="text-sm text-zinc-400">{t.noExceptionsYet}</li>}
+                  </ul>
+
+                  <form onSubmit={addException} className="mt-4 flex flex-col gap-3">
+                    <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                      {t.dateLabel}
+                      <input
+                        type="date"
+                        required
+                        value={newExceptionDate}
+                        onChange={(e) => setNewExceptionDate(e.target.value)}
+                        className={inputClass}
+                      />
+                    </label>
+                    <label className="flex items-center gap-1.5 text-sm text-zinc-700">
+                      <input
+                        type="checkbox"
+                        checked={newExceptionAllDay}
+                        onChange={(e) => setNewExceptionAllDay(e.target.checked)}
+                        className="h-4 w-4 rounded border-zinc-300"
+                      />
+                      {t.allDayLabel}
+                    </label>
+                    {!newExceptionAllDay && (
+                      <div className="flex gap-3">
+                        <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
+                          {t.fromLabel}
+                          <input
+                            type="time"
+                            required
+                            value={newExceptionStart}
+                            onChange={(e) => setNewExceptionStart(e.target.value)}
+                            className={inputClass}
+                          />
+                        </label>
+                        <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
+                          {t.toLabel}
+                          <input
+                            type="time"
+                            required
+                            value={newExceptionEnd}
+                            onChange={(e) => setNewExceptionEnd(e.target.value)}
+                            className={inputClass}
+                          />
+                        </label>
+                      </div>
+                    )}
+                    <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                      {t.exceptionNoteLabel}
+                      <input
+                        placeholder={t.exceptionNotePlaceholder}
+                        value={newExceptionNote}
+                        onChange={(e) => setNewExceptionNote(e.target.value)}
+                        className={inputClass}
+                      />
+                    </label>
+                    <button type="submit" disabled={addingException} className={`self-start ${primaryButtonClass}`}>
+                      {addingException ? t.adding : t.addException}
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
 
             <div className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="p-4">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+              <h3 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                 <IconTag className="h-4 w-4 text-zinc-500" />
                 {t.servicesTitle}
-              </h2>
+              </h3>
               <p className="mt-1 text-xs text-zinc-500">{t.servicesBody}</p>
 
               <ul className="mt-3 flex flex-col gap-2">
@@ -721,66 +730,27 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className={`mt-6 ${cardClass}`}>
-              <div className={cardAccentBarClass} />
-              <div className="p-4">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
-                <IconUsers className="h-4 w-4 text-zinc-500" />
-                {t.employeesTitle}
-              </h2>
-              <p className="mt-1 text-xs text-zinc-500">{t.employeesBody}</p>
-
-              <ul className="mt-3 flex flex-col gap-2">
-                {business.employees.map((emp) => (
-                  <li
-                    key={emp.id}
-                    className={`flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm ${listRowHoverClass}`}
-                  >
-                    <span className="text-zinc-700">{emp.name}</span>
-                    <button
-                      onClick={() => removeEmployee(emp.id)}
-                      disabled={removingEmployeeId === emp.id}
-                      className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
-                    >
-                      {removingEmployeeId === emp.id ? t.removing : t.remove}
-                    </button>
-                  </li>
-                ))}
-                {business.employees.length === 0 && (
-                  <li className="text-sm text-zinc-400">{t.noEmployeesYet}</li>
-                )}
-              </ul>
-
-              <form onSubmit={addEmployee} className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4 sm:flex-row sm:items-end">
-                <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
-                  {t.employeeName}
-                  <input
-                    required
-                    placeholder={t.employeeNamePlaceholder}
-                    value={newEmployeeName}
-                    onChange={(e) => setNewEmployeeName(e.target.value)}
-                    className={inputClass}
-                  />
-                </label>
-                <button
-                  type="submit"
-                  disabled={addingEmployee}
-                  className={primaryButtonClass}
-                >
-                  {addingEmployee ? t.adding : t.addEmployee}
-                </button>
-              </form>
-              </div>
-            </div>
-
             <form onSubmit={saveAbout} className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="flex flex-col gap-3 p-4">
-                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                <h3 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconImage className="h-4 w-4 text-zinc-500" />
                   {t.aboutPhotosTitle}
-                </h2>
+                </h3>
                 <p className="text-xs text-zinc-500">{t.aboutPhotosBody}</p>
+
+                <label className="flex items-center gap-3 text-sm text-zinc-600">
+                  {t.accentColorLabel}
+                  <input
+                    type="color"
+                    value={accentColor}
+                    onChange={(e) => {
+                      setAccentColor(e.target.value);
+                      setAboutSaved(false);
+                    }}
+                    className="h-9 w-14 cursor-pointer rounded-lg border border-zinc-300 bg-white p-1"
+                  />
+                </label>
 
                 <label className="flex flex-col gap-1 text-sm text-zinc-600">
                   {t.aboutLabel}
@@ -910,10 +880,10 @@ export default function SettingsPage() {
             <div className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="p-4">
-                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                <h3 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconQuestion className="h-4 w-4 text-zinc-500" />
                   {t.faqTitle}
-                </h2>
+                </h3>
                 <p className="mt-1 text-xs text-zinc-500">{t.faqBody}</p>
 
                 <ul className="mt-3 flex flex-col gap-2">
@@ -964,13 +934,84 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            <div className="mt-8">
+              <h2 className="text-base font-semibold text-zinc-900">{t.sectionAccountOps}</h2>
+              <p className="mt-0.5 text-xs text-zinc-500">{t.sectionAccountOpsBody}</p>
+            </div>
+
+            <div className={`mt-4 ${cardClass}`}>
+              <div className={cardAccentBarClass} />
+              <div className="p-4">
+              <h3 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                <IconUsers className="h-4 w-4 text-zinc-500" />
+                {t.employeesTitle}
+              </h3>
+              <p className="mt-1 text-xs text-zinc-500">{t.employeesBody}</p>
+
+              <ul className="mt-3 flex flex-col gap-2">
+                {business.employees.map((emp) => (
+                  <li
+                    key={emp.id}
+                    className={`flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm ${listRowHoverClass}`}
+                  >
+                    <span className="text-zinc-700">{emp.name}</span>
+                    <button
+                      onClick={() => removeEmployee(emp.id)}
+                      disabled={removingEmployeeId === emp.id}
+                      className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                    >
+                      {removingEmployeeId === emp.id ? t.removing : t.remove}
+                    </button>
+                  </li>
+                ))}
+                {business.employees.length === 0 && (
+                  <li className="text-sm text-zinc-400">{t.noEmployeesYet}</li>
+                )}
+              </ul>
+
+              <form onSubmit={addEmployee} className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4 sm:flex-row sm:items-end">
+                <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
+                  {t.employeeName}
+                  <input
+                    required
+                    placeholder={t.employeeNamePlaceholder}
+                    value={newEmployeeName}
+                    onChange={(e) => setNewEmployeeName(e.target.value)}
+                    className={inputClass}
+                  />
+                </label>
+                <button
+                  type="submit"
+                  disabled={addingEmployee}
+                  className={primaryButtonClass}
+                >
+                  {addingEmployee ? t.adding : t.addEmployee}
+                </button>
+              </form>
+              </div>
+            </div>
+
+            <div className={`mt-6 ${cardClass}`}>
+              <div className={cardAccentBarClass} />
+              <div className="p-4">
+                <h3 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                  <IconBell className="h-4 w-4 text-zinc-500" />
+                  {t.notificationsTitle}
+                </h3>
+                <p className="mt-1 text-sm text-zinc-600">{t.notificationsBody}</p>
+                <div className="mt-3">
+                  <PushNotificationSettings />
+                </div>
+              </div>
+            </div>
+
             <form onSubmit={changePassword} className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />
               <div className="flex flex-col gap-3 p-4">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+              <h3 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                 <IconLock className="h-4 w-4 text-zinc-500" />
                 {t.changePasswordTitle}
-              </h2>
+              </h3>
               <label className="flex flex-col gap-1 text-sm text-zinc-600">
                 {t.currentPassword}
                 <input
