@@ -361,19 +361,19 @@ export default function BookingPage() {
       <SuppressInstallPrompt />
 
       <header className="sticky top-0 z-40 border-b border-zinc-200 bg-paper/90 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-3 px-4">
-          <span className="flex min-w-0 items-center gap-2 font-semibold text-zinc-900">
+        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 px-4 lg:h-16 lg:px-8">
+          <span className="flex min-w-0 items-center gap-2 text-base font-semibold text-zinc-900 lg:gap-2.5 lg:text-lg">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-lg object-cover" />
+              <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-lg object-cover lg:h-9 lg:w-9" />
             ) : (
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-xs font-bold text-zinc-900">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-xs font-bold text-zinc-900 lg:h-9 lg:w-9">
                 {initials(businessName) || "•"}
               </span>
             )}
             <span className="truncate">{businessName || t.loading}</span>
           </span>
-          <nav dir="ltr" className="hidden items-center gap-4 text-sm font-medium text-zinc-600 sm:flex">
+          <nav dir="ltr" className="hidden items-center gap-6 text-sm font-medium text-zinc-600 lg:text-base sm:flex">
             <a href="#services" className="hover:text-zinc-900">
               {t.nav.services}
             </a>
@@ -416,7 +416,7 @@ export default function BookingPage() {
         </div>
       </header>
 
-      <section className="relative h-64 overflow-hidden sm:h-96">
+      <section className="relative h-72 overflow-hidden sm:h-96 lg:h-[32rem]">
         {heroImageUrl ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -427,19 +427,23 @@ export default function BookingPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-[#b98b3e] to-cedar" />
         )}
         <div className="absolute inset-0 flex items-center">
-          <div className="mx-auto w-full max-w-3xl px-4">
-            <div className={`max-w-md ${cardClass}`}>
+          <div className="mx-auto w-full max-w-5xl px-4 lg:px-8">
+            <div className={`max-w-md sm:max-w-lg lg:max-w-2xl ${cardClass}`}>
               <div className={cardAccentBarClass} />
-              <div className="p-6">
-                <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl">{businessName || t.loading}</h1>
-                <p className="mt-2 text-sm text-zinc-600">{about || t.heroFallbackSubtitle}</p>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <button type="button" onClick={() => setSlotsPopupOpen(true)} className={primaryButtonClass}>
+              <div className="p-6 lg:p-10">
+                <h1 className="text-3xl font-bold text-zinc-900 sm:text-4xl lg:text-5xl">{businessName || t.loading}</h1>
+                <p className="mt-3 text-sm text-zinc-600 sm:text-base lg:text-lg">{about || t.heroFallbackSubtitle}</p>
+                <div className="mt-5 flex flex-wrap gap-3 lg:mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setSlotsPopupOpen(true)}
+                    className={`${primaryButtonClass} lg:px-6 lg:py-3 lg:text-base`}
+                  >
                     {t.nav.bookNow}
                   </button>
                   <a
                     href="#services"
-                    className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-50"
+                    className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-50 lg:px-6 lg:py-3 lg:text-base"
                   >
                     {t.viewServices}
                   </a>
@@ -520,10 +524,10 @@ export default function BookingPage() {
           document.body
         )}
 
-      <div className="mx-auto max-w-3xl px-4 pb-14 pt-8">
+      <div className="mx-auto max-w-5xl px-4 pb-14 pt-8 lg:px-8">
         <section id="services" className="scroll-mt-20">
-          <h2 className="mt-10 text-lg font-semibold text-zinc-900">{t.services.label}</h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <h2 className="mt-10 text-xl font-semibold text-zinc-900 sm:text-2xl">{t.services.label}</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
             {services.map((s) => {
               const selected = selectedServiceIds.includes(s.id);
               return (
@@ -536,20 +540,20 @@ export default function BookingPage() {
                   }}
                   className={`text-start ${cardClass} ${listRowHoverClass} ${selected ? "ring-2 ring-zinc-900" : ""}`}
                 >
-                  <div className="flex flex-col gap-3 p-5">
-                    <p className="font-semibold text-zinc-800">{s.name}</p>
-                    <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600">
+                  <div className="flex flex-col gap-3 p-5 lg:p-6">
+                    <p className="font-semibold text-zinc-800 lg:text-lg">{s.name}</p>
+                    <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600 lg:text-sm">
                       <IconClock className="h-3.5 w-3.5" />
                       {s.durationMinutes} {lang === "ar" ? "د" : "min"}
                     </span>
                     <div className="flex items-center justify-between gap-3 border-t border-zinc-100 pt-3">
                       {s.priceUsd !== null ? (
-                        <p className="text-xl font-bold text-zinc-900">${s.priceUsd}</p>
+                        <p className="text-xl font-bold text-zinc-900 lg:text-2xl">${s.priceUsd}</p>
                       ) : (
                         <span />
                       )}
                       <span
-                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors lg:text-sm ${
                           selected ? "bg-zinc-900 text-white" : "ring-1 ring-zinc-300 text-zinc-700"
                         }`}
                       >
@@ -568,7 +572,7 @@ export default function BookingPage() {
           <button
             type="button"
             onClick={() => setSlotsPopupOpen(true)}
-            className={`mt-10 w-full ${primaryButtonClass}`}
+            className={`mt-10 w-full ${primaryButtonClass} lg:py-3 lg:text-base`}
           >
             {t.reserveButton}
           </button>
@@ -580,7 +584,7 @@ export default function BookingPage() {
                 onClick={() => setSlotsPopupOpen(false)}
               >
                 <div
-                  className={`animate-modal-in flex max-h-[90vh] w-full max-w-2xl flex-col ${cardClass}`}
+                  className={`animate-modal-in flex max-h-[90vh] w-full max-w-2xl flex-col lg:max-w-3xl ${cardClass}`}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className={cardAccentBarClass} />
@@ -890,8 +894,8 @@ export default function BookingPage() {
 
         {gallery.length > 0 && (
           <section id="gallery" className="scroll-mt-20">
-            <h2 className="mt-10 text-lg font-semibold text-zinc-900">{t.galleryTitle}</h2>
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <h2 className="mt-10 text-xl font-semibold text-zinc-900 sm:text-2xl">{t.galleryTitle}</h2>
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {gallery.map((photo) => (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -907,11 +911,11 @@ export default function BookingPage() {
 
         {faqs.length > 0 && (
           <section id="faq" className="scroll-mt-20">
-            <div className="mt-10 grid gap-6 sm:grid-cols-[220px_1fr] sm:gap-10">
+            <div className="mt-10 grid gap-6 sm:grid-cols-[220px_1fr] sm:gap-10 lg:grid-cols-[280px_1fr]">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-900">{t.faqTitle}</p>
-                <h2 className="mt-2 text-2xl font-semibold leading-tight text-zinc-900">{t.faqHeading}</h2>
-                <p className="mt-3 text-sm text-zinc-500">
+                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-900 lg:text-sm">{t.faqTitle}</p>
+                <h2 className="mt-2 text-2xl font-semibold leading-tight text-zinc-900 lg:text-3xl">{t.faqHeading}</h2>
+                <p className="mt-3 text-sm text-zinc-500 lg:text-base">
                   {t.faqSubtext}{" "}
                   {whatsappHref && (
                     <a
@@ -927,14 +931,14 @@ export default function BookingPage() {
               </div>
               <div className="flex flex-col gap-3">
                 {faqs.map((faq) => (
-                  <details key={faq.id} className="group rounded-2xl bg-white px-5 py-4 shadow-sm ring-1 ring-zinc-100">
+                  <details key={faq.id} className="group rounded-2xl bg-white px-5 py-4 shadow-sm ring-1 ring-zinc-100 lg:px-6 lg:py-5">
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-3 marker:content-none">
-                      <span className="text-sm font-semibold text-zinc-900">{faq.question}</span>
+                      <span className="text-sm font-semibold text-zinc-900 lg:text-base">{faq.question}</span>
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-900/10 text-zinc-900 transition-transform duration-200 group-open:rotate-180">
                         <IconChevronDown className="h-3.5 w-3.5" />
                       </span>
                     </summary>
-                    <p className="mt-3 text-sm text-zinc-600">{faq.answer}</p>
+                    <p className="mt-3 text-sm text-zinc-600 lg:text-base">{faq.answer}</p>
                   </details>
                 ))}
               </div>
@@ -943,10 +947,10 @@ export default function BookingPage() {
         )}
 
         <section id="hours" className="scroll-mt-20">
-          <h2 className="mt-10 text-lg font-semibold text-zinc-900">{t.hoursTitle}</h2>
-          <ul className={`mt-3 divide-y divide-zinc-100 ${cardClass}`}>
+          <h2 className="mt-10 text-xl font-semibold text-zinc-900 sm:text-2xl">{t.hoursTitle}</h2>
+          <ul className={`mt-4 divide-y divide-zinc-100 ${cardClass}`}>
             {t.weekdaysFull.map((label, i) => (
-              <li key={i} className="flex items-center justify-between px-4 py-2.5 text-sm">
+              <li key={i} className="flex items-center justify-between px-4 py-2.5 text-sm lg:px-6 lg:py-3.5 lg:text-base">
                 <span className="text-zinc-700">{label}</span>
                 <span className={offDays.includes(i) ? "text-zinc-400" : "text-zinc-600"}>
                   {offDays.includes(i) ? t.closed : `${formatHour(startHour)} – ${formatHour(endHour)}`}
@@ -958,21 +962,21 @@ export default function BookingPage() {
 
         {whatsappHref && (
           <section id="contact" className="scroll-mt-20">
-            <h2 className="mt-10 text-lg font-semibold text-zinc-900">{t.contactTitle}</h2>
+            <h2 className="mt-10 text-xl font-semibold text-zinc-900 sm:text-2xl">{t.contactTitle}</h2>
             <a
               href={whatsappHref}
               target="_blank"
               rel="noreferrer"
-              className={`mt-3 flex items-center gap-3 p-4 ${cardClass} ${listRowHoverClass}`}
+              className={`mt-4 flex items-center gap-3 p-4 lg:p-5 ${cardClass} ${listRowHoverClass}`}
             >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#25D366] text-white">
-                <IconChatBubble className="h-5 w-5" />
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#25D366] text-white lg:h-12 lg:w-12">
+                <IconChatBubble className="h-5 w-5 lg:h-6 lg:w-6" />
               </span>
               <div>
-                <p className="font-medium text-zinc-800" dir="ltr">
+                <p className="font-medium text-zinc-800 lg:text-lg" dir="ltr">
                   {ownerPhone}
                 </p>
-                <p className="text-xs text-zinc-500">{t.whatsappLabel}</p>
+                <p className="text-xs text-zinc-500 lg:text-sm">{t.whatsappLabel}</p>
               </div>
             </a>
           </section>
@@ -981,7 +985,7 @@ export default function BookingPage() {
       </div>
 
       <footer className="mt-10 bg-black text-zinc-300">
-        <div className="mx-auto max-w-3xl px-4 py-10">
+        <div className="mx-auto max-w-5xl px-4 py-10 lg:px-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
               {logoUrl ? (
