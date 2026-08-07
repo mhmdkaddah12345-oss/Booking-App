@@ -5,7 +5,17 @@ import Link from "next/link";
 import OwnerNav from "@/components/OwnerNav";
 import PushNotificationSettings from "@/components/PushNotificationSettings";
 import { inputClass, primaryButtonClass, cardClass, cardAccentBarClass, listRowHoverClass } from "@/lib/ui";
-import { IconLink, IconBell, IconBuilding, IconTag, IconUsers, IconLock, IconImage, IconQuestion } from "@/components/icons";
+import {
+  IconLink,
+  IconBell,
+  IconBuilding,
+  IconTag,
+  IconUsers,
+  IconLock,
+  IconImage,
+  IconQuestion,
+  IconCalendarX,
+} from "@/components/icons";
 import { useOwnerLang } from "@/lib/useOwnerLang";
 import { settingsCopy } from "@/lib/settingsPageTranslations";
 
@@ -15,6 +25,7 @@ type Service = { id: string; name: string; durationMinutes: number; priceUsd: nu
 type Employee = { id: string; name: string };
 type GalleryPhoto = { id: string; url: string };
 type Faq = { id: string; question: string; answer: string };
+type ScheduleException = { id: string; date: string; startTime: string | null; endTime: string | null; note: string | null };
 type Business = {
   name: string;
   slug: string;
@@ -77,6 +88,15 @@ export default function SettingsPage() {
   const [removingPhotoId, setRemovingPhotoId] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
 
+  const [scheduleExceptions, setScheduleExceptions] = useState<ScheduleException[]>([]);
+  const [newExceptionDate, setNewExceptionDate] = useState("");
+  const [newExceptionAllDay, setNewExceptionAllDay] = useState(true);
+  const [newExceptionStart, setNewExceptionStart] = useState("");
+  const [newExceptionEnd, setNewExceptionEnd] = useState("");
+  const [newExceptionNote, setNewExceptionNote] = useState("");
+  const [addingException, setAddingException] = useState(false);
+  const [removingExceptionId, setRemovingExceptionId] = useState<string | null>(null);
+
   const [newFaqQuestion, setNewFaqQuestion] = useState("");
   const [newFaqAnswer, setNewFaqAnswer] = useState("");
   const [addingFaq, setAddingFaq] = useState(false);
@@ -106,8 +126,15 @@ export default function SettingsPage() {
       });
   }
 
+  function loadExceptions() {
+    fetch("/api/business/schedule-exceptions")
+      .then((r) => r.json())
+      .then((data) => setScheduleExceptions(data.exceptions ?? []));
+  }
+
   useEffect(() => {
     loadBusiness();
+    loadExceptions();
   }, []);
 
   async function saveDetails(e: React.FormEvent) {
@@ -250,6 +277,43 @@ export default function SettingsPage() {
       loadBusiness();
     } finally {
       setRemovingLogo(false);
+    }
+  }
+
+  async function addException(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newExceptionDate) return;
+    if (!newExceptionAllDay && (!newExceptionStart || !newExceptionEnd)) return;
+    setAddingException(true);
+    try {
+      await fetch("/api/business/schedule-exceptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: newExceptionDate,
+          startTime: newExceptionAllDay ? null : newExceptionStart,
+          endTime: newExceptionAllDay ? null : newExceptionEnd,
+          note: newExceptionNote.trim() || null,
+        }),
+      });
+      setNewExceptionDate("");
+      setNewExceptionAllDay(true);
+      setNewExceptionStart("");
+      setNewExceptionEnd("");
+      setNewExceptionNote("");
+      loadExceptions();
+    } finally {
+      setAddingException(false);
+    }
+  }
+
+  async function removeException(id: string) {
+    setRemovingExceptionId(id);
+    try {
+      await fetch(`/api/business/schedule-exceptions/${id}`, { method: "DELETE" });
+      loadExceptions();
+    } finally {
+      setRemovingExceptionId(null);
     }
   }
 
@@ -479,6 +543,99 @@ export default function SettingsPage() {
               </div>
               </div>
             </form>
+
+            <div className={`mt-6 ${cardClass}`}>
+              <div className={cardAccentBarClass} />
+              <div className="p-4">
+                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
+                  <IconCalendarX className="h-4 w-4 text-zinc-500" />
+                  {t.timeOffTitle}
+                </h2>
+                <p className="mt-1 text-xs text-zinc-500">{t.timeOffBody}</p>
+
+                <ul className="mt-3 flex flex-col gap-2">
+                  {scheduleExceptions.map((ex) => (
+                    <li
+                      key={ex.id}
+                      className={`flex items-center justify-between gap-3 rounded-lg bg-zinc-50 px-3 py-2 text-sm ${listRowHoverClass}`}
+                    >
+                      <span className="text-zinc-700">
+                        {ex.startTime && ex.endTime
+                          ? t.exceptionBusyRange(ex.date, ex.startTime, ex.endTime)
+                          : t.exceptionClosedAllDay(ex.date)}
+                        {ex.note && <span className="text-zinc-400"> — {ex.note}</span>}
+                      </span>
+                      <button
+                        onClick={() => removeException(ex.id)}
+                        disabled={removingExceptionId === ex.id}
+                        className="shrink-0 rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                      >
+                        {removingExceptionId === ex.id ? t.removing : t.remove}
+                      </button>
+                    </li>
+                  ))}
+                  {scheduleExceptions.length === 0 && <li className="text-sm text-zinc-400">{t.noExceptionsYet}</li>}
+                </ul>
+
+                <form onSubmit={addException} className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4">
+                  <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                    {t.dateLabel}
+                    <input
+                      type="date"
+                      required
+                      value={newExceptionDate}
+                      onChange={(e) => setNewExceptionDate(e.target.value)}
+                      className={inputClass}
+                    />
+                  </label>
+                  <label className="flex items-center gap-1.5 text-sm text-zinc-700">
+                    <input
+                      type="checkbox"
+                      checked={newExceptionAllDay}
+                      onChange={(e) => setNewExceptionAllDay(e.target.checked)}
+                      className="h-4 w-4 rounded border-zinc-300"
+                    />
+                    {t.allDayLabel}
+                  </label>
+                  {!newExceptionAllDay && (
+                    <div className="flex gap-3">
+                      <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
+                        {t.fromLabel}
+                        <input
+                          type="time"
+                          required
+                          value={newExceptionStart}
+                          onChange={(e) => setNewExceptionStart(e.target.value)}
+                          className={inputClass}
+                        />
+                      </label>
+                      <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
+                        {t.toLabel}
+                        <input
+                          type="time"
+                          required
+                          value={newExceptionEnd}
+                          onChange={(e) => setNewExceptionEnd(e.target.value)}
+                          className={inputClass}
+                        />
+                      </label>
+                    </div>
+                  )}
+                  <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                    {t.exceptionNoteLabel}
+                    <input
+                      placeholder={t.exceptionNotePlaceholder}
+                      value={newExceptionNote}
+                      onChange={(e) => setNewExceptionNote(e.target.value)}
+                      className={inputClass}
+                    />
+                  </label>
+                  <button type="submit" disabled={addingException} className={`self-start ${primaryButtonClass}`}>
+                    {addingException ? t.adding : t.addException}
+                  </button>
+                </form>
+              </div>
+            </div>
 
             <div className={`mt-6 ${cardClass}`}>
               <div className={cardAccentBarClass} />

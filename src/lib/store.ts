@@ -35,6 +35,17 @@ export type Faq = {
   answer: string;
 };
 
+// A one-off exception on top of the weekly off-days: startTime/endTime both
+// null means the whole date is closed; both set means just that time range
+// is busy and the rest of the day follows normal hours.
+export type ScheduleException = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  startTime: string | null; // HH:MM
+  endTime: string | null; // HH:MM
+  note: string | null;
+};
+
 export type SubscriptionStatus = "trial" | "active" | "expired";
 
 export type BusinessConfig = {
@@ -47,6 +58,7 @@ export type BusinessConfig = {
   services: Service[];
   employees: Employee[];
   offDays: number[]; // days of week the business is closed, 0=Sunday .. 6=Saturday
+  closedDates: string[]; // upcoming one-off dates fully closed via schedule_exceptions
   about: string | null;
   heroImageUrl: string | null;
   logoUrl: string | null;
@@ -170,7 +182,8 @@ function mapBusinessConfig(
   services: Service[],
   employees: Employee[],
   gallery: GalleryPhoto[],
-  faqs: Faq[]
+  faqs: Faq[],
+  closedDates: string[]
 ): BusinessConfig {
   return {
     id: business.id as string,
@@ -180,6 +193,7 @@ function mapBusinessConfig(
     endHour: business.end_hour as number,
     slotGranularityMinutes: business.slot_granularity_minutes as number,
     offDays: business.off_days as number[],
+    closedDates,
     about: (business.about as string | null) ?? null,
     heroImageUrl: (business.hero_image_url as string | null) ?? null,
     logoUrl: (business.logo_url as string | null) ?? null,
@@ -229,14 +243,16 @@ export async function getBusinessConfig(businessId: string): Promise<BusinessCon
   const business = await getBusinessRowById(businessId);
   if (!business) return undefined;
   const { services, employees, gallery, faqs } = await businessContentFor(business.id);
-  return mapBusinessConfig(business, services, employees, gallery, faqs);
+  const closedDates = await getUpcomingClosedDates(business.id);
+  return mapBusinessConfig(business, services, employees, gallery, faqs, closedDates);
 }
 
 export async function getBusinessConfigBySlug(slug: string): Promise<BusinessConfig | undefined> {
   const business = await getBusinessRowBySlug(slug);
   if (!business) return undefined;
   const { services, employees, gallery, faqs } = await businessContentFor(business.id);
-  return mapBusinessConfig(business, services, employees, gallery, faqs);
+  const closedDates = await getUpcomingClosedDates(business.id);
+  return mapBusinessConfig(business, services, employees, gallery, faqs, closedDates);
 }
 
 export function slugify(name: string): string {
@@ -579,7 +595,67 @@ export async function isDayClosed(businessId: string, date: string): Promise<boo
   if (!business) return true;
   const [y, m, d] = date.split("-").map(Number);
   const dayOfWeek = new Date(y, m - 1, d).getDay();
-  return (business.off_days as number[]).includes(dayOfWeek);
+  if ((business.off_days as number[]).includes(dayOfWeek)) return true;
+  const exceptions = await getExceptionsForDate(businessId, date);
+  return exceptions.some((e) => !e.startTime && !e.endTime);
+}
+
+function mapScheduleException(row: Record<string, unknown>): ScheduleException {
+  return {
+    id: row.id as string,
+    date: row.date as string,
+    startTime: row.start_time ? trimTime(row.start_time as string) : null,
+    endTime: row.end_time ? trimTime(row.end_time as string) : null,
+    note: (row.note as string | null) ?? null,
+  };
+}
+
+async function getExceptionsForDate(businessId: string, date: string): Promise<ScheduleException[]> {
+  const { data } = await supabase
+    .from("schedule_exceptions")
+    .select("*")
+    .eq("business_id", businessId)
+    .eq("date", date);
+  return (data ?? []).map(mapScheduleException);
+}
+
+/** Owner-facing list for the Settings page — upcoming exceptions only, oldest first. */
+export async function getScheduleExceptions(businessId: string): Promise<ScheduleException[]> {
+  const { dateStr: today } = beirutNow();
+  const { data } = await supabase
+    .from("schedule_exceptions")
+    .select("*")
+    .eq("business_id", businessId)
+    .gte("date", today)
+    .order("date", { ascending: true });
+  return (data ?? []).map(mapScheduleException);
+}
+
+/** Public-safe subset for the booking page's calendar — just which upcoming dates are fully closed, no notes/times. */
+async function getUpcomingClosedDates(businessId: string): Promise<string[]> {
+  const exceptions = await getScheduleExceptions(businessId);
+  return exceptions.filter((e) => !e.startTime && !e.endTime).map((e) => e.date);
+}
+
+export async function addScheduleException(
+  businessId: string,
+  date: string,
+  startTime: string | null,
+  endTime: string | null,
+  note: string | null
+): Promise<ScheduleException> {
+  const { data, error } = await supabase
+    .from("schedule_exceptions")
+    .insert({ business_id: businessId, date, start_time: startTime, end_time: endTime, note })
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return mapScheduleException(data);
+}
+
+export async function removeScheduleException(id: string, businessId: string): Promise<{ success: boolean }> {
+  const { error } = await supabase.from("schedule_exceptions").delete().eq("id", id).eq("business_id", businessId);
+  return { success: !error };
 }
 
 function timeToMinutes(time: string): number {
@@ -657,6 +733,12 @@ async function getSlotsForDurationCore(
   const closed = (business.off_days as number[]).includes(new Date(y, m - 1, d).getDay());
   if (closed) return [];
 
+  const exceptions = await getExceptionsForDate(businessId, date);
+  if (exceptions.some((e) => !e.startTime && !e.endTime)) return [];
+  const busyRanges = exceptions
+    .filter((e): e is ScheduleException & { startTime: string; endTime: string } => !!e.startTime && !!e.endTime)
+    .map((e) => ({ start: timeToMinutes(e.startTime), end: timeToMinutes(e.endTime) }));
+
   // Read-only — never auto-provisions an employee row here. Two of these
   // calls run concurrently (slots + fullyBooked, via Promise.all in the
   // API route), so writing from here caused a duplicate-insert race the
@@ -676,10 +758,12 @@ async function getSlotsForDurationCore(
   const slots: SlotInfo[] = [];
   for (let start = startHour * 60; start + durationMinutes <= closeMinutes; start += slotGranularityMinutes) {
     if (date === today && start <= nowMinutes) continue;
+    const blockedByException = busyRanges.some((r) => rangesOverlap(start, start + durationMinutes, r.start, r.end));
     const available =
-      employees.length > 0
+      !blockedByException &&
+      (employees.length > 0
         ? employees.some((emp) => isEmployeeRangeFreeLocal(bookingsThatDay, emp.id, start, durationMinutes))
-        : isRangeFreeAcrossAnyBookingLocal(bookingsThatDay, start, durationMinutes);
+        : isRangeFreeAcrossAnyBookingLocal(bookingsThatDay, start, durationMinutes));
     slots.push({ time: minutesToTime(start), available });
   }
   return slots;
