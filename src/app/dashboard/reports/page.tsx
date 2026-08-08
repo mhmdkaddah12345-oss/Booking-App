@@ -89,17 +89,11 @@ export default function ReportsPage() {
                   {summary.revenueByService.length === 0 ? (
                     <p className="mt-2 text-sm text-zinc-400">{t.noRevenueYet}</p>
                   ) : (
-                    <ul className="mt-2 flex flex-col gap-1.5">
+                    <div className="mt-3 grid grid-cols-3 gap-3">
                       {summary.revenueByService.map((s) => (
-                        <li
-                          key={s.serviceName}
-                          className="flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm"
-                        >
-                          <span className="text-zinc-700">{s.serviceName}</span>
-                          <span className="font-medium text-zinc-800">${s.revenueUsd}</span>
-                        </li>
+                        <StatCard key={s.serviceName} label={s.serviceName} value={`$${s.revenueUsd}`} />
                       ))}
-                    </ul>
+                    </div>
                   )}
                 </div>
 
