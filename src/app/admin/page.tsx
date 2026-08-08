@@ -11,7 +11,7 @@ import {
   listRowHoverClass,
   pulsingDotClass,
 } from "@/lib/ui";
-import { IconBuilding, IconCreditCard, IconChat } from "@/components/icons";
+import { IconBuilding, IconCreditCard, IconChat, IconAlert } from "@/components/icons";
 import { PLANS, PlanId } from "@/lib/plans";
 import { formatDisplayDateTime } from "@/lib/formatDate";
 
@@ -187,14 +187,21 @@ export default function AdminPage() {
                         {b.ownerPhone && <> · {b.ownerPhone}</>}
                       </p>
                       {b.paymentPendingSince && (
-                        <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-amber-700">
-                          <span className={`${pulsingDotClass} bg-amber-500`} />
-                          Payment reported {formatDate(b.paymentPendingSince)}
-                          {b.paymentPendingPlan && PLANS[b.paymentPendingPlan as PlanId]
-                            ? ` — ${PLANS[b.paymentPendingPlan as PlanId].label} plan`
-                            : ""}{" "}
-                          — awaiting confirmation
-                        </p>
+                        <>
+                          <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-amber-700">
+                            <span className={`${pulsingDotClass} bg-amber-500`} />
+                            Payment reported {formatDate(b.paymentPendingSince)}
+                            {b.paymentPendingPlan && PLANS[b.paymentPendingPlan as PlanId]
+                              ? ` — ${PLANS[b.paymentPendingPlan as PlanId].label} plan`
+                              : ""}{" "}
+                            — awaiting confirmation
+                          </p>
+                          <p className="mt-1 flex items-center gap-1.5 text-xs text-red-600">
+                            <IconAlert className="h-3.5 w-3.5 shrink-0" />
+                            This just means they clicked Pay — it doesn&apos;t confirm the money landed. Check your
+                            Whish wallet before marking paid.
+                          </p>
+                        </>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
