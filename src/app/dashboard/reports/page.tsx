@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import OwnerNav from "@/components/OwnerNav";
+import Spinner from "@/components/Spinner";
 import { cardClass, cardAccentBarClass } from "@/lib/ui";
 import { IconTrendingUp } from "@/components/icons";
 import { useOwnerLang } from "@/lib/useOwnerLang";
@@ -75,7 +76,10 @@ export default function ReportsPage() {
             </div>
 
             {!summary ? (
-              <p className="mt-4 text-sm text-zinc-500">{t.loading}</p>
+              <div className="mt-4 flex items-center gap-2 text-sm text-zinc-500">
+                <Spinner />
+                {t.loading}
+              </div>
             ) : (
               <>
                 <div className="mt-4 grid grid-cols-3 gap-3">

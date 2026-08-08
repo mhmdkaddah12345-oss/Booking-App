@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Wordmark from "@/components/Wordmark";
+import Spinner from "@/components/Spinner";
 import {
   inputClass,
   primaryButtonClass,
@@ -174,7 +175,10 @@ export default function AdminPage() {
             Businesses
           </h2>
           {!businesses ? (
-            <p className="mt-3 text-sm text-zinc-500">Loading...</p>
+            <div className="mt-3 flex items-center gap-2 text-sm text-zinc-500">
+              <Spinner />
+              Loading...
+            </div>
           ) : (
             <ul className="mt-3 flex flex-col gap-2">
               {businesses.map((b) => (
@@ -333,7 +337,10 @@ export default function AdminPage() {
           </h2>
           <p className="mt-1 text-xs text-zinc-500">Submissions from the landing page's Contact form.</p>
           {!contactMessages ? (
-            <p className="mt-3 text-sm text-zinc-500">Loading...</p>
+            <div className="mt-3 flex items-center gap-2 text-sm text-zinc-500">
+              <Spinner />
+              Loading...
+            </div>
           ) : (
             <ul className="mt-3 flex flex-col gap-2">
               {contactMessages.map((m) => (

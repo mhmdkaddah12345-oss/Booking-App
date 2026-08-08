@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import OwnerNav from "@/components/OwnerNav";
+import Spinner from "@/components/Spinner";
 import { cardClass, cardAccentBarClass, pulsingDotClass } from "@/lib/ui";
 import { IconShieldCheck, IconCreditCard, IconWhish } from "@/components/icons";
 import { PLANS, PlanId, WHISH_PAY_LINKS } from "@/lib/plans";
@@ -59,7 +60,10 @@ export default function BillingPage() {
         <h1 className="mt-6 text-2xl font-semibold text-zinc-900">{t.title}</h1>
 
         {!billing ? (
-          <p className="mt-6 text-sm text-zinc-500">{t.loading}</p>
+          <div className="mt-6 flex items-center gap-2 text-sm text-zinc-500">
+            <Spinner />
+            {t.loading}
+          </div>
         ) : (
           <>
             <div className={`mt-6 ${cardClass}`}>

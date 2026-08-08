@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import OwnerNav from "@/components/OwnerNav";
 import Reveal from "@/components/Reveal";
+import Spinner from "@/components/Spinner";
 import {
   cardClass,
   cardAccentBarClass,
@@ -360,7 +361,10 @@ export default function DashboardPage() {
         </div>
 
         {loading ? (
-          <p className="mt-6 text-sm text-zinc-500">{t.loading}</p>
+          <div className="mt-6 flex items-center gap-2 text-sm text-zinc-500">
+            <Spinner />
+            {t.loading}
+          </div>
         ) : subscriptionStatus === "expired" ? (
           <div className={`mt-6 ${cardClass}`}>
             <div className={cardAccentBarClass} />
@@ -1044,7 +1048,10 @@ function ReserveModal({
               <div>
                 <p className="text-sm text-zinc-600">{t.time}</p>
                 {slotsLoading ? (
-                  <p className="mt-1 text-sm text-zinc-400">{t.loadingTimes}</p>
+                  <div className="mt-1 flex items-center gap-2 text-sm text-zinc-400">
+                  <Spinner className="h-3.5 w-3.5" />
+                  {t.loadingTimes}
+                </div>
                 ) : dayClosed ? (
                   <p className="mt-1 text-sm text-zinc-400">{t.closedThatDay}</p>
                 ) : fullyBooked ? (
@@ -1246,7 +1253,10 @@ function RescheduleModal({
             <div>
               <p className="text-sm text-zinc-600">{t.time}</p>
               {slotsLoading ? (
-                <p className="mt-1 text-sm text-zinc-400">{t.loadingTimes}</p>
+                <div className="mt-1 flex items-center gap-2 text-sm text-zinc-400">
+                  <Spinner className="h-3.5 w-3.5" />
+                  {t.loadingTimes}
+                </div>
               ) : dayClosed ? (
                 <p className="mt-1 text-sm text-zinc-400">{t.closedThatDay}</p>
               ) : fullyBooked ? (

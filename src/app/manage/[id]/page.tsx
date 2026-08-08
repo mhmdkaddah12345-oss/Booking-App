@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { primaryButtonClass, dangerButtonClass, ghostButtonClass, cardClass, cardAccentBarClass, pulsingDotClass } from "@/lib/ui";
 import { manageCopy, type Lang } from "@/lib/managePageTranslations";
 import SuppressInstallPrompt from "@/components/SuppressInstallPrompt";
+import Spinner from "@/components/Spinner";
 import { formatDisplayDate } from "@/lib/formatDate";
 
 const ROOT_DOMAIN = "maw3edapp.com";
@@ -216,7 +217,10 @@ export default function ManageBookingPage() {
         </div>
 
         {loading ? (
-          <p className="mt-6 text-sm text-zinc-500">{t.loading}</p>
+          <div className="mt-6 flex items-center gap-2 text-sm text-zinc-500">
+            <Spinner />
+            {t.loading}
+          </div>
         ) : notFound ? (
           <p className="mt-6 text-sm text-zinc-500">{t.notFound}</p>
         ) : booking?.status === "cancelled" ? (
@@ -375,7 +379,10 @@ export default function ManageBookingPage() {
                           <p className="text-sm font-semibold text-zinc-800">{formatDisplayDate(selectedDate, lang)}</p>
                           <div className="mt-3">
                             {slotsLoading ? (
-                              <p className="text-sm text-zinc-500">{t.loadingTimes}</p>
+                              <div className="flex items-center gap-2 text-sm text-zinc-500">
+                                <Spinner className="h-3.5 w-3.5" />
+                                {t.loadingTimes}
+                              </div>
                             ) : dayClosed ? (
                               <p className="text-sm text-zinc-600">{t.closedDay}</p>
                             ) : fullyBooked ? (

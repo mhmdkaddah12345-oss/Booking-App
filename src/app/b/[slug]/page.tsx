@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { inputClass, primaryButtonClass, ghostButtonClass, cardClass, cardAccentBarClass, listRowHoverClass } from "@/lib/ui";
 import { bookingCopy, Lang } from "@/lib/bookingPageTranslations";
 import SuppressInstallPrompt from "@/components/SuppressInstallPrompt";
+import Spinner from "@/components/Spinner";
 import { formatDisplayDate } from "@/lib/formatDate";
 import { whatsappLink } from "@/lib/whatsapp";
 import { IconChatBubble, IconChevronDown, IconClock } from "@/components/icons";
@@ -564,7 +565,12 @@ export default function BookingPage() {
                 </button>
               );
             })}
-            {services.length === 0 && <p className="text-sm text-zinc-400">{t.loading}</p>}
+            {services.length === 0 && (
+              <div className="flex items-center gap-2 text-sm text-zinc-400">
+                <Spinner className="h-3.5 w-3.5" />
+                {t.loading}
+              </div>
+            )}
           </div>
         </section>
 

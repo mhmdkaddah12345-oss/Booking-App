@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import OwnerNav from "@/components/OwnerNav";
 import PushNotificationSettings from "@/components/PushNotificationSettings";
+import Spinner from "@/components/Spinner";
 import { inputClass, primaryButtonClass, cardClass, cardAccentBarClass, listRowHoverClass } from "@/lib/ui";
 import {
   IconLink,
@@ -437,7 +438,10 @@ export default function SettingsPage() {
         <h1 className="mt-6 text-2xl font-semibold text-zinc-900">{t.title}</h1>
 
         {!business ? (
-          <p className="mt-6 text-sm text-zinc-500">{t.loading}</p>
+          <div className="mt-6 flex items-center gap-2 text-sm text-zinc-500">
+            <Spinner />
+            {t.loading}
+          </div>
         ) : (
           <>
             <div className="mt-8">

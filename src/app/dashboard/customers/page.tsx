@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import OwnerNav from "@/components/OwnerNav";
+import Spinner from "@/components/Spinner";
 import { primaryButtonClass, ghostButtonClass, inputClass, cardClass, cardAccentBarClass, listRowHoverClass } from "@/lib/ui";
 import { IconUsers } from "@/components/icons";
 import { useOwnerLang } from "@/lib/useOwnerLang";
@@ -158,7 +159,10 @@ export default function CustomersPage() {
             )}
 
             {!customers ? (
-              <p className="mt-4 text-sm text-zinc-500">{t.loading}</p>
+              <div className="mt-4 flex items-center gap-2 text-sm text-zinc-500">
+                <Spinner />
+                {t.loading}
+              </div>
             ) : customers.length === 0 ? (
               <p className="mt-4 text-sm text-zinc-400">{t.noCustomersYet}</p>
             ) : filteredCustomers.length === 0 ? (
