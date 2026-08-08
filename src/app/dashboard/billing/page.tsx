@@ -55,7 +55,7 @@ export default function BillingPage() {
 
   return (
     <div dir={dir} className={`min-h-screen bg-zinc-50 px-4 py-8 ${lang === "ar" ? "lang-ar" : ""}`}>
-      <div className="mx-auto max-w-xl">
+      <div className="mx-auto max-w-4xl">
         <OwnerNav current="billing" lang={lang} onToggleLang={() => setLang(lang === "en" ? "ar" : "en")} />
         <h1 className="mt-6 text-2xl font-semibold text-zinc-900">{t.title}</h1>
 
