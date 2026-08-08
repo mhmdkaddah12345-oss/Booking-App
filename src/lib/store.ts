@@ -1034,28 +1034,39 @@ export async function getAllWaitlist(businessId: string): Promise<WaitlistEntry[
   return (data ?? []).map(mapWaitlist);
 }
 
+export type CustomerHistoryEntry = {
+  date: string; // YYYY-MM-DD
+  time: string;
+  serviceName: string;
+  durationMinutes: number;
+  status: BookingStatus;
+};
+
 export type CustomerSummary = {
   phone: string;
   name: string;
   visitCount: number;
-  lastVisitDate: string; // YYYY-MM-DD
+  lastVisitDate: string; // YYYY-MM-DD, most recent non-cancelled visit
   totalSpentUsd: number | null; // null when no visit has price data to sum
+  serviceNames: string[]; // unique services ever booked (non-cancelled), for filtering
+  history: CustomerHistoryEntry[]; // every booking incl. cancelled, most recent first
 };
 
 /**
- * Aggregates every non-cancelled booking by customer phone number. Spend is
- * a best-effort total using each service's *current* price (bookings don't
- * snapshot the price at booking time) — a service that's been deleted or
- * repriced since just doesn't contribute to the total rather than throwing
- * it off, so totalSpentUsd is null only when none of a customer's bookings
- * have any priced service to go on.
+ * Aggregates every booking by customer phone number. Spend is a best-effort
+ * total using each service's *current* price (bookings don't snapshot the
+ * price at booking time) — a service that's been deleted or repriced since
+ * just doesn't contribute to the total rather than throwing it off, so
+ * totalSpentUsd is null only when none of a customer's bookings have any
+ * priced service to go on. Cancelled bookings are excluded from
+ * visitCount/lastVisitDate/spend/serviceNames but still appear in the
+ * per-customer history for full transparency.
  */
 export async function getCustomerSummaries(businessId: string): Promise<CustomerSummary[]> {
   const { data: bookingsRaw } = await supabase
     .from("bookings")
     .select("*")
     .eq("business_id", businessId)
-    .neq("status", "cancelled")
     .order("date", { ascending: true })
     .order("time", { ascending: true });
   const bookings = (bookingsRaw ?? []).map(mapBooking);
@@ -1065,15 +1076,35 @@ export async function getCustomerSummaries(businessId: string): Promise<Customer
     (servicesRaw ?? []).map((s) => [s.id, s.price_usd === null || s.price_usd === undefined ? null : Number(s.price_usd)])
   );
 
-  const byPhone = new Map<string, { name: string; dates: string[]; spend: number; hasPrice: boolean }>();
+  const byPhone = new Map<
+    string,
+    { name: string; dates: string[]; spend: number; hasPrice: boolean; serviceNames: Set<string>; history: CustomerHistoryEntry[] }
+  >();
   for (const b of bookings) {
-    const entry = byPhone.get(b.customerPhone) ?? { name: b.customerName, dates: [], spend: 0, hasPrice: false };
+    const entry = byPhone.get(b.customerPhone) ?? {
+      name: b.customerName,
+      dates: [],
+      spend: 0,
+      hasPrice: false,
+      serviceNames: new Set<string>(),
+      history: [],
+    };
     entry.name = b.customerName;
-    entry.dates.push(b.date);
-    const price = priceById.get(b.serviceId);
-    if (typeof price === "number") {
-      entry.spend += price;
-      entry.hasPrice = true;
+    entry.history.push({
+      date: b.date,
+      time: b.time,
+      serviceName: b.serviceName,
+      durationMinutes: b.durationMinutes,
+      status: b.status,
+    });
+    if (b.status !== "cancelled") {
+      entry.dates.push(b.date);
+      entry.serviceNames.add(b.serviceName);
+      const price = priceById.get(b.serviceId);
+      if (typeof price === "number") {
+        entry.spend += price;
+        entry.hasPrice = true;
+      }
     }
     byPhone.set(b.customerPhone, entry);
   }
@@ -1083,8 +1114,10 @@ export async function getCustomerSummaries(businessId: string): Promise<Customer
       phone,
       name: e.name,
       visitCount: e.dates.length,
-      lastVisitDate: e.dates[e.dates.length - 1],
+      lastVisitDate: e.dates.length > 0 ? e.dates[e.dates.length - 1] : e.history[e.history.length - 1].date,
       totalSpentUsd: e.hasPrice ? e.spend : null,
+      serviceNames: Array.from(e.serviceNames),
+      history: e.history.slice().reverse(),
     }))
     .sort((a, b) => b.lastVisitDate.localeCompare(a.lastVisitDate));
 }
