@@ -895,7 +895,7 @@ export default function BookingPage() {
         {gallery.length > 0 && (
           <section id="gallery" className="scroll-mt-20">
             <h2 className="mt-10 text-xl font-semibold text-zinc-900 sm:text-2xl">{t.galleryTitle}</h2>
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {gallery.map((photo) => (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
