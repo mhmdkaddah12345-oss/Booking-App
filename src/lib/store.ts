@@ -550,6 +550,29 @@ export async function addService(
   };
 }
 
+export async function updateService(
+  serviceId: string,
+  businessId: string,
+  name: string,
+  durationMinutes: number,
+  priceUsd?: number | null
+): Promise<Service | undefined> {
+  const { data, error } = await supabase
+    .from("services")
+    .update({ name, duration_minutes: durationMinutes, price_usd: priceUsd ?? null })
+    .eq("id", serviceId)
+    .eq("business_id", businessId)
+    .select()
+    .maybeSingle();
+  if (error || !data) return undefined;
+  return {
+    id: data.id,
+    name: data.name,
+    durationMinutes: data.duration_minutes,
+    priceUsd: data.price_usd === null || data.price_usd === undefined ? null : Number(data.price_usd),
+  };
+}
+
 export async function removeService(serviceId: string, businessId: string): Promise<{ success: boolean }> {
   const { error } = await supabase.from("services").delete().eq("id", serviceId).eq("business_id", businessId);
   return { success: !error };

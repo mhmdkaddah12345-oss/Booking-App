@@ -78,6 +78,12 @@ export default function SettingsPage() {
   const [addingService, setAddingService] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
+  const [editServiceName, setEditServiceName] = useState("");
+  const [editServiceDuration, setEditServiceDuration] = useState(30);
+  const [editServicePrice, setEditServicePrice] = useState("");
+  const [savingEditId, setSavingEditId] = useState<string | null>(null);
+
   const [newEmployeeName, setNewEmployeeName] = useState("");
   const [addingEmployee, setAddingEmployee] = useState(false);
   const [removingEmployeeId, setRemovingEmployeeId] = useState<string | null>(null);
@@ -207,6 +213,31 @@ export default function SettingsPage() {
       loadBusiness();
     } finally {
       setRemovingId(null);
+    }
+  }
+
+  function startEditService(s: Service) {
+    setEditingServiceId(s.id);
+    setEditServiceName(s.name);
+    setEditServiceDuration(s.durationMinutes);
+    setEditServicePrice(s.priceUsd !== null ? String(s.priceUsd) : "");
+  }
+
+  async function saveEditService(e: React.FormEvent, id: string) {
+    e.preventDefault();
+    if (!editServiceName.trim()) return;
+    setSavingEditId(id);
+    try {
+      const priceUsd = editServicePrice.trim() === "" ? null : Number(editServicePrice);
+      await fetch(`/api/business/services/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editServiceName, durationMinutes: editServiceDuration, priceUsd }),
+      });
+      setEditingServiceId(null);
+      loadBusiness();
+    } finally {
+      setSavingEditId(null);
     }
   }
 
@@ -656,27 +687,92 @@ export default function SettingsPage() {
               <p className="mt-1 text-xs text-zinc-500">{t.servicesBody}</p>
 
               <ul className="mt-3 flex flex-col gap-2">
-                {business.services.map((s) => (
-                  <li
-                    key={s.id}
-                    className={`flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm ${listRowHoverClass}`}
-                  >
-                    <span className="text-zinc-700">
-                      {s.name}{" "}
-                      <span className="text-zinc-400">
-                        — {t.durationMin(s.durationMinutes)}
-                        {s.priceUsd !== null ? ` · ${t.priceTag(s.priceUsd)}` : ""}
-                      </span>
-                    </span>
-                    <button
-                      onClick={() => removeService(s.id)}
-                      disabled={removingId === s.id}
-                      className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                {business.services.map((s) =>
+                  editingServiceId === s.id ? (
+                    <li key={s.id} className="rounded-lg bg-zinc-50 px-3 py-3">
+                      <form
+                        onSubmit={(e) => saveEditService(e, s.id)}
+                        className="flex flex-col gap-3 sm:flex-row sm:items-end"
+                      >
+                        <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
+                          {t.serviceName}
+                          <input
+                            required
+                            value={editServiceName}
+                            onChange={(e) => setEditServiceName(e.target.value)}
+                            className={inputClass}
+                          />
+                        </label>
+                        <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                          {t.duration}
+                          <select
+                            value={editServiceDuration}
+                            onChange={(e) => setEditServiceDuration(Number(e.target.value))}
+                            className={inputClass}
+                          >
+                            {DURATION_OPTIONS.map((d) => (
+                              <option key={d} value={d}>
+                                {t.durationMin(d)}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                          {t.price}
+                          <input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            placeholder={t.pricePlaceholder}
+                            value={editServicePrice}
+                            onChange={(e) => setEditServicePrice(e.target.value)}
+                            className={`${inputClass} sm:w-24`}
+                          />
+                        </label>
+                        <div className="flex gap-2">
+                          <button type="submit" disabled={savingEditId === s.id} className={primaryButtonClass}>
+                            {savingEditId === s.id ? t.saving : t.save}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingServiceId(null)}
+                            className="rounded-full px-3 py-2 text-sm font-medium text-zinc-600 ring-1 ring-zinc-300 hover:bg-zinc-100"
+                          >
+                            {t.cancelEdit}
+                          </button>
+                        </div>
+                      </form>
+                    </li>
+                  ) : (
+                    <li
+                      key={s.id}
+                      className={`flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm ${listRowHoverClass}`}
                     >
-                      {removingId === s.id ? t.removing : t.remove}
-                    </button>
-                  </li>
-                ))}
+                      <span className="text-zinc-700">
+                        {s.name}{" "}
+                        <span className="text-zinc-400">
+                          — {t.durationMin(s.durationMinutes)}
+                          {s.priceUsd !== null ? ` · ${t.priceTag(s.priceUsd)}` : ""}
+                        </span>
+                      </span>
+                      <div className="flex shrink-0 gap-2">
+                        <button
+                          onClick={() => startEditService(s)}
+                          className="rounded-full px-3 py-1 text-xs font-medium text-zinc-600 ring-1 ring-zinc-300 transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-100 active:scale-95"
+                        >
+                          {t.edit}
+                        </button>
+                        <button
+                          onClick={() => removeService(s.id)}
+                          disabled={removingId === s.id}
+                          className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                        >
+                          {removingId === s.id ? t.removing : t.remove}
+                        </button>
+                      </div>
+                    </li>
+                  )
+                )}
                 {business.services.length === 0 && (
                   <li className="text-sm text-zinc-400">{t.noServicesYet}</li>
                 )}
