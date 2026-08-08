@@ -8,6 +8,8 @@ import Spinner from "@/components/Spinner";
 import {
   cardClass,
   cardAccentBarClass,
+  cardTopBorderClass,
+  statTileClass,
   listRowHoverClass,
   pulsingDotClass,
   primaryButtonClass,
@@ -120,7 +122,7 @@ type SubscriptionStatus = "trial" | "active" | "expired";
 function StatTile({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
   const displayValue = useCountUp(value);
   return (
-    <div className="rounded-lg bg-zinc-50 px-3 py-2.5 text-center transition-all duration-150 hover:-translate-y-0.5 hover:bg-zinc-100">
+    <div className={`${statTileClass} transition-all duration-150 hover:-translate-y-0.5 hover:bg-zinc-900/[0.09]`}>
       <p className={`text-2xl font-semibold tabular-nums ${accent ? "text-amber-600" : "text-zinc-900"}`}>
         {displayValue}
       </p>
@@ -455,7 +457,7 @@ export default function DashboardPage() {
             )}
 
             <Reveal delayMs={120} className={`mt-6 ${cardClass}`}>
-              <div className={cardAccentBarClass} />
+              <div className={cardTopBorderClass} />
               <div className="overflow-x-auto p-4">
                 <div dir="ltr" className="grid" style={{ gridTemplateColumns: "50px repeat(5, minmax(110px, 1fr))" }}>
                   <div />
@@ -678,7 +680,7 @@ export default function DashboardPage() {
             )}
 
             <Reveal delayMs={180} className={`mt-6 ${cardClass}`}>
-              <div className={cardAccentBarClass} />
+              <div className={cardTopBorderClass} />
               <div className="p-4">
               <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                 <IconUsers className="h-4 w-4 text-zinc-500" />
@@ -737,7 +739,7 @@ export default function DashboardPage() {
             </Reveal>
 
             <Reveal delayMs={240} className={`mt-6 ${cardClass}`}>
-              <div className={cardAccentBarClass} />
+              <div className={cardTopBorderClass} />
               <div className="p-4">
               <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                 <IconCalendar className="h-4 w-4 text-zinc-500" />

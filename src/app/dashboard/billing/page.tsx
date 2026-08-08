@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import OwnerNav from "@/components/OwnerNav";
 import Spinner from "@/components/Spinner";
-import { cardClass, cardAccentBarClass, pulsingDotClass } from "@/lib/ui";
+import { cardClass, cardAccentBarClass, cardTopBorderClass, pulsingDotClass } from "@/lib/ui";
 import { IconShieldCheck, IconCreditCard, IconWhish } from "@/components/icons";
 import { PLANS, PlanId, WHISH_PAY_LINKS } from "@/lib/plans";
 import { useOwnerLang } from "@/lib/useOwnerLang";
@@ -58,6 +58,7 @@ export default function BillingPage() {
       <div className="mx-auto max-w-4xl">
         <OwnerNav current="billing" lang={lang} onToggleLang={() => setLang(lang === "en" ? "ar" : "en")} />
         <h1 className="mt-6 text-2xl font-semibold text-zinc-900">{t.title}</h1>
+        <p className="mt-1 text-sm text-zinc-500">{t.pageSubtitle}</p>
 
         {!billing ? (
           <div className="mt-6 flex items-center gap-2 text-sm text-zinc-500">
@@ -99,7 +100,7 @@ export default function BillingPage() {
             </div>
 
             <div className={`mt-6 ${cardClass}`}>
-              <div className={cardAccentBarClass} />
+              <div className={cardTopBorderClass} />
               <div className="p-4">
                 <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconCreditCard className="h-4 w-4 text-zinc-500" />
@@ -144,7 +145,7 @@ export default function BillingPage() {
             </div>
 
             <div className={`mt-6 ${cardClass}`}>
-              <div className={cardAccentBarClass} />
+              <div className={cardTopBorderClass} />
               <div className="p-4">
                 <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconCreditCard className="h-4 w-4 text-zinc-500" />

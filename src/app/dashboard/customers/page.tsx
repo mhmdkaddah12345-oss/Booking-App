@@ -105,6 +105,7 @@ export default function CustomersPage() {
       <div className="mx-auto max-w-4xl">
         <OwnerNav current="customers" lang={lang} onToggleLang={() => setLang(lang === "en" ? "ar" : "en")} />
         <h1 className="mt-6 text-2xl font-semibold text-zinc-900">{t.title}</h1>
+        <p className="mt-1 text-sm text-zinc-500">{t.body}</p>
 
         <div className={`mt-6 ${cardClass}`}>
           <div className={cardAccentBarClass} />
@@ -115,7 +116,6 @@ export default function CustomersPage() {
                   <IconUsers className="h-4 w-4 text-zinc-500" />
                   {t.title}
                 </h2>
-                <p className="mt-1 text-xs text-zinc-500">{t.body}</p>
               </div>
               {customers && customers.length > 0 && (
                 <button onClick={() => downloadCsv(filteredCustomers, t)} className={primaryButtonClass}>

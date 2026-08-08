@@ -5,7 +5,15 @@ import Link from "next/link";
 import OwnerNav from "@/components/OwnerNav";
 import PushNotificationSettings from "@/components/PushNotificationSettings";
 import Spinner from "@/components/Spinner";
-import { inputClass, primaryButtonClass, cardClass, cardAccentBarClass, listRowHoverClass } from "@/lib/ui";
+import {
+  inputClass,
+  primaryButtonClass,
+  cardClass,
+  cardAccentBarClass,
+  cardTopBorderClass,
+  listRowHoverClass,
+  emptyStateClass,
+} from "@/lib/ui";
 import {
   IconLink,
   IconBell,
@@ -483,7 +491,7 @@ export default function SettingsPage() {
             </div>
 
             <form onSubmit={saveBasicInfo} className={`mt-6 ${cardClass}`}>
-              <div className={cardAccentBarClass} />
+              <div className={cardTopBorderClass} />
               <div className="flex flex-col gap-3 p-4">
                 <h3 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconBuilding className="h-4 w-4 text-zinc-500" />
@@ -524,7 +532,7 @@ export default function SettingsPage() {
             </form>
 
             <div className={`mt-6 ${cardClass}`}>
-              <div className={cardAccentBarClass} />
+              <div className={cardTopBorderClass} />
               <div className="p-4">
                 <h3 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconCalendarX className="h-4 w-4 text-zinc-500" />
@@ -617,7 +625,7 @@ export default function SettingsPage() {
                         </button>
                       </li>
                     ))}
-                    {scheduleExceptions.length === 0 && <li className="text-sm text-zinc-400">{t.noExceptionsYet}</li>}
+                    {scheduleExceptions.length === 0 && <li className={emptyStateClass}>{t.noExceptionsYet}</li>}
                   </ul>
 
                   <form onSubmit={addException} className="mt-4 flex flex-col gap-3">
@@ -682,7 +690,7 @@ export default function SettingsPage() {
             </div>
 
             <div className={`mt-6 ${cardClass}`}>
-              <div className={cardAccentBarClass} />
+              <div className={cardTopBorderClass} />
               <div className="p-4">
               <h3 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                 <IconTag className="h-4 w-4 text-zinc-500" />
@@ -778,7 +786,7 @@ export default function SettingsPage() {
                   )
                 )}
                 {business.services.length === 0 && (
-                  <li className="text-sm text-zinc-400">{t.noServicesYet}</li>
+                  <li className={emptyStateClass}>{t.noServicesYet}</li>
                 )}
               </ul>
 
@@ -831,7 +839,7 @@ export default function SettingsPage() {
             </div>
 
             <form onSubmit={saveAbout} className={`mt-6 ${cardClass}`}>
-              <div className={cardAccentBarClass} />
+              <div className={cardTopBorderClass} />
               <div className="flex flex-col gap-3 p-4">
                 <h3 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconImage className="h-4 w-4 text-zinc-500" />
@@ -956,7 +964,7 @@ export default function SettingsPage() {
                       </div>
                     ))}
                   </div>
-                  {business.gallery.length === 0 && <p className="mt-2 text-sm text-zinc-400">{t.noGalleryYet}</p>}
+                  {business.gallery.length === 0 && <p className={`mt-2 ${emptyStateClass}`}>{t.noGalleryYet}</p>}
                   <label className="mt-3 inline-block cursor-pointer rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 ring-1 ring-zinc-300 hover:bg-zinc-100">
                     {uploadingGallery ? t.uploading : t.addPhoto}
                     <input
@@ -978,7 +986,7 @@ export default function SettingsPage() {
             </form>
 
             <div className={`mt-6 ${cardClass}`}>
-              <div className={cardAccentBarClass} />
+              <div className={cardTopBorderClass} />
               <div className="p-4">
                 <h3 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconQuestion className="h-4 w-4 text-zinc-500" />
@@ -1005,7 +1013,7 @@ export default function SettingsPage() {
                       </button>
                     </li>
                   ))}
-                  {business.faqs.length === 0 && <li className="text-sm text-zinc-400">{t.noFaqsYet}</li>}
+                  {business.faqs.length === 0 && <li className={emptyStateClass}>{t.noFaqsYet}</li>}
                 </ul>
 
                 <form onSubmit={addFaq} className="mt-4 flex flex-col gap-3 border-t border-zinc-100 pt-4">
@@ -1065,7 +1073,7 @@ export default function SettingsPage() {
                   </li>
                 ))}
                 {business.employees.length === 0 && (
-                  <li className="text-sm text-zinc-400">{t.noEmployeesYet}</li>
+                  <li className={emptyStateClass}>{t.noEmployeesYet}</li>
                 )}
               </ul>
 
@@ -1092,7 +1100,7 @@ export default function SettingsPage() {
             </div>
 
             <div className={`mt-6 ${cardClass}`}>
-              <div className={cardAccentBarClass} />
+              <div className={cardTopBorderClass} />
               <div className="p-4">
                 <h3 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                   <IconBell className="h-4 w-4 text-zinc-500" />
@@ -1106,7 +1114,7 @@ export default function SettingsPage() {
             </div>
 
             <form onSubmit={changePassword} className={`mt-6 ${cardClass}`}>
-              <div className={cardAccentBarClass} />
+              <div className={cardTopBorderClass} />
               <div className="flex flex-col gap-3 p-4">
               <h3 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-800">
                 <IconLock className="h-4 w-4 text-zinc-500" />

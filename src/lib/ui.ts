@@ -24,6 +24,23 @@ export const ghostButtonClass =
 export const cardClass = "overflow-hidden rounded-2xl bg-paper shadow-sm ring-1 ring-zinc-200";
 export const cardAccentBarClass = "h-1 bg-gradient-to-r from-zinc-900 via-[#b98b3e] to-cedar";
 
+// A quieter alternative to cardAccentBarClass for secondary cards — one
+// page should only have a single full gradient bar (its lead card); every
+// other card on that page uses this instead, so the gradient still reads
+// as "this is the important one" rather than blanket decoration.
+export const cardTopBorderClass = "h-[3px] bg-zinc-900/15";
+
+// Tinted tile for at-a-glance numbers (stat rows, revenue-by-service,
+// etc.) — bg-zinc-50 alone sits almost flush against the card's paper
+// background, so numbers read flat. This warms the tile against the same
+// accent used everywhere else (zinc-900 is remapped to the brand rust).
+export const statTileClass = "rounded-lg bg-zinc-900/[0.06] px-3 py-2.5 text-center";
+
+// Placeholder box for "nothing here yet" states — a dashed outline reads
+// as an intentional empty slot rather than a stray line of gray text.
+export const emptyStateClass =
+  "rounded-lg border border-dashed border-zinc-300 px-3 py-4 text-center text-sm text-zinc-400";
+
 // Hover lift for clickable list rows (bookings, services, employees, etc.)
 export const listRowHoverClass =
   "transition-all duration-150 hover:-translate-y-0.5 hover:shadow-sm";

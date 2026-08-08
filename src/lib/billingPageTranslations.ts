@@ -3,6 +3,7 @@ export type Lang = "en" | "ar";
 export const billingCopy = {
   en: {
     title: "Plan",
+    pageSubtitle: "Your subscription status and how to pay.",
     loading: "Loading...",
     yourPlan: "Your plan",
     freeTrial: (days: number, endsDate: string) => `Free trial — ${days} day(s) left (ends ${endsDate}).`,
@@ -26,6 +27,7 @@ export const billingCopy = {
   },
   ar: {
     title: "الاشتراك",
+    pageSubtitle: "حالة اشتراكك وكيفية الدفع.",
     loading: "عم يحمّل...",
     yourPlan: "اشتراكك",
     freeTrial: (days: number, endsDate: string) => `فترة مجانية — بقي ${days} يوم (بتخلص ${endsDate}).`,
