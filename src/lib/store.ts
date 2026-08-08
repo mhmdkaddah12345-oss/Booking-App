@@ -1122,6 +1122,72 @@ export async function getCustomerSummaries(businessId: string): Promise<Customer
     .sort((a, b) => b.lastVisitDate.localeCompare(a.lastVisitDate));
 }
 
+export type ReportsPeriod = "month" | "all";
+
+export type ReportsSummary = {
+  totalRevenueUsd: number;
+  totalBookings: number;
+  cancelledCount: number;
+  revenueByService: { serviceName: string; revenueUsd: number }[];
+  busiestWeekdays: { dayOfWeek: number; count: number }[]; // 0=Sunday..6=Saturday, sorted busiest first
+};
+
+/**
+ * Plain-numbers business summary — no charts, just totals and two ranked
+ * lists. Revenue is best-effort using each service's *current* price
+ * (bookings don't snapshot price at booking time), same approach as
+ * getCustomerSummaries.
+ */
+export async function getReportsSummary(businessId: string, period: ReportsPeriod): Promise<ReportsSummary> {
+  let query = supabase.from("bookings").select("*").eq("business_id", businessId);
+  if (period === "month") {
+    const { dateStr } = beirutNow();
+    const monthStart = `${dateStr.slice(0, 7)}-01`;
+    query = query.gte("date", monthStart);
+  }
+  const { data: bookingsRaw } = await query;
+  const bookings = (bookingsRaw ?? []).map(mapBooking);
+
+  const { data: servicesRaw } = await supabase.from("services").select("id, name, price_usd").eq("business_id", businessId);
+  const priceById = new Map<string, number | null>(
+    (servicesRaw ?? []).map((s) => [s.id, s.price_usd === null || s.price_usd === undefined ? null : Number(s.price_usd)])
+  );
+
+  let totalRevenueUsd = 0;
+  let totalBookings = 0;
+  let cancelledCount = 0;
+  const revenueByServiceName = new Map<string, number>();
+  const weekdayCounts = new Array(7).fill(0);
+
+  for (const b of bookings) {
+    if (b.status === "cancelled") {
+      cancelledCount++;
+      continue;
+    }
+    totalBookings++;
+    const [y, m, d] = b.date.split("-").map(Number);
+    const dayOfWeek = new Date(y, m - 1, d).getDay();
+    weekdayCounts[dayOfWeek]++;
+
+    const price = priceById.get(b.serviceId);
+    if (typeof price === "number") {
+      totalRevenueUsd += price;
+      revenueByServiceName.set(b.serviceName, (revenueByServiceName.get(b.serviceName) ?? 0) + price);
+    }
+  }
+
+  const revenueByService = Array.from(revenueByServiceName.entries())
+    .map(([serviceName, revenueUsd]) => ({ serviceName, revenueUsd }))
+    .sort((a, b) => b.revenueUsd - a.revenueUsd);
+
+  const busiestWeekdays = weekdayCounts
+    .map((count, dayOfWeek) => ({ dayOfWeek, count }))
+    .filter((d) => d.count > 0)
+    .sort((a, b) => b.count - a.count);
+
+  return { totalRevenueUsd, totalBookings, cancelledCount, revenueByService, busiestWeekdays };
+}
+
 export type DashboardStats = {
   appointmentsThisWeek: number;
   pendingCount: number;

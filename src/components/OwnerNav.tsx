@@ -3,13 +3,14 @@
 import Link from "next/link";
 import Wordmark from "./Wordmark";
 import type { Lang } from "@/lib/useOwnerLang";
-import { IconChartBar, IconGear, IconCreditCard, IconUsers } from "./icons";
+import { IconChartBar, IconGear, IconCreditCard, IconUsers, IconTrendingUp } from "./icons";
 
 const TAB_LABELS = {
   en: {
     dashboard: "Dashboard",
     settings: "Settings",
     customers: "Customers",
+    reports: "Reports",
     billing: "Plan",
     logOut: "Log out",
     langToggle: "العربية",
@@ -18,6 +19,7 @@ const TAB_LABELS = {
     dashboard: "لوحة التحكم",
     settings: "الإعدادات",
     customers: "الزباين",
+    reports: "التقارير",
     billing: "الاشتراك",
     logOut: "تسجيل خروج",
     langToggle: "English",
@@ -28,6 +30,7 @@ const TABS = [
   { href: "/dashboard", key: "dashboard", Icon: IconChartBar },
   { href: "/dashboard/settings", key: "settings", Icon: IconGear },
   { href: "/dashboard/customers", key: "customers", Icon: IconUsers },
+  { href: "/dashboard/reports", key: "reports", Icon: IconTrendingUp },
   { href: "/dashboard/billing", key: "billing", Icon: IconCreditCard },
 ] as const;
 
@@ -36,7 +39,7 @@ export default function OwnerNav({
   lang,
   onToggleLang,
 }: {
-  current: "dashboard" | "settings" | "customers" | "billing";
+  current: "dashboard" | "settings" | "customers" | "reports" | "billing";
   lang: Lang;
   onToggleLang: () => void;
 }) {

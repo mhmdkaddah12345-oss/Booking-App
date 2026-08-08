@@ -221,6 +221,15 @@ export function IconChevronDown({ className }: IconProps) {
   );
 }
 
+export function IconTrendingUp({ className }: IconProps) {
+  return (
+    <svg {...common} className={className}>
+      <path d="M4 16l5.5-5.5 4 4L20 7" {...strokeProps} />
+      <path d="M14.5 7H20v5.5" {...strokeProps} />
+    </svg>
+  );
+}
+
 export function IconGear({ className }: IconProps) {
   return (
     <svg {...common} className={className}>

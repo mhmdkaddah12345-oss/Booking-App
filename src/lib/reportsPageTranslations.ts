@@ -1,0 +1,38 @@
+export type Lang = "en" | "ar";
+
+export const reportsCopy = {
+  en: {
+    title: "Reports",
+    body: "A quick read on how the business is doing.",
+    periodMonth: "This month",
+    periodAll: "All time",
+    statRevenue: "Revenue",
+    statBookings: "Bookings",
+    statCancelled: "Cancelled",
+    revenueByServiceTitle: "Revenue by service",
+    noRevenueYet: "No priced bookings in this period yet.",
+    busiestDayTitle: "Busiest day of the week",
+    noBookingsYet: "No bookings in this period yet.",
+    weekdays: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    loading: "Loading...",
+    langToggle: "العربية",
+    localeTag: "en-GB" as string | undefined,
+  },
+  ar: {
+    title: "التقارير",
+    body: "لمحة سريعة عن وضع عملك.",
+    periodMonth: "هالشهر",
+    periodAll: "كل الوقت",
+    statRevenue: "الإيرادات",
+    statBookings: "الحجوزات",
+    statCancelled: "الملغاة",
+    revenueByServiceTitle: "الإيرادات حسب الخدمة",
+    noRevenueYet: "ما في حجوزات مسعّرة بهالفترة لسا.",
+    busiestDayTitle: "أكتر يوم مزحوم بالأسبوع",
+    noBookingsYet: "ما في حجوزات بهالفترة لسا.",
+    weekdays: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
+    loading: "عم يحمّل...",
+    langToggle: "English",
+    localeTag: "ar-u-nu-latn" as string | undefined,
+  },
+} as const;
