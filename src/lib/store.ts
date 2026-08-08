@@ -1034,6 +1034,61 @@ export async function getAllWaitlist(businessId: string): Promise<WaitlistEntry[
   return (data ?? []).map(mapWaitlist);
 }
 
+export type CustomerSummary = {
+  phone: string;
+  name: string;
+  visitCount: number;
+  lastVisitDate: string; // YYYY-MM-DD
+  totalSpentUsd: number | null; // null when no visit has price data to sum
+};
+
+/**
+ * Aggregates every non-cancelled booking by customer phone number. Spend is
+ * a best-effort total using each service's *current* price (bookings don't
+ * snapshot the price at booking time) — a service that's been deleted or
+ * repriced since just doesn't contribute to the total rather than throwing
+ * it off, so totalSpentUsd is null only when none of a customer's bookings
+ * have any priced service to go on.
+ */
+export async function getCustomerSummaries(businessId: string): Promise<CustomerSummary[]> {
+  const { data: bookingsRaw } = await supabase
+    .from("bookings")
+    .select("*")
+    .eq("business_id", businessId)
+    .neq("status", "cancelled")
+    .order("date", { ascending: true })
+    .order("time", { ascending: true });
+  const bookings = (bookingsRaw ?? []).map(mapBooking);
+
+  const { data: servicesRaw } = await supabase.from("services").select("id, price_usd").eq("business_id", businessId);
+  const priceById = new Map<string, number | null>(
+    (servicesRaw ?? []).map((s) => [s.id, s.price_usd === null || s.price_usd === undefined ? null : Number(s.price_usd)])
+  );
+
+  const byPhone = new Map<string, { name: string; dates: string[]; spend: number; hasPrice: boolean }>();
+  for (const b of bookings) {
+    const entry = byPhone.get(b.customerPhone) ?? { name: b.customerName, dates: [], spend: 0, hasPrice: false };
+    entry.name = b.customerName;
+    entry.dates.push(b.date);
+    const price = priceById.get(b.serviceId);
+    if (typeof price === "number") {
+      entry.spend += price;
+      entry.hasPrice = true;
+    }
+    byPhone.set(b.customerPhone, entry);
+  }
+
+  return Array.from(byPhone.entries())
+    .map(([phone, e]) => ({
+      phone,
+      name: e.name,
+      visitCount: e.dates.length,
+      lastVisitDate: e.dates[e.dates.length - 1],
+      totalSpentUsd: e.hasPrice ? e.spend : null,
+    }))
+    .sort((a, b) => b.lastVisitDate.localeCompare(a.lastVisitDate));
+}
+
 export type DashboardStats = {
   appointmentsThisWeek: number;
   pendingCount: number;
