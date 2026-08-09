@@ -48,6 +48,7 @@ type Business = {
   logoUrl: string | null;
   accentColor: string | null;
   ownerPhone: string;
+  allowEmployeeChoice: boolean;
   gallery: GalleryPhoto[];
   faqs: Faq[];
 };
@@ -96,6 +97,7 @@ export default function SettingsPage() {
   const [newEmployeeName, setNewEmployeeName] = useState("");
   const [addingEmployee, setAddingEmployee] = useState(false);
   const [removingEmployeeId, setRemovingEmployeeId] = useState<string | null>(null);
+  const [savingEmployeeChoice, setSavingEmployeeChoice] = useState(false);
 
   const [about, setAbout] = useState("");
   const [savingAbout, setSavingAbout] = useState(false);
@@ -274,6 +276,20 @@ export default function SettingsPage() {
       loadBusiness();
     } finally {
       setRemovingEmployeeId(null);
+    }
+  }
+
+  async function toggleAllowEmployeeChoice(checked: boolean) {
+    setSavingEmployeeChoice(true);
+    try {
+      await fetch("/api/business", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ allowEmployeeChoice: checked }),
+      });
+      loadBusiness();
+    } finally {
+      setSavingEmployeeChoice(false);
     }
   }
 
@@ -1096,6 +1112,22 @@ export default function SettingsPage() {
                   {addingEmployee ? t.adding : t.addEmployee}
                 </button>
               </form>
+
+              {business.employees.length > 1 && (
+                <label className="mt-4 flex items-start gap-2 border-t border-zinc-100 pt-4 text-sm text-zinc-700">
+                  <input
+                    type="checkbox"
+                    checked={business.allowEmployeeChoice}
+                    disabled={savingEmployeeChoice}
+                    onChange={(e) => toggleAllowEmployeeChoice(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-zinc-300"
+                  />
+                  <span>
+                    {t.allowEmployeeChoiceLabel}
+                    <span className="block text-xs text-zinc-400">{t.allowEmployeeChoiceHint}</span>
+                  </span>
+                </label>
+              )}
               </div>
             </div>
 

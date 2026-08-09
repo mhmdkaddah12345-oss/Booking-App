@@ -66,6 +66,7 @@ export type BusinessConfig = {
   gallery: GalleryPhoto[];
   faqs: Faq[];
   ownerPhone: string;
+  allowEmployeeChoice: boolean;
   subscriptionStatus: SubscriptionStatus;
   trialEndsAt: string;
   paidUntil: string | null;
@@ -203,6 +204,7 @@ function mapBusinessConfig(
     gallery,
     faqs,
     ownerPhone: business.owner_phone as string,
+    allowEmployeeChoice: (business.allow_employee_choice as boolean) ?? false,
     ...computeSubscriptionFields(business),
   };
 }
@@ -422,7 +424,12 @@ export async function resetPasswordWithCode(
 
 export async function updateBusinessConfig(
   businessId: string,
-  updates: Partial<Pick<BusinessConfig, "name" | "startHour" | "endHour" | "offDays" | "about" | "accentColor" | "ownerPhone">>
+  updates: Partial<
+    Pick<
+      BusinessConfig,
+      "name" | "startHour" | "endHour" | "offDays" | "about" | "accentColor" | "ownerPhone" | "allowEmployeeChoice"
+    >
+  >
 ): Promise<BusinessConfig | undefined> {
   const dbUpdates: Record<string, unknown> = {};
   if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -432,6 +439,7 @@ export async function updateBusinessConfig(
   if (updates.about !== undefined) dbUpdates.about = updates.about;
   if (updates.accentColor !== undefined) dbUpdates.accent_color = updates.accentColor;
   if (updates.ownerPhone !== undefined) dbUpdates.owner_phone = updates.ownerPhone;
+  if (updates.allowEmployeeChoice !== undefined) dbUpdates.allow_employee_choice = updates.allowEmployeeChoice;
 
   const { error } = await supabase.from("business").update(dbUpdates).eq("id", businessId);
   if (error) throw new Error(error.message);
@@ -748,7 +756,8 @@ export type SlotInfo = { time: string; available: boolean };
 async function getSlotsForDurationCore(
   businessId: string,
   date: string,
-  durationMinutes: number
+  durationMinutes: number,
+  employeeId?: string
 ): Promise<SlotInfo[]> {
   const business = await getBusinessRowById(businessId);
   if (!business) return [];
@@ -784,7 +793,9 @@ async function getSlotsForDurationCore(
     const blockedByException = busyRanges.some((r) => rangesOverlap(start, start + durationMinutes, r.start, r.end));
     const available =
       !blockedByException &&
-      (employees.length > 0
+      (employeeId
+        ? isEmployeeRangeFreeLocal(bookingsThatDay, employeeId, start, durationMinutes)
+        : employees.length > 0
         ? employees.some((emp) => isEmployeeRangeFreeLocal(bookingsThatDay, emp.id, start, durationMinutes))
         : isRangeFreeAcrossAnyBookingLocal(bookingsThatDay, start, durationMinutes));
     slots.push({ time: minutesToTime(start), available });
@@ -793,29 +804,45 @@ async function getSlotsForDurationCore(
 }
 
 /** Used by the reschedule flow, which already knows the booking's total duration and doesn't need to re-derive it from service ids. */
-export async function getSlotsForDuration(businessId: string, date: string, durationMinutes: number): Promise<SlotInfo[]> {
-  return getSlotsForDurationCore(businessId, date, durationMinutes);
+export async function getSlotsForDuration(
+  businessId: string,
+  date: string,
+  durationMinutes: number,
+  employeeId?: string
+): Promise<SlotInfo[]> {
+  return getSlotsForDurationCore(businessId, date, durationMinutes, employeeId);
 }
 
 export async function isDayFullyBookedForDuration(
   businessId: string,
   date: string,
-  durationMinutes: number
+  durationMinutes: number,
+  employeeId?: string
 ): Promise<boolean> {
-  const slots = await getSlotsForDurationCore(businessId, date, durationMinutes);
+  const slots = await getSlotsForDurationCore(businessId, date, durationMinutes, employeeId);
   return slots.length > 0 && slots.every((s) => !s.available);
 }
 
-export async function getSlotsForDay(businessId: string, date: string, serviceIds: string[]): Promise<SlotInfo[]> {
+export async function getSlotsForDay(
+  businessId: string,
+  date: string,
+  serviceIds: string[],
+  employeeId?: string
+): Promise<SlotInfo[]> {
   const combined = await resolveCombinedService(serviceIds, businessId);
   if (!combined) return [];
-  return getSlotsForDurationCore(businessId, date, combined.durationMinutes);
+  return getSlotsForDurationCore(businessId, date, combined.durationMinutes, employeeId);
 }
 
-export async function isDayFullyBooked(businessId: string, date: string, serviceIds: string[]): Promise<boolean> {
+export async function isDayFullyBooked(
+  businessId: string,
+  date: string,
+  serviceIds: string[],
+  employeeId?: string
+): Promise<boolean> {
   const combined = await resolveCombinedService(serviceIds, businessId);
   if (!combined) return false;
-  return isDayFullyBookedForDuration(businessId, date, combined.durationMinutes);
+  return isDayFullyBookedForDuration(businessId, date, combined.durationMinutes, employeeId);
 }
 
 type BookingResult =
@@ -872,13 +899,24 @@ export async function createBooking(
   customerName: string,
   customerPhone: string,
   note?: string,
-  initialStatus: "pending" | "booked" = "pending"
+  initialStatus: "pending" | "booked" = "pending",
+  preferredEmployeeId?: string
 ): Promise<BookingResult> {
   const service = await resolveCombinedService(serviceIds, businessId);
   if (!service) {
     return { success: false, error: "unknown_service" };
   }
-  return insertBookingForService(businessId, date, time, service, customerName, customerPhone, note, initialStatus);
+  return insertBookingForService(
+    businessId,
+    date,
+    time,
+    service,
+    customerName,
+    customerPhone,
+    note,
+    initialStatus,
+    preferredEmployeeId
+  );
 }
 
 /**
@@ -895,7 +933,8 @@ async function insertBookingForService(
   customerName: string,
   customerPhone: string,
   note?: string,
-  initialStatus: "pending" | "booked" = "pending"
+  initialStatus: "pending" | "booked" = "pending",
+  preferredEmployeeId?: string
 ): Promise<BookingResult> {
   const business = await getBusinessRowById(businessId);
   if (!business || isBusinessLocked(business)) {
@@ -903,6 +942,13 @@ async function insertBookingForService(
   }
 
   const employees = await getOrCreateEmployees(businessId);
+  // When the customer picked a specific staff member, only that one is a
+  // candidate — if they're not free, the slot is taken for this booking
+  // even though someone else might be open (that's the whole point of
+  // letting the customer choose in the first place).
+  const candidateEmployees = preferredEmployeeId
+    ? employees.filter((e) => e.id === preferredEmployeeId)
+    : employees;
 
   // Try each employee in turn — the database's exclusion constraint is the
   // real safety net here (it rejects an overlapping insert even if two
@@ -910,7 +956,7 @@ async function insertBookingForService(
   // A "pending" booking holds the slot exactly like a "booked" one — the
   // exclusion constraint covers both — it just still needs the owner to
   // accept it before it's confirmed.
-  for (const emp of employees) {
+  for (const emp of candidateEmployees) {
     const { data, error } = await supabase
       .from("bookings")
       .insert({

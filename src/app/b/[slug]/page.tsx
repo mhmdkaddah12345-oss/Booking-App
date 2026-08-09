@@ -16,6 +16,7 @@ const ROOT_DOMAIN = "maw3edapp.com";
 
 type Slot = { time: string; available: boolean };
 type Service = { id: string; name: string; durationMinutes: number; priceUsd: number | null };
+type Employee = { id: string; name: string };
 type GalleryPhoto = { id: string; url: string };
 type Faq = { id: string; question: string; answer: string };
 type FoundBooking = {
@@ -83,6 +84,9 @@ export default function BookingPage() {
   const [offDays, setOffDays] = useState<number[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [allowEmployeeChoice, setAllowEmployeeChoice] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const serviceIdsKey = selectedServiceIds.join(",");
   const selectedServices = services.filter((s) => selectedServiceIds.includes(s.id));
   const totalDurationMinutes = selectedServices.reduce((sum, s) => sum + s.durationMinutes, 0);
@@ -165,6 +169,8 @@ export default function BookingPage() {
         setLocked(data.business.subscriptionStatus === "expired");
         setOffDays(data.business.offDays);
         setServices(data.business.services);
+        setEmployees(data.business.employees ?? []);
+        setAllowEmployeeChoice(data.business.allowEmployeeChoice ?? false);
       })
       .finally(() => setPageLoading(false));
   }, [slug]);
@@ -188,6 +194,8 @@ export default function BookingPage() {
     setSelectedServiceIds((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]));
   }
 
+  const employeeQueryParam = selectedEmployeeId ? `&employeeId=${selectedEmployeeId}` : "";
+
   useEffect(() => {
     if (!selectedDate || !serviceIdsKey) return;
     setSlotsLoading(true);
@@ -196,7 +204,7 @@ export default function BookingPage() {
     setSuccessMessage(null);
     setBookedId(null);
     setJoiningWaitlist(false);
-    fetch(`/api/slots?slug=${slug}&date=${selectedDate}&serviceIds=${serviceIdsKey}`)
+    fetch(`/api/slots?slug=${slug}&date=${selectedDate}&serviceIds=${serviceIdsKey}${employeeQueryParam}`)
       .then((r) => r.json())
       .then((data) => {
         setSlots(data.slots);
@@ -204,10 +212,10 @@ export default function BookingPage() {
         setDayClosed(data.closed);
       })
       .finally(() => setSlotsLoading(false));
-  }, [slug, selectedDate, serviceIdsKey]);
+  }, [slug, selectedDate, serviceIdsKey, employeeQueryParam]);
 
   function refreshSlots() {
-    fetch(`/api/slots?slug=${slug}&date=${selectedDate}&serviceIds=${serviceIdsKey}`)
+    fetch(`/api/slots?slug=${slug}&date=${selectedDate}&serviceIds=${serviceIdsKey}${employeeQueryParam}`)
       .then((r) => r.json())
       .then((data) => {
         setSlots(data.slots);
@@ -233,6 +241,7 @@ export default function BookingPage() {
           customerName: name,
           customerPhone: phone,
           note,
+          employeeId: selectedEmployeeId || undefined,
         }),
       });
       if (res.status === 409) {
@@ -639,6 +648,39 @@ export default function BookingPage() {
                             {totalDurationMinutes} {lang === "ar" ? "د" : "min"}
                           </p>
                           {totalPriceUsd !== null && <p className="mt-1">${totalPriceUsd}</p>}
+                        </div>
+                      )}
+
+                      {allowEmployeeChoice && employees.length > 1 && (
+                        <div className="mt-3 border-t border-zinc-100 pt-3">
+                          <p className="text-sm font-semibold text-zinc-800">{t.staff.label}</p>
+                          <div className="mt-2 flex flex-col gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedEmployeeId(null)}
+                              className={`rounded-lg px-2.5 py-2 text-start text-sm transition-colors ${
+                                selectedEmployeeId === null
+                                  ? "bg-zinc-900 text-white"
+                                  : "bg-zinc-50 text-zinc-700 hover:bg-zinc-100"
+                              }`}
+                            >
+                              {t.staff.noPreference}
+                            </button>
+                            {employees.map((emp) => (
+                              <button
+                                type="button"
+                                key={emp.id}
+                                onClick={() => setSelectedEmployeeId(emp.id)}
+                                className={`rounded-lg px-2.5 py-2 text-start text-sm transition-colors ${
+                                  selectedEmployeeId === emp.id
+                                    ? "bg-zinc-900 text-white"
+                                    : "bg-zinc-50 text-zinc-700 hover:bg-zinc-100"
+                                }`}
+                              >
+                                {emp.name}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>

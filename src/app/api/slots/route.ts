@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
   const slug = request.nextUrl.searchParams.get("slug");
   const serviceIdsParam = request.nextUrl.searchParams.get("serviceIds");
   const durationParam = request.nextUrl.searchParams.get("durationMinutes");
+  const employeeId = request.nextUrl.searchParams.get("employeeId") || undefined;
 
   if (!date || !slug || (!serviceIdsParam && !durationParam)) {
     return NextResponse.json({ error: "date, slug, and serviceIds (or durationMinutes) are required" }, { status: 400 });
@@ -26,8 +27,8 @@ export async function GET(request: NextRequest) {
   if (durationParam) {
     const durationMinutes = Number(durationParam);
     const [slots, fullyBooked, closed] = await Promise.all([
-      getSlotsForDuration(business.id, date, durationMinutes),
-      isDayFullyBookedForDuration(business.id, date, durationMinutes),
+      getSlotsForDuration(business.id, date, durationMinutes, employeeId),
+      isDayFullyBookedForDuration(business.id, date, durationMinutes, employeeId),
       isDayClosed(business.id, date),
     ]);
     return NextResponse.json({ slots, fullyBooked, closed });
@@ -35,8 +36,8 @@ export async function GET(request: NextRequest) {
 
   const serviceIds = serviceIdsParam!.split(",").filter(Boolean);
   const [slots, fullyBooked, closed] = await Promise.all([
-    getSlotsForDay(business.id, date, serviceIds),
-    isDayFullyBooked(business.id, date, serviceIds),
+    getSlotsForDay(business.id, date, serviceIds, employeeId),
+    isDayFullyBooked(business.id, date, serviceIds, employeeId),
     isDayClosed(business.id, date),
   ]);
 

@@ -28,6 +28,10 @@ export const bookingCopy = {
       selected: "Selected",
       pickAtLeastOne: "Pick at least one service.",
     },
+    staff: {
+      label: "Staff",
+      noPreference: "No preference",
+    },
     viewServices: "View services",
     heroFallbackSubtitle: "Book your appointment in seconds.",
     reserveButton: "Reserve",
@@ -108,6 +112,10 @@ export const bookingCopy = {
       select: "اختار",
       selected: "مختارة",
       pickAtLeastOne: "اختار خدمة وحدة عالأقل.",
+    },
+    staff: {
+      label: "الموظف",
+      noPreference: "مو مهم مين",
     },
     viewServices: "شوف الخدمات",
     heroFallbackSubtitle: "احجز موعدك بثواني.",
