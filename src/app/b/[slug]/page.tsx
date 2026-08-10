@@ -438,7 +438,11 @@ export default function BookingPage() {
         )}
         <div className="absolute inset-0 flex items-center">
           <div className="mx-auto w-full max-w-5xl px-4 lg:px-8">
-            <div className={`max-w-md sm:max-w-lg lg:max-w-2xl ${cardClass}`}>
+            <div
+              className={`max-w-md overflow-hidden rounded-2xl shadow-lg ring-1 sm:max-w-lg lg:max-w-2xl ${
+                heroImageUrl ? "bg-paper/75 ring-white/40 backdrop-blur-md" : "bg-paper ring-zinc-200"
+              }`}
+            >
               <div className={cardAccentBarClass} />
               <div className="p-6 lg:p-10">
                 <h1 className="text-3xl font-bold text-zinc-900 sm:text-4xl lg:text-5xl">{businessName || t.loading}</h1>
