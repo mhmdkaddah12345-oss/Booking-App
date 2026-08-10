@@ -55,6 +55,39 @@ export const landingCopy = {
       heading: "What your customers actually see",
       body: "A clean page with your services, open time slots, and instant confirmation — the moment someone books, it's locked into your calendar. No app, no account, no confusion about which times are actually free.",
     },
+    ownerPreview: {
+      heading: "What you see as the owner",
+      body: "Your day at a glance, how much you made this month, and who your regulars are — all in one dashboard, no spreadsheet required.",
+    },
+    ownerMockup: {
+      dashboardTitle: "Dashboard",
+      weekAtGlance: "This week at a glance",
+      statAppointments: "Appointments",
+      statPending: "Pending",
+      statCancelled: "Cancelled",
+      statWaitlist: "Waitlist",
+      today: "Today",
+      todayBookings: [
+        { time: "10:00", name: "Layla Haddad", service: "Haircut" },
+        { time: "11:30", name: "Nour Fares", service: "Coloring" },
+        { time: "14:00", name: "Maya Saade", service: "Blowout" },
+      ],
+      calendarTitle: "Calendar",
+      reportsTitle: "Reports",
+      statRevenue: "Revenue",
+      statBookings: "Bookings",
+      revenueByService: "Revenue by service",
+      services: [
+        { name: "Coloring", value: "$275" },
+        { name: "Haircut", value: "$310" },
+      ],
+      customersTitle: "Customers",
+      customersList: [
+        { name: "Layla Haddad", visits: "3 visits" },
+        { name: "Nour Fares", visits: "5 visits" },
+        { name: "Maya Saade", visits: "2 visits" },
+      ],
+    },
     features: {
       heading: "Everything your booking page needs",
       items: [
@@ -204,6 +237,39 @@ export const landingCopy = {
     preview: {
       heading: "شو بيشوف زبونك بالضبط",
       body: "صفحة نظيفة فيها خدماتك، الأوقات المتاحة، وتأكيد فوري — لحظة ما حدا يحجز، بينسجل مباشرة بجدولك. بدون تطبيق، بدون حساب، وبدون لخبطة بالأوقات المتاحة.",
+    },
+    ownerPreview: {
+      heading: "شو بتشوف إنت كصاحب العمل",
+      body: "يومك بلمحة، قديش ربحت هالشهر، ومين زباينك الدائمين — كلو بلوحة تحكم وحدة، بدون أي جدول إكسل.",
+    },
+    ownerMockup: {
+      dashboardTitle: "لوحة التحكم",
+      weekAtGlance: "هالأسبوع بلمحة",
+      statAppointments: "المواعيد",
+      statPending: "بانتظار التأكيد",
+      statCancelled: "الملغاة",
+      statWaitlist: "لائحة الانتظار",
+      today: "اليوم",
+      todayBookings: [
+        { time: "10:00", name: "ليلى حداد", service: "قصة شعر" },
+        { time: "11:30", name: "نور فارس", service: "صبغة" },
+        { time: "14:00", name: "مايا سعادة", service: "بلو-دراي" },
+      ],
+      calendarTitle: "الجدول",
+      reportsTitle: "التقارير",
+      statRevenue: "الإيرادات",
+      statBookings: "الحجوزات",
+      revenueByService: "الإيرادات حسب الخدمة",
+      services: [
+        { name: "صبغة", value: "$275" },
+        { name: "قصة شعر", value: "$310" },
+      ],
+      customersTitle: "الزباين",
+      customersList: [
+        { name: "ليلى حداد", visits: "3 زيارات" },
+        { name: "نور فارس", visits: "5 زيارات" },
+        { name: "مايا سعادة", visits: "زيارتين" },
+      ],
     },
     features: {
       heading: "كل شي محتاجو صفحة الحجز تبعك",

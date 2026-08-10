@@ -10,6 +10,7 @@ import StandaloneLoginRedirect from "@/components/StandaloneLoginRedirect";
 import Reveal from "@/components/Reveal";
 import FaqAccordion from "@/components/FaqAccordion";
 import BookingPreviewMockup from "@/components/BookingPreviewMockup";
+import DashboardPreviewMockup from "@/components/DashboardPreviewMockup";
 import { PLANS, PlanId } from "@/lib/plans";
 import { landingCopy, Lang } from "@/lib/landingTranslations";
 import { whatsappLink } from "@/lib/whatsapp";
@@ -402,6 +403,20 @@ export default function LandingPage() {
               <h2 className="font-display text-2xl font-semibold text-zinc-800 sm:text-3xl">{t.preview.heading}</h2>
               <p className="mt-4 text-sm leading-relaxed text-zinc-600 sm:text-base">{t.preview.body}</p>
             </div>
+          </Reveal>
+        </div>
+      </section>
+
+      <section className="bg-zinc-50">
+        <div className="mx-auto max-w-4xl px-6 py-20">
+          <Reveal className="text-center">
+            <h2 className="font-display text-2xl font-semibold text-zinc-800 sm:text-3xl">{t.ownerPreview.heading}</h2>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-zinc-600 sm:text-base">
+              {t.ownerPreview.body}
+            </p>
+          </Reveal>
+          <Reveal className="mt-10 w-full">
+            <DashboardPreviewMockup lang={lang} />
           </Reveal>
         </div>
       </section>
