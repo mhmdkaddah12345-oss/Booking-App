@@ -560,6 +560,15 @@ export default function LandingPage() {
           {t.whatsappLabel} · {CONTACT_WHATSAPP_NUMBER}
         </a>
         <p className="mt-4">{t.footer}</p>
+        <p className="mt-2 flex items-center justify-center gap-3">
+          <Link href="/privacy" className="hover:text-zinc-600 hover:underline">
+            {t.privacyLink}
+          </Link>
+          <span aria-hidden>·</span>
+          <Link href="/terms" className="hover:text-zinc-600 hover:underline">
+            {t.termsLink}
+          </Link>
+        </p>
       </footer>
     </div>
   );

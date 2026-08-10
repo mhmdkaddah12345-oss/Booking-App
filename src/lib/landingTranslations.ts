@@ -134,6 +134,8 @@ export const landingCopy = {
     footer: "Maw3ed — built for Lebanon's salons, clinics, and gyms.",
     whatsappLabel: "Chat with us on WhatsApp",
     whatsappPrefill: "Hi Maw3ed! I have a question.",
+    privacyLink: "Privacy Policy",
+    termsLink: "Terms of Service",
     mockup: {
       businessName: "Bella Salon",
       servicesLabel: "Services",
@@ -282,6 +284,8 @@ export const landingCopy = {
     footer: "Maw3ed — مصمَّم لصالونات وعيادات ونوادي لبنان.",
     whatsappLabel: "احكينا عالواتساب",
     whatsappPrefill: "مرحبا Maw3ed! عندي سؤال.",
+    privacyLink: "سياسة الخصوصية",
+    termsLink: "شروط الاستخدام",
     mockup: {
       businessName: "صالون بيلا",
       servicesLabel: "الخدمات",

@@ -371,6 +371,18 @@ export default function SignupPage() {
 
               {error && <p className="text-sm text-red-600">{error}</p>}
 
+              <p className="text-xs text-zinc-500">
+                {t.agreementPrefix}{" "}
+                <Link href="/terms" target="_blank" className="font-medium text-zinc-700 underline">
+                  {t.agreementTerms}
+                </Link>{" "}
+                {t.agreementAnd}{" "}
+                <Link href="/privacy" target="_blank" className="font-medium text-zinc-700 underline">
+                  {t.agreementPrivacy}
+                </Link>
+                .
+              </p>
+
               <div className="flex items-center gap-3">
                 <button
                   type="button"
