@@ -59,6 +59,8 @@ export type BusinessConfig = {
   employees: Employee[];
   offDays: number[]; // days of week the business is closed, 0=Sunday .. 6=Saturday
   closedDates: string[]; // upcoming one-off dates fully closed via schedule_exceptions
+  breakStartTime: string | null; // HH:MM, recurring daily break — null on both means no break
+  breakEndTime: string | null;
   about: string | null;
   heroImageUrl: string | null;
   logoUrl: string | null;
@@ -195,6 +197,8 @@ function mapBusinessConfig(
     slotGranularityMinutes: business.slot_granularity_minutes as number,
     offDays: business.off_days as number[],
     closedDates,
+    breakStartTime: business.break_start_time ? trimTime(business.break_start_time as string) : null,
+    breakEndTime: business.break_end_time ? trimTime(business.break_end_time as string) : null,
     about: (business.about as string | null) ?? null,
     heroImageUrl: (business.hero_image_url as string | null) ?? null,
     logoUrl: (business.logo_url as string | null) ?? null,
@@ -427,7 +431,16 @@ export async function updateBusinessConfig(
   updates: Partial<
     Pick<
       BusinessConfig,
-      "name" | "startHour" | "endHour" | "offDays" | "about" | "accentColor" | "ownerPhone" | "allowEmployeeChoice"
+      | "name"
+      | "startHour"
+      | "endHour"
+      | "offDays"
+      | "about"
+      | "accentColor"
+      | "ownerPhone"
+      | "allowEmployeeChoice"
+      | "breakStartTime"
+      | "breakEndTime"
     >
   >
 ): Promise<BusinessConfig | undefined> {
@@ -440,6 +453,8 @@ export async function updateBusinessConfig(
   if (updates.accentColor !== undefined) dbUpdates.accent_color = updates.accentColor;
   if (updates.ownerPhone !== undefined) dbUpdates.owner_phone = updates.ownerPhone;
   if (updates.allowEmployeeChoice !== undefined) dbUpdates.allow_employee_choice = updates.allowEmployeeChoice;
+  if (updates.breakStartTime !== undefined) dbUpdates.break_start_time = updates.breakStartTime;
+  if (updates.breakEndTime !== undefined) dbUpdates.break_end_time = updates.breakEndTime;
 
   const { error } = await supabase.from("business").update(dbUpdates).eq("id", businessId);
   if (error) throw new Error(error.message);
@@ -770,6 +785,15 @@ async function getSlotsForDurationCore(
   const busyRanges = exceptions
     .filter((e): e is ScheduleException & { startTime: string; endTime: string } => !!e.startTime && !!e.endTime)
     .map((e) => ({ start: timeToMinutes(e.startTime), end: timeToMinutes(e.endTime) }));
+
+  // Recurring daily break (e.g. lunch) — blocked out every day, same as a
+  // one-off exception's busy range but without needing one added per date.
+  if (business.break_start_time && business.break_end_time) {
+    busyRanges.push({
+      start: timeToMinutes(business.break_start_time as string),
+      end: timeToMinutes(business.break_end_time as string),
+    });
+  }
 
   // Read-only — never auto-provisions an employee row here. Two of these
   // calls run concurrently (slots + fullyBooked, via Promise.all in the

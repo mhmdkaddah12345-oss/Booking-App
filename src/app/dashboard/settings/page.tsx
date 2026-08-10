@@ -49,6 +49,8 @@ type Business = {
   accentColor: string | null;
   ownerPhone: string;
   allowEmployeeChoice: boolean;
+  breakStartTime: string | null;
+  breakEndTime: string | null;
   gallery: GalleryPhoto[];
   faqs: Faq[];
 };
@@ -77,8 +79,12 @@ export default function SettingsPage() {
   const [startHour, setStartHour] = useState(9);
   const [endHour, setEndHour] = useState(18);
   const [offDays, setOffDays] = useState<number[]>([]);
+  const [hasBreak, setHasBreak] = useState(false);
+  const [breakStart, setBreakStart] = useState("13:00");
+  const [breakEnd, setBreakEnd] = useState("14:00");
   const [savingHours, setSavingHours] = useState(false);
   const [hoursSaved, setHoursSaved] = useState(false);
+  const [hoursError, setHoursError] = useState<string | null>(null);
 
   const [accentColor, setAccentColor] = useState(DEFAULT_ACCENT_COLOR);
 
@@ -141,6 +147,9 @@ export default function SettingsPage() {
         setStartHour(data.business.startHour);
         setEndHour(data.business.endHour);
         setOffDays(data.business.offDays);
+        setHasBreak(!!(data.business.breakStartTime && data.business.breakEndTime));
+        setBreakStart(data.business.breakStartTime ?? "13:00");
+        setBreakEnd(data.business.breakEndTime ?? "14:00");
         setAbout(data.business.about ?? "");
         setAccentColor(data.business.accentColor ?? DEFAULT_ACCENT_COLOR);
         setOwnerPhone(data.business.ownerPhone ?? "");
@@ -177,13 +186,24 @@ export default function SettingsPage() {
 
   async function saveHours(e: React.FormEvent) {
     e.preventDefault();
+    if (hasBreak && breakEnd <= breakStart) {
+      setHoursError(t.breakEndBeforeStart);
+      return;
+    }
+    setHoursError(null);
     setSavingHours(true);
     setHoursSaved(false);
     try {
       await fetch("/api/business", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ startHour, endHour, offDays }),
+        body: JSON.stringify({
+          startHour,
+          endHour,
+          offDays,
+          breakStartTime: hasBreak ? breakStart : null,
+          breakEndTime: hasBreak ? breakEnd : null,
+        }),
       });
       loadBusiness();
       setHoursSaved(true);
@@ -608,6 +628,57 @@ export default function SettingsPage() {
                       ))}
                     </div>
                   </div>
+
+                  <div className="flex flex-col gap-2 border-t border-zinc-100 pt-3">
+                    <label className="flex items-center gap-1.5 text-sm text-zinc-700">
+                      <input
+                        type="checkbox"
+                        checked={hasBreak}
+                        onChange={(e) => {
+                          setHasBreak(e.target.checked);
+                          setHoursSaved(false);
+                          setHoursError(null);
+                        }}
+                        className="h-4 w-4 rounded border-zinc-300"
+                      />
+                      {t.dailyBreakLabel}
+                    </label>
+                    <p className="text-xs text-zinc-400">{t.dailyBreakHint}</p>
+                    {hasBreak && (
+                      <div className="flex gap-3">
+                        <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
+                          {t.fromLabel}
+                          <input
+                            type="time"
+                            required
+                            value={breakStart}
+                            onChange={(e) => {
+                              setBreakStart(e.target.value);
+                              setHoursSaved(false);
+                              setHoursError(null);
+                            }}
+                            className={inputClass}
+                          />
+                        </label>
+                        <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
+                          {t.toLabel}
+                          <input
+                            type="time"
+                            required
+                            value={breakEnd}
+                            onChange={(e) => {
+                              setBreakEnd(e.target.value);
+                              setHoursSaved(false);
+                              setHoursError(null);
+                            }}
+                            className={inputClass}
+                          />
+                        </label>
+                      </div>
+                    )}
+                    {hoursError && <p className="text-sm text-red-600">{hoursError}</p>}
+                  </div>
+
                   <div className="flex items-center gap-3">
                     <button type="submit" disabled={savingHours} className={primaryButtonClass}>
                       {savingHours ? t.saving : t.save}

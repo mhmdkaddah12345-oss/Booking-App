@@ -24,7 +24,8 @@ export async function PATCH(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   const body = await request.json();
-  const { name, startHour, endHour, offDays, about, accentColor, ownerPhone, allowEmployeeChoice } = body ?? {};
+  const { name, startHour, endHour, offDays, about, accentColor, ownerPhone, allowEmployeeChoice, breakStartTime, breakEndTime } =
+    body ?? {};
   const updates: {
     name?: string;
     startHour?: number;
@@ -34,6 +35,8 @@ export async function PATCH(request: NextRequest) {
     accentColor?: string;
     ownerPhone?: string;
     allowEmployeeChoice?: boolean;
+    breakStartTime?: string | null;
+    breakEndTime?: string | null;
   } = {};
   if (typeof name === "string") updates.name = name;
   if (typeof startHour === "number") updates.startHour = startHour;
@@ -43,6 +46,13 @@ export async function PATCH(request: NextRequest) {
   if (typeof accentColor === "string" && /^#[0-9a-fA-F]{6}$/.test(accentColor)) updates.accentColor = accentColor;
   if (typeof ownerPhone === "string") updates.ownerPhone = ownerPhone;
   if (typeof allowEmployeeChoice === "boolean") updates.allowEmployeeChoice = allowEmployeeChoice;
+  const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+  if (breakStartTime === null || (typeof breakStartTime === "string" && timePattern.test(breakStartTime))) {
+    updates.breakStartTime = breakStartTime;
+  }
+  if (breakEndTime === null || (typeof breakEndTime === "string" && timePattern.test(breakEndTime))) {
+    updates.breakEndTime = breakEndTime;
+  }
 
   const business = await updateBusinessConfig(auth.businessId, updates);
   return NextResponse.json({ business });
