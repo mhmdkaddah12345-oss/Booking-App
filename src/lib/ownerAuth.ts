@@ -25,7 +25,12 @@ async function getSessionBusinessId(request: NextRequest): Promise<string | null
 
   const { data } = await supabase.from("sessions").select("*").eq("id", sessionId).maybeSingle();
   if (!data) return null;
-  if (new Date(data.expires_at).getTime() < Date.now()) return null;
+  if (new Date(data.expires_at).getTime() < Date.now()) {
+    // Opportunistic cleanup — expired rows otherwise just accumulate forever
+    // since nothing else ever deletes them.
+    await supabase.from("sessions").delete().eq("id", sessionId);
+    return null;
+  }
 
   return data.business_id;
 }

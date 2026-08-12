@@ -349,8 +349,22 @@ export async function activateBusiness(businessId: string, extendByDays = 30): P
     })
     .eq("id", businessId);
   if (error) throw new Error(error.message);
+  await invalidateSessions(businessId);
 
   return { password };
+}
+
+/**
+ * Kills existing login sessions after a password change, so a stolen
+ * cookie doesn't stay valid for up to 30 days after the owner secures
+ * their account. `exceptSessionId` keeps the session making the change
+ * itself alive (self-service change-password) — omitted for flows with no
+ * session to preserve (forgot-password reset, admin activation).
+ */
+async function invalidateSessions(businessId: string, exceptSessionId?: string): Promise<void> {
+  let query = supabase.from("sessions").delete().eq("business_id", businessId);
+  if (exceptSessionId) query = query.neq("id", exceptSessionId);
+  await query;
 }
 
 /**
@@ -361,7 +375,8 @@ export async function activateBusiness(businessId: string, extendByDays = 30): P
 export async function changeOwnPassword(
   businessId: string,
   currentPassword: string,
-  newPassword: string
+  newPassword: string,
+  currentSessionId?: string
 ): Promise<{ success: true } | { success: false; error: string }> {
   const { data } = await supabase.from("business").select("password_hash").eq("id", businessId).maybeSingle();
   if (!data?.password_hash || !verifyPassword(currentPassword, data.password_hash)) {
@@ -372,6 +387,7 @@ export async function changeOwnPassword(
     .update({ password_hash: hashPassword(newPassword) })
     .eq("id", businessId);
   if (error) throw new Error(error.message);
+  await invalidateSessions(businessId, currentSessionId);
   return { success: true };
 }
 
@@ -423,6 +439,7 @@ export async function resetPasswordWithCode(
     .update({ password_hash: hashPassword(newPassword), reset_code_hash: null, reset_code_expires_at: null })
     .eq("id", data.id);
   if (error) throw new Error(error.message);
+  await invalidateSessions(data.id);
   return { success: true };
 }
 
@@ -1078,7 +1095,8 @@ export async function joinWaitlist(
   serviceIds: string[],
   customerName: string,
   customerPhone: string,
-  note?: string
+  note?: string,
+  isOwnerInitiated = false
 ): Promise<WaitlistEntry | { error: "unknown_service" | "business_locked" | "invalid_input" }> {
   if (customerInputError(customerName, customerPhone, note)) {
     return { error: "invalid_input" };
@@ -1110,6 +1128,15 @@ export async function joinWaitlist(
   if (error) throw new Error(error.message);
 
   notify("waitlist_joined", { phone: customerPhone, name: customerName, date });
+
+  if (!isOwnerInitiated) {
+    try {
+      await notifyOwnerPush(businessId, "New waitlist request", `${customerName} joined the waitlist for ${date} (${service.name})`);
+    } catch (err) {
+      console.error("[push notify error]", err);
+    }
+  }
+
   return mapWaitlist(data);
 }
 
@@ -1450,6 +1477,21 @@ export async function cancelBooking(
     date: booking.date,
     time: booking.time,
   });
+
+  // Only when the customer cancelled their own booking — the owner doesn't
+  // need to be told about a cancellation they just performed themselves via
+  // the dashboard (requireBusinessId is only set on that authenticated path).
+  if (!requireBusinessId) {
+    try {
+      await notifyOwnerPush(
+        booking.businessId,
+        "Booking cancelled",
+        `${booking.customerName} cancelled their ${booking.date} at ${booking.time} appointment`
+      );
+    } catch (err) {
+      console.error("[push notify error]", err);
+    }
+  }
 
   const promoted = await promoteNextWaitlisted(booking.businessId, booking.date, booking.time, booking.durationMinutes);
   return { success: true, promoted };

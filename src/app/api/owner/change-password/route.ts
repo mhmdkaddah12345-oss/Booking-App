@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireOwner } from "@/lib/ownerAuth";
+import { requireOwner, SESSION_COOKIE } from "@/lib/ownerAuth";
 import { changeOwnPassword } from "@/lib/store";
 
 export async function POST(request: NextRequest) {
@@ -11,7 +11,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid_input" }, { status: 400 });
   }
 
-  const result = await changeOwnPassword(auth.businessId, currentPassword, newPassword);
+  const currentSessionId = request.cookies.get(SESSION_COOKIE)?.value;
+  const result = await changeOwnPassword(auth.businessId, currentPassword, newPassword, currentSessionId);
   if (!result.success) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }

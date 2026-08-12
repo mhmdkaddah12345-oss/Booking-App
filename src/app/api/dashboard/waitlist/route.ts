@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
 
-  const entry = await joinWaitlist(auth.businessId, date, serviceIds, customerName, customerPhone, note || undefined);
+  const entry = await joinWaitlist(auth.businessId, date, serviceIds, customerName, customerPhone, note || undefined, true);
   if ("error" in entry) {
     const status = entry.error === "business_locked" ? 403 : 400;
     return NextResponse.json({ error: entry.error }, { status });
