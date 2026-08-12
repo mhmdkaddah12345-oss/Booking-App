@@ -772,10 +772,13 @@ async function getSlotsForDurationCore(
   businessId: string,
   date: string,
   durationMinutes: number,
-  employeeId?: string
+  employeeId?: string,
+  excludeBookingId?: string
 ): Promise<SlotInfo[]> {
   const business = await getBusinessRowById(businessId);
   if (!business) return [];
+  const { dateStr: today } = beirutNow();
+  if (date < today) return [];
   const [y, m, d] = date.split("-").map(Number);
   const closed = (business.off_days as number[]).includes(new Date(y, m - 1, d).getDay());
   if (closed) return [];
@@ -802,14 +805,16 @@ async function getSlotsForDurationCore(
   // employees added) is treated as a single implicit resource instead.
   const { data: employeesRaw } = await supabase.from("employees").select("*").eq("business_id", business.id);
   const employees = employeesRaw ?? [];
-  const bookingsThatDay = await getBookedBookingsForDate(business.id, date);
+  const bookingsThatDay = (await getBookedBookingsForDate(business.id, date)).filter(
+    (b) => b.id !== excludeBookingId
+  );
 
   const startHour = business.start_hour as number;
   const endHour = business.end_hour as number;
   const slotGranularityMinutes = business.slot_granularity_minutes as number;
   const closeMinutes = endHour * 60;
 
-  const { dateStr: today, minutesSinceMidnight: nowMinutes } = beirutNow();
+  const { minutesSinceMidnight: nowMinutes } = beirutNow();
 
   const slots: SlotInfo[] = [];
   for (let start = startHour * 60; start + durationMinutes <= closeMinutes; start += slotGranularityMinutes) {
@@ -871,7 +876,25 @@ export async function isDayFullyBooked(
 
 type BookingResult =
   | { success: true; booking: Booking }
-  | { success: false; error: "slot_taken" | "unknown_service" | "business_locked" };
+  | { success: false; error: "slot_taken" | "unknown_service" | "business_locked" | "invalid_input" };
+
+// Loose sanity caps on customer-submitted text — not full validation, just
+// enough to stop someone from stuffing megabytes of text into a booking row
+// (breaks dashboard layout, bloats the database) since there's otherwise no
+// limit between the public API and the database.
+const MAX_NAME_LENGTH = 100;
+const MAX_PHONE_LENGTH = 30;
+const MAX_NOTE_LENGTH = 1000;
+
+function customerInputError(name: string, phone: string, note?: string): boolean {
+  return (
+    !name.trim() ||
+    name.length > MAX_NAME_LENGTH ||
+    !phone.trim() ||
+    phone.length > MAX_PHONE_LENGTH ||
+    (!!note && note.length > MAX_NOTE_LENGTH)
+  );
+}
 
 const EXCLUSION_VIOLATION = "23P01";
 
@@ -924,7 +947,8 @@ export async function createBooking(
   customerPhone: string,
   note?: string,
   initialStatus: "pending" | "booked" = "pending",
-  preferredEmployeeId?: string
+  preferredEmployeeId?: string,
+  enforceAvailability = true
 ): Promise<BookingResult> {
   const service = await resolveCombinedService(serviceIds, businessId);
   if (!service) {
@@ -939,7 +963,8 @@ export async function createBooking(
     customerPhone,
     note,
     initialStatus,
-    preferredEmployeeId
+    preferredEmployeeId,
+    enforceAvailability
   );
 }
 
@@ -958,11 +983,30 @@ async function insertBookingForService(
   customerPhone: string,
   note?: string,
   initialStatus: "pending" | "booked" = "pending",
-  preferredEmployeeId?: string
+  preferredEmployeeId?: string,
+  enforceAvailability = true
 ): Promise<BookingResult> {
+  if (customerInputError(customerName, customerPhone, note)) {
+    return { success: false, error: "invalid_input" };
+  }
+
   const business = await getBusinessRowById(businessId);
   if (!business || isBusinessLocked(business)) {
     return { success: false, error: "business_locked" };
+  }
+
+  // Re-derive availability from scratch server-side instead of trusting the
+  // requested date/time — the slots UI only ever offers valid times, but a
+  // direct API call could send anything (a closed day, the middle of a
+  // break, a slot in the past, or one that's already booked). Skipped for
+  // owner-initiated bookings, where overriding hours for a walk-in is a
+  // legitimate, trusted action.
+  if (enforceAvailability) {
+    const slots = await getSlotsForDurationCore(businessId, date, service.durationMinutes, preferredEmployeeId);
+    const requestedSlot = slots.find((s) => s.time === time);
+    if (!requestedSlot || !requestedSlot.available) {
+      return { success: false, error: "slot_taken" };
+    }
   }
 
   const employees = await getOrCreateEmployees(businessId);
@@ -1035,7 +1079,11 @@ export async function joinWaitlist(
   customerName: string,
   customerPhone: string,
   note?: string
-): Promise<WaitlistEntry | { error: "unknown_service" | "business_locked" }> {
+): Promise<WaitlistEntry | { error: "unknown_service" | "business_locked" | "invalid_input" }> {
+  if (customerInputError(customerName, customerPhone, note)) {
+    return { error: "invalid_input" };
+  }
+
   const business = await getBusinessRowById(businessId);
   if (!business || isBusinessLocked(business)) {
     return { error: "business_locked" };
@@ -1065,9 +1113,40 @@ export async function joinWaitlist(
   return mapWaitlist(data);
 }
 
+// Supabase caps any unbounded select at 1000 rows with no error — it just
+// silently truncates. A salon doing ~20 bookings/day crosses that in about
+// seven weeks, at which point bookings would quietly vanish from the
+// calendar, Reports revenue would undercount, and Customers/find-my-booking
+// would miss people — with the count-based dashboard stat tiles (which use
+// { count: "exact", head: true } and aren't affected) showing the *correct*
+// number right above the truncated list. This pages through in batches of
+// 1000 so any "all of a business's X" query actually returns all of them.
+const SUPABASE_PAGE_SIZE = 1000;
+
+async function fetchAllRows(
+  queryFn: (
+    from: number,
+    to: number
+  ) => PromiseLike<{ data: Record<string, unknown>[] | null; error: { message: string } | null }>
+): Promise<Record<string, unknown>[]> {
+  const all: Record<string, unknown>[] = [];
+  let from = 0;
+  for (;;) {
+    const { data, error } = await queryFn(from, from + SUPABASE_PAGE_SIZE - 1);
+    if (error) throw new Error(error.message);
+    const page = data ?? [];
+    all.push(...page);
+    if (page.length < SUPABASE_PAGE_SIZE) break;
+    from += SUPABASE_PAGE_SIZE;
+  }
+  return all;
+}
+
 export async function getAllBookings(businessId: string): Promise<Booking[]> {
-  const { data } = await supabase.from("bookings").select("*").eq("business_id", businessId);
-  return (data ?? []).map(mapBooking);
+  const data = await fetchAllRows((from, to) =>
+    supabase.from("bookings").select("*").eq("business_id", businessId).order("id").range(from, to)
+  );
+  return data.map(mapBooking);
 }
 
 // Compares only the last 8 digits so "+961 70 123456", "70123456", and
@@ -1100,8 +1179,10 @@ export async function getBooking(id: string): Promise<Booking | undefined> {
 }
 
 export async function getAllWaitlist(businessId: string): Promise<WaitlistEntry[]> {
-  const { data } = await supabase.from("waitlist").select("*").eq("business_id", businessId);
-  return (data ?? []).map(mapWaitlist);
+  const data = await fetchAllRows((from, to) =>
+    supabase.from("waitlist").select("*").eq("business_id", businessId).order("id").range(from, to)
+  );
+  return data.map(mapWaitlist);
 }
 
 export type CustomerHistoryEntry = {
@@ -1133,13 +1214,16 @@ export type CustomerSummary = {
  * per-customer history for full transparency.
  */
 export async function getCustomerSummaries(businessId: string): Promise<CustomerSummary[]> {
-  const { data: bookingsRaw } = await supabase
-    .from("bookings")
-    .select("*")
-    .eq("business_id", businessId)
-    .order("date", { ascending: true })
-    .order("time", { ascending: true });
-  const bookings = (bookingsRaw ?? []).map(mapBooking);
+  const bookingsRaw = await fetchAllRows((from, to) =>
+    supabase
+      .from("bookings")
+      .select("*")
+      .eq("business_id", businessId)
+      .order("date", { ascending: true })
+      .order("time", { ascending: true })
+      .range(from, to)
+  );
+  const bookings = bookingsRaw.map(mapBooking);
 
   const { data: servicesRaw } = await supabase.from("services").select("id, price_usd").eq("business_id", businessId);
   const priceById = new Map<string, number | null>(
@@ -1209,14 +1293,17 @@ export type ReportsSummary = {
  * getCustomerSummaries.
  */
 export async function getReportsSummary(businessId: string, period: ReportsPeriod): Promise<ReportsSummary> {
-  let query = supabase.from("bookings").select("*").eq("business_id", businessId);
+  let monthStart: string | undefined;
   if (period === "month") {
     const { dateStr } = beirutNow();
-    const monthStart = `${dateStr.slice(0, 7)}-01`;
-    query = query.gte("date", monthStart);
+    monthStart = `${dateStr.slice(0, 7)}-01`;
   }
-  const { data: bookingsRaw } = await query;
-  const bookings = (bookingsRaw ?? []).map(mapBooking);
+  const bookingsRaw = await fetchAllRows((from, to) => {
+    let query = supabase.from("bookings").select("*").eq("business_id", businessId).order("id");
+    if (monthStart) query = query.gte("date", monthStart);
+    return query.range(from, to);
+  });
+  const bookings = bookingsRaw.map(mapBooking);
 
   const { data: servicesRaw } = await supabase.from("services").select("id, name, price_usd").eq("business_id", businessId);
   const priceById = new Map<string, number | null>(
@@ -1437,6 +1524,18 @@ export async function rescheduleBooking(
   // re-approve their own edit.
   const isActualChange = booking.date !== newDate || booking.time !== newTime;
   const needsReconfirmation = !requireBusinessId && booking.status === "booked" && isActualChange;
+
+  // Same re-derivation as a fresh booking (see insertBookingForService) —
+  // a customer's manage link has no session, so this PATCH must not trust
+  // the requested date/time on its own. Skipped for owner-initiated
+  // reschedules (requireBusinessId set), same trusted-override reasoning.
+  if (!requireBusinessId && isActualChange) {
+    const slots = await getSlotsForDurationCore(booking.businessId, newDate, booking.durationMinutes, undefined, id);
+    const requestedSlot = slots.find((s) => s.time === newTime);
+    if (!requestedSlot || !requestedSlot.available) {
+      return { success: false, error: "slot_taken" };
+    }
+  }
 
   for (const emp of employees) {
     const { data, error } = await supabase
