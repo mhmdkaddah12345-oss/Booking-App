@@ -4,6 +4,7 @@ export type Lang = "en" | "ar";
 export const manageCopy = {
   en: {
     title: "Manage Your Appointment",
+    backToBookingPage: "← Back to booking page",
     loading: "Loading...",
     notFound: "We couldn't find that booking.",
     alreadyCancelled: "This booking has already been cancelled.",
@@ -36,6 +37,7 @@ export const manageCopy = {
   },
   ar: {
     title: "إدارة موعدك",
+    backToBookingPage: "→ رجوع لصفحة الحجز",
     loading: "عم يحمّل...",
     notFound: "ما لقينا هالموعد.",
     alreadyCancelled: "هالموعد انلغى من قبل.",

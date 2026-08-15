@@ -216,6 +216,15 @@ export default function ManageBookingPage() {
           </button>
         </div>
 
+        {slug && (
+          <a
+            href={`https://${slug}.${ROOT_DOMAIN}`}
+            className="mt-2 inline-block text-sm font-medium text-zinc-500 hover:text-zinc-700 hover:underline"
+          >
+            {t.backToBookingPage}
+          </a>
+        )}
+
         {loading ? (
           <div className="mt-6 flex items-center gap-2 text-sm text-zinc-500">
             <Spinner />
