@@ -331,7 +331,7 @@ export default function CustomersPage() {
                 <button
                   type="button"
                   onClick={() => downloadHistoryCsv(historyCustomer, lang, t)}
-                  className={`shrink-0 ${ghostButtonClass}`}
+                  className={`shrink-0 ${primaryButtonClass}`}
                 >
                   {t.downloadCsv}
                 </button>
