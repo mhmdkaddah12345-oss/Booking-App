@@ -139,6 +139,8 @@ export default function DashboardPage() {
 
   const [startHour, setStartHour] = useState(9);
   const [endHour, setEndHour] = useState(18);
+  const [breakStartTime, setBreakStartTime] = useState<string | null>(null);
+  const [breakEndTime, setBreakEndTime] = useState<string | null>(null);
   const [offDays, setOffDays] = useState<number[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -172,6 +174,8 @@ export default function DashboardPage() {
       .then(([businessData, dashboardData, exceptionsData]) => {
         setStartHour(businessData.business.startHour);
         setEndHour(businessData.business.endHour);
+        setBreakStartTime(businessData.business.breakStartTime ?? null);
+        setBreakEndTime(businessData.business.breakEndTime ?? null);
         setOffDays(businessData.business.offDays);
         setEmployees(businessData.business.employees);
         setServices(businessData.business.services);
@@ -550,6 +554,27 @@ export default function DashboardPage() {
                           </div>
                         );
                       })}
+                      {!day.closed && breakStartTime && breakEndTime && (() => {
+                        const startMinutesFromOpen = timeToMinutes(breakStartTime) - startHour * 60;
+                        const endMinutesFromOpen = timeToMinutes(breakEndTime) - startHour * 60;
+                        const topPx = (startMinutesFromOpen / 60) * ROW_HEIGHT_PX;
+                        const heightPx = Math.max(((endMinutesFromOpen - startMinutesFromOpen) / 60) * ROW_HEIGHT_PX, 18);
+                        return (
+                          <div
+                            title={t.breakBlockLabel}
+                            className="pointer-events-none absolute inset-x-0 z-10 flex items-center justify-center overflow-hidden rounded-md px-1 text-center text-[10px] font-medium text-zinc-600 ring-1 ring-inset ring-zinc-300"
+                            style={{
+                              top: topPx,
+                              height: heightPx,
+                              backgroundColor: "rgba(113,113,122,0.12)",
+                              backgroundImage:
+                                "repeating-linear-gradient(45deg, rgba(63,63,70,0.12), rgba(63,63,70,0.12) 4px, transparent 4px, transparent 9px)",
+                            }}
+                          >
+                            <span className="truncate">{t.breakBlockLabel}</span>
+                          </div>
+                        );
+                      })()}
                       {dayIndex === 0 && showNowLine && (
                         <div
                           className="pointer-events-none absolute left-0 right-0 z-20 flex items-center"
