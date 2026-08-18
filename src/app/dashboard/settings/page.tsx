@@ -30,7 +30,7 @@ import { settingsCopy } from "@/lib/settingsPageTranslations";
 
 const ROOT_DOMAIN = "maw3edapp.com";
 
-type Service = { id: string; name: string; durationMinutes: number; priceUsd: number | null };
+type Service = { id: string; name: string; nameAr: string | null; durationMinutes: number; priceUsd: number | null };
 type Employee = { id: string; name: string };
 type GalleryPhoto = { id: string; url: string };
 type Faq = { id: string; question: string; answer: string };
@@ -92,6 +92,7 @@ export default function SettingsPage() {
   const [accentColor, setAccentColor] = useState(DEFAULT_ACCENT_COLOR);
 
   const [newServiceName, setNewServiceName] = useState("");
+  const [newServiceNameAr, setNewServiceNameAr] = useState("");
   const [newServiceDuration, setNewServiceDuration] = useState(30);
   const [newServicePrice, setNewServicePrice] = useState("");
   const [addingService, setAddingService] = useState(false);
@@ -99,6 +100,7 @@ export default function SettingsPage() {
 
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [editServiceName, setEditServiceName] = useState("");
+  const [editServiceNameAr, setEditServiceNameAr] = useState("");
   const [editServiceDuration, setEditServiceDuration] = useState(30);
   const [editServicePrice, setEditServicePrice] = useState("");
   const [savingEditId, setSavingEditId] = useState<string | null>(null);
@@ -232,9 +234,15 @@ export default function SettingsPage() {
       await fetch("/api/business/services", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newServiceName, durationMinutes: newServiceDuration, priceUsd }),
+        body: JSON.stringify({
+          name: newServiceName,
+          nameAr: newServiceNameAr,
+          durationMinutes: newServiceDuration,
+          priceUsd,
+        }),
       });
       setNewServiceName("");
+      setNewServiceNameAr("");
       setNewServiceDuration(30);
       setNewServicePrice("");
       loadBusiness();
@@ -256,6 +264,7 @@ export default function SettingsPage() {
   function startEditService(s: Service) {
     setEditingServiceId(s.id);
     setEditServiceName(s.name);
+    setEditServiceNameAr(s.nameAr ?? "");
     setEditServiceDuration(s.durationMinutes);
     setEditServicePrice(s.priceUsd !== null ? String(s.priceUsd) : "");
   }
@@ -269,7 +278,12 @@ export default function SettingsPage() {
       await fetch(`/api/business/services/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editServiceName, durationMinutes: editServiceDuration, priceUsd }),
+        body: JSON.stringify({
+          name: editServiceName,
+          nameAr: editServiceNameAr,
+          durationMinutes: editServiceDuration,
+          priceUsd,
+        }),
       });
       setEditingServiceId(null);
       loadBusiness();
@@ -822,6 +836,16 @@ export default function SettingsPage() {
                             className={inputClass}
                           />
                         </label>
+                        <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
+                          {t.serviceNameAr}
+                          <input
+                            dir="rtl"
+                            placeholder={t.serviceNameArPlaceholder}
+                            value={editServiceNameAr}
+                            onChange={(e) => setEditServiceNameAr(e.target.value)}
+                            className={inputClass}
+                          />
+                        </label>
                         <label className="flex flex-col gap-1 text-sm text-zinc-600">
                           {t.duration}
                           <select
@@ -868,7 +892,8 @@ export default function SettingsPage() {
                       className={`flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-2 text-sm ${listRowHoverClass}`}
                     >
                       <span className="text-zinc-700">
-                        {s.name}{" "}
+                        {s.name}
+                        {s.nameAr && <span dir="rtl" className="text-zinc-400"> · {s.nameAr}</span>}{" "}
                         <span className="text-zinc-400">
                           — {t.durationMin(s.durationMinutes)}
                           {s.priceUsd !== null ? ` · ${t.priceTag(s.priceUsd)}` : ""}
@@ -905,6 +930,16 @@ export default function SettingsPage() {
                     placeholder={t.serviceNamePlaceholder}
                     value={newServiceName}
                     onChange={(e) => setNewServiceName(e.target.value)}
+                    className={inputClass}
+                  />
+                </label>
+                <label className="flex flex-1 flex-col gap-1 text-sm text-zinc-600">
+                  {t.serviceNameAr}
+                  <input
+                    dir="rtl"
+                    placeholder={t.serviceNameArPlaceholder}
+                    value={newServiceNameAr}
+                    onChange={(e) => setNewServiceNameAr(e.target.value)}
                     className={inputClass}
                   />
                 </label>

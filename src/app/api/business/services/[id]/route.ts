@@ -8,12 +8,22 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const { id } = await params;
   const body = await request.json();
-  const { name, durationMinutes, priceUsd } = body ?? {};
+  const { name, nameAr, durationMinutes, priceUsd } = body ?? {};
   if (typeof name !== "string" || !name.trim() || typeof durationMinutes !== "number") {
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
+  if (nameAr !== undefined && nameAr !== null && typeof nameAr !== "string") {
+    return NextResponse.json({ error: "invalid_name_ar" }, { status: 400 });
+  }
 
-  const service = await updateService(id, auth.businessId, name, durationMinutes, priceUsd ?? null);
+  const service = await updateService(
+    id,
+    auth.businessId,
+    name,
+    durationMinutes,
+    priceUsd ?? null,
+    nameAr === "" ? null : nameAr ?? null
+  );
   if (!service) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }

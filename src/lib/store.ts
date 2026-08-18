@@ -15,6 +15,7 @@ import { beirutNow, beirutWeekRange } from "./time";
 export type Service = {
   id: string;
   name: string;
+  nameAr: string | null; // shown instead of `name` on the public booking page when viewed in Arabic
   durationMinutes: number;
   priceUsd: number | null;
 };
@@ -240,6 +241,7 @@ async function businessContentFor(businessId: string) {
     services: (services ?? []).map((s) => ({
       id: s.id,
       name: s.name,
+      nameAr: s.name_ar ?? null,
       durationMinutes: s.duration_minutes,
       priceUsd: s.price_usd === null || s.price_usd === undefined ? null : Number(s.price_usd),
     })),
@@ -582,17 +584,25 @@ export async function addService(
   businessId: string,
   name: string,
   durationMinutes: number,
-  priceUsd?: number | null
+  priceUsd?: number | null,
+  nameAr?: string | null
 ): Promise<Service> {
   const { data, error } = await supabase
     .from("services")
-    .insert({ business_id: businessId, name, duration_minutes: durationMinutes, price_usd: priceUsd ?? null })
+    .insert({
+      business_id: businessId,
+      name,
+      name_ar: nameAr ?? null,
+      duration_minutes: durationMinutes,
+      price_usd: priceUsd ?? null,
+    })
     .select()
     .single();
   if (error) throw new Error(error.message);
   return {
     id: data.id,
     name: data.name,
+    nameAr: data.name_ar ?? null,
     durationMinutes: data.duration_minutes,
     priceUsd: data.price_usd === null || data.price_usd === undefined ? null : Number(data.price_usd),
   };
@@ -603,11 +613,12 @@ export async function updateService(
   businessId: string,
   name: string,
   durationMinutes: number,
-  priceUsd?: number | null
+  priceUsd?: number | null,
+  nameAr?: string | null
 ): Promise<Service | undefined> {
   const { data, error } = await supabase
     .from("services")
-    .update({ name, duration_minutes: durationMinutes, price_usd: priceUsd ?? null })
+    .update({ name, name_ar: nameAr ?? null, duration_minutes: durationMinutes, price_usd: priceUsd ?? null })
     .eq("id", serviceId)
     .eq("business_id", businessId)
     .select()
@@ -616,6 +627,7 @@ export async function updateService(
   return {
     id: data.id,
     name: data.name,
+    nameAr: data.name_ar ?? null,
     durationMinutes: data.duration_minutes,
     priceUsd: data.price_usd === null || data.price_usd === undefined ? null : Number(data.price_usd),
   };
@@ -934,6 +946,7 @@ async function getServiceForBusiness(serviceId: string, businessId: string): Pro
     ? {
         id: data.id,
         name: data.name,
+        nameAr: data.name_ar ?? null,
         durationMinutes: data.duration_minutes,
         priceUsd: data.price_usd === null || data.price_usd === undefined ? null : Number(data.price_usd),
       }

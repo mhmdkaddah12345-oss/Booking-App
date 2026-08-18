@@ -15,7 +15,13 @@ import { IconChatBubble, IconChevronDown, IconClock } from "@/components/icons";
 const ROOT_DOMAIN = "maw3edapp.com";
 
 type Slot = { time: string; available: boolean };
-type Service = { id: string; name: string; durationMinutes: number; priceUsd: number | null };
+type Service = { id: string; name: string; nameAr: string | null; durationMinutes: number; priceUsd: number | null };
+
+// Arabic override is optional — fall back to the default (English) name
+// when the owner hasn't filled one in yet.
+function displayServiceName(s: Service, lang: Lang): string {
+  return (lang === "ar" && s.nameAr) || s.name;
+}
 type Employee = { id: string; name: string };
 type GalleryPhoto = { id: string; url: string };
 type Faq = { id: string; question: string; answer: string };
@@ -564,7 +570,7 @@ export default function BookingPage() {
                   className={`text-start ${cardClass} ${listRowHoverClass} ${selected ? "ring-2 ring-zinc-900" : ""}`}
                 >
                   <div className="flex flex-col gap-3 p-5 lg:p-6">
-                    <p className="font-semibold text-zinc-800 lg:text-lg">{s.name}</p>
+                    <p className="font-semibold text-zinc-800 lg:text-lg">{displayServiceName(s, lang)}</p>
                     <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600 lg:text-sm">
                       <IconClock className="h-3.5 w-3.5" />
                       {s.durationMinutes} {lang === "ar" ? "د" : "min"}
@@ -643,7 +649,7 @@ export default function BookingPage() {
                                 selected ? "bg-zinc-900 text-white" : "bg-zinc-50 text-zinc-700 hover:bg-zinc-100"
                               }`}
                             >
-                              <span className="min-w-0 truncate">{s.name}</span>
+                              <span className="min-w-0 truncate">{displayServiceName(s, lang)}</span>
                               <span className={`shrink-0 text-xs ${selected ? "text-white/80" : "text-zinc-400"}`}>
                                 {s.durationMinutes}
                                 {lang === "ar" ? "د" : "m"}
