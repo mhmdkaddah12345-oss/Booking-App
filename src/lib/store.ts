@@ -601,6 +601,31 @@ export async function addFaq(
   };
 }
 
+export async function updateFaq(
+  faqId: string,
+  businessId: string,
+  question: string,
+  answer: string,
+  questionAr?: string | null,
+  answerAr?: string | null
+): Promise<Faq | undefined> {
+  const { data, error } = await supabase
+    .from("faqs")
+    .update({ question, question_ar: questionAr ?? null, answer, answer_ar: answerAr ?? null })
+    .eq("id", faqId)
+    .eq("business_id", businessId)
+    .select()
+    .maybeSingle();
+  if (error || !data) return undefined;
+  return {
+    id: data.id,
+    question: data.question,
+    questionAr: data.question_ar ?? null,
+    answer: data.answer,
+    answerAr: data.answer_ar ?? null,
+  };
+}
+
 export async function removeFaq(faqId: string, businessId: string): Promise<{ success: boolean }> {
   const { error } = await supabase.from("faqs").delete().eq("id", faqId).eq("business_id", businessId);
   return { success: !error };

@@ -137,6 +137,13 @@ export default function SettingsPage() {
   const [addingFaq, setAddingFaq] = useState(false);
   const [removingFaqId, setRemovingFaqId] = useState<string | null>(null);
 
+  const [editingFaqId, setEditingFaqId] = useState<string | null>(null);
+  const [editFaqQuestion, setEditFaqQuestion] = useState("");
+  const [editFaqAnswer, setEditFaqAnswer] = useState("");
+  const [editFaqQuestionAr, setEditFaqQuestionAr] = useState("");
+  const [editFaqAnswerAr, setEditFaqAnswerAr] = useState("");
+  const [savingEditFaqId, setSavingEditFaqId] = useState<string | null>(null);
+
   const [linkCopied, setLinkCopied] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -468,6 +475,36 @@ export default function SettingsPage() {
       loadBusiness();
     } finally {
       setRemovingFaqId(null);
+    }
+  }
+
+  function startEditFaq(faq: Faq) {
+    setEditingFaqId(faq.id);
+    setEditFaqQuestion(faq.question);
+    setEditFaqAnswer(faq.answer);
+    setEditFaqQuestionAr(faq.questionAr ?? "");
+    setEditFaqAnswerAr(faq.answerAr ?? "");
+  }
+
+  async function saveEditFaq(e: React.FormEvent, id: string) {
+    e.preventDefault();
+    if (!editFaqQuestion.trim() || !editFaqAnswer.trim()) return;
+    setSavingEditFaqId(id);
+    try {
+      await fetch(`/api/business/faqs/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: editFaqQuestion,
+          answer: editFaqAnswer,
+          questionAr: editFaqQuestionAr,
+          answerAr: editFaqAnswerAr,
+        }),
+      });
+      setEditingFaqId(null);
+      loadBusiness();
+    } finally {
+      setSavingEditFaqId(null);
     }
   }
 
@@ -1162,30 +1199,99 @@ export default function SettingsPage() {
                 <p className="mt-1 text-xs text-zinc-500">{t.faqBody}</p>
 
                 <ul className="mt-3 flex flex-col gap-2">
-                  {business.faqs.map((faq) => (
-                    <li
-                      key={faq.id}
-                      className={`flex items-start justify-between gap-3 rounded-lg bg-zinc-50 px-3 py-2 text-sm ${listRowHoverClass}`}
-                    >
-                      <div>
-                        <p className="font-medium text-zinc-800">{faq.question}</p>
-                        <p className="mt-0.5 text-zinc-500">{faq.answer}</p>
-                        {(faq.questionAr || faq.answerAr) && (
-                          <div dir="rtl" className="mt-1 border-t border-zinc-200 pt-1">
-                            {faq.questionAr && <p className="font-medium text-zinc-800">{faq.questionAr}</p>}
-                            {faq.answerAr && <p className="mt-0.5 text-zinc-500">{faq.answerAr}</p>}
+                  {business.faqs.map((faq) =>
+                    editingFaqId === faq.id ? (
+                      <li key={faq.id} className="rounded-lg bg-zinc-50 px-3 py-3">
+                        <form onSubmit={(e) => saveEditFaq(e, faq.id)} className="flex flex-col gap-3">
+                          <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                            {t.question}
+                            <input
+                              required
+                              value={editFaqQuestion}
+                              onChange={(e) => setEditFaqQuestion(e.target.value)}
+                              className={inputClass}
+                            />
+                          </label>
+                          <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                            {t.answer}
+                            <input
+                              required
+                              value={editFaqAnswer}
+                              onChange={(e) => setEditFaqAnswer(e.target.value)}
+                              className={inputClass}
+                            />
+                          </label>
+                          <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                            {t.questionAr}
+                            <input
+                              dir="rtl"
+                              placeholder={t.questionArPlaceholder}
+                              value={editFaqQuestionAr}
+                              onChange={(e) => setEditFaqQuestionAr(e.target.value)}
+                              className={inputClass}
+                            />
+                          </label>
+                          <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                            {t.answerAr}
+                            <input
+                              dir="rtl"
+                              placeholder={t.answerArPlaceholder}
+                              value={editFaqAnswerAr}
+                              onChange={(e) => setEditFaqAnswerAr(e.target.value)}
+                              className={inputClass}
+                            />
+                          </label>
+                          <div className="flex gap-2">
+                            <button
+                              type="submit"
+                              disabled={savingEditFaqId === faq.id}
+                              className={primaryButtonClass}
+                            >
+                              {savingEditFaqId === faq.id ? t.saving : t.save}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingFaqId(null)}
+                              className="rounded-full px-3 py-2 text-sm font-medium text-zinc-600 ring-1 ring-zinc-300 hover:bg-zinc-100"
+                            >
+                              {t.cancelEdit}
+                            </button>
                           </div>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => removeFaq(faq.id)}
-                        disabled={removingFaqId === faq.id}
-                        className="shrink-0 rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                        </form>
+                      </li>
+                    ) : (
+                      <li
+                        key={faq.id}
+                        className={`flex items-start justify-between gap-3 rounded-lg bg-zinc-50 px-3 py-2 text-sm ${listRowHoverClass}`}
                       >
-                        {removingFaqId === faq.id ? t.removing : t.remove}
-                      </button>
-                    </li>
-                  ))}
+                        <div>
+                          <p className="font-medium text-zinc-800">{faq.question}</p>
+                          <p className="mt-0.5 text-zinc-500">{faq.answer}</p>
+                          {(faq.questionAr || faq.answerAr) && (
+                            <div dir="rtl" className="mt-1 border-t border-zinc-200 pt-1">
+                              {faq.questionAr && <p className="font-medium text-zinc-800">{faq.questionAr}</p>}
+                              {faq.answerAr && <p className="mt-0.5 text-zinc-500">{faq.answerAr}</p>}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex shrink-0 gap-2">
+                          <button
+                            onClick={() => startEditFaq(faq)}
+                            className="rounded-full px-3 py-1 text-xs font-medium text-zinc-600 ring-1 ring-zinc-300 transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-100 active:scale-95"
+                          >
+                            {t.edit}
+                          </button>
+                          <button
+                            onClick={() => removeFaq(faq.id)}
+                            disabled={removingFaqId === faq.id}
+                            className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                          >
+                            {removingFaqId === faq.id ? t.removing : t.remove}
+                          </button>
+                        </div>
+                      </li>
+                    )
+                  )}
                   {business.faqs.length === 0 && <li className={emptyStateClass}>{t.noFaqsYet}</li>}
                 </ul>
 
