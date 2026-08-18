@@ -69,7 +69,14 @@ export default function BookingPage() {
   const dateLocale = t.localeTag;
 
   const [businessName, setBusinessName] = useState<string>("");
+  const [businessNameAr, setBusinessNameAr] = useState<string | null>(null);
   const [about, setAbout] = useState<string | null>(null);
+  const [aboutAr, setAboutAr] = useState<string | null>(null);
+  // Arabic versions are optional — fall back to the default (English)
+  // value when the owner hasn't filled one in yet, rather than showing
+  // nothing.
+  const displayName = (lang === "ar" && businessNameAr) || businessName;
+  const displayAbout = (lang === "ar" && aboutAr) || about;
   const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [accentColor, setAccentColor] = useState<string | null>(null);
@@ -157,7 +164,9 @@ export default function BookingPage() {
       .then((data) => {
         if (!data) return;
         setBusinessName(data.business.name);
+        setBusinessNameAr(data.business.nameAr ?? null);
         setAbout(data.business.about ?? null);
+        setAboutAr(data.business.aboutAr ?? null);
         setHeroImageUrl(data.business.heroImageUrl ?? null);
         setLogoUrl(data.business.logoUrl ?? null);
         setAccentColor(data.business.accentColor ?? null);
@@ -378,10 +387,10 @@ export default function BookingPage() {
               <img src={logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-lg object-cover lg:h-9 lg:w-9" />
             ) : (
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-xs font-bold text-zinc-900 lg:h-9 lg:w-9">
-                {initials(businessName) || "•"}
+                {initials(displayName) || "•"}
               </span>
             )}
-            <span className="truncate">{businessName || t.loading}</span>
+            <span className="truncate">{displayName || t.loading}</span>
           </span>
           <nav dir="ltr" className="hidden items-center gap-6 text-sm font-medium text-zinc-600 lg:text-base sm:flex">
             <a href="#services" className="hover:text-zinc-900">
@@ -445,8 +454,8 @@ export default function BookingPage() {
             >
               <div className={cardAccentBarClass} />
               <div className="p-6 lg:p-10">
-                <h1 className="text-3xl font-bold text-zinc-900 sm:text-4xl lg:text-5xl">{businessName || t.loading}</h1>
-                <p className="mt-3 text-sm text-zinc-600 sm:text-base lg:text-lg">{about || t.heroFallbackSubtitle}</p>
+                <h1 className="text-3xl font-bold text-zinc-900 sm:text-4xl lg:text-5xl">{displayName || t.loading}</h1>
+                <p className="mt-3 text-sm text-zinc-600 sm:text-base lg:text-lg">{displayAbout || t.heroFallbackSubtitle}</p>
                 <div className="mt-5 flex flex-wrap gap-3 lg:mt-6">
                   <button
                     type="button"
@@ -1045,10 +1054,10 @@ export default function BookingPage() {
                 <img src={logoUrl} alt="" className="h-10 w-10 shrink-0 rounded-xl object-cover" />
               ) : (
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-sm font-bold text-white">
-                  {initials(businessName) || "•"}
+                  {initials(displayName) || "•"}
                 </span>
               )}
-              <span className="text-lg font-semibold text-white">{businessName}</span>
+              <span className="text-lg font-semibold text-white">{displayName}</span>
             </div>
             <nav dir="ltr" className="flex flex-wrap gap-6 text-sm">
               <button type="button" onClick={() => setSlotsPopupOpen(true)} className="hover:text-white">
@@ -1081,7 +1090,7 @@ export default function BookingPage() {
 
           <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5 text-xs text-zinc-400">
             <span>
-              © {new Date().getFullYear()} {businessName}
+              © {new Date().getFullYear()} {displayName}
             </span>
             <span>
               {t.poweredBy}{" "}

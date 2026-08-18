@@ -24,14 +24,28 @@ export async function PATCH(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   const body = await request.json();
-  const { name, startHour, endHour, offDays, about, accentColor, ownerPhone, allowEmployeeChoice, breakStartTime, breakEndTime } =
-    body ?? {};
+  const {
+    name,
+    nameAr,
+    startHour,
+    endHour,
+    offDays,
+    about,
+    aboutAr,
+    accentColor,
+    ownerPhone,
+    allowEmployeeChoice,
+    breakStartTime,
+    breakEndTime,
+  } = body ?? {};
   const updates: {
     name?: string;
+    nameAr?: string | null;
     startHour?: number;
     endHour?: number;
     offDays?: number[];
     about?: string;
+    aboutAr?: string | null;
     accentColor?: string;
     ownerPhone?: string;
     allowEmployeeChoice?: boolean;
@@ -39,10 +53,12 @@ export async function PATCH(request: NextRequest) {
     breakEndTime?: string | null;
   } = {};
   if (typeof name === "string") updates.name = name;
+  if (nameAr === null || typeof nameAr === "string") updates.nameAr = nameAr === "" ? null : nameAr;
   if (typeof startHour === "number") updates.startHour = startHour;
   if (typeof endHour === "number") updates.endHour = endHour;
   if (Array.isArray(offDays)) updates.offDays = offDays;
   if (typeof about === "string") updates.about = about;
+  if (aboutAr === null || typeof aboutAr === "string") updates.aboutAr = aboutAr === "" ? null : aboutAr;
   if (typeof accentColor === "string" && /^#[0-9a-fA-F]{6}$/.test(accentColor)) updates.accentColor = accentColor;
   if (typeof ownerPhone === "string") updates.ownerPhone = ownerPhone;
   if (typeof allowEmployeeChoice === "boolean") updates.allowEmployeeChoice = allowEmployeeChoice;

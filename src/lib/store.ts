@@ -52,6 +52,7 @@ export type BusinessConfig = {
   id: string;
   slug: string;
   name: string;
+  nameAr: string | null; // shown instead of `name` on the public booking page when viewed in Arabic
   startHour: number; // 24h, e.g. 9 = 9:00
   endHour: number; // 24h, e.g. 18 = 18:00
   slotGranularityMinutes: number; // interval between candidate start times
@@ -62,6 +63,7 @@ export type BusinessConfig = {
   breakStartTime: string | null; // HH:MM, recurring daily break — null on both means no break
   breakEndTime: string | null;
   about: string | null;
+  aboutAr: string | null; // shown instead of `about` on the public booking page when viewed in Arabic
   heroImageUrl: string | null;
   logoUrl: string | null;
   accentColor: string | null;
@@ -192,6 +194,7 @@ function mapBusinessConfig(
     id: business.id as string,
     slug: business.slug as string,
     name: business.name as string,
+    nameAr: (business.name_ar as string | null) ?? null,
     startHour: business.start_hour as number,
     endHour: business.end_hour as number,
     slotGranularityMinutes: business.slot_granularity_minutes as number,
@@ -200,6 +203,7 @@ function mapBusinessConfig(
     breakStartTime: business.break_start_time ? trimTime(business.break_start_time as string) : null,
     breakEndTime: business.break_end_time ? trimTime(business.break_end_time as string) : null,
     about: (business.about as string | null) ?? null,
+    aboutAr: (business.about_ar as string | null) ?? null,
     heroImageUrl: (business.hero_image_url as string | null) ?? null,
     logoUrl: (business.logo_url as string | null) ?? null,
     accentColor: (business.accent_color as string | null) ?? null,
@@ -449,10 +453,12 @@ export async function updateBusinessConfig(
     Pick<
       BusinessConfig,
       | "name"
+      | "nameAr"
       | "startHour"
       | "endHour"
       | "offDays"
       | "about"
+      | "aboutAr"
       | "accentColor"
       | "ownerPhone"
       | "allowEmployeeChoice"
@@ -463,10 +469,12 @@ export async function updateBusinessConfig(
 ): Promise<BusinessConfig | undefined> {
   const dbUpdates: Record<string, unknown> = {};
   if (updates.name !== undefined) dbUpdates.name = updates.name;
+  if (updates.nameAr !== undefined) dbUpdates.name_ar = updates.nameAr;
   if (updates.startHour !== undefined) dbUpdates.start_hour = updates.startHour;
   if (updates.endHour !== undefined) dbUpdates.end_hour = updates.endHour;
   if (updates.offDays !== undefined) dbUpdates.off_days = updates.offDays;
   if (updates.about !== undefined) dbUpdates.about = updates.about;
+  if (updates.aboutAr !== undefined) dbUpdates.about_ar = updates.aboutAr;
   if (updates.accentColor !== undefined) dbUpdates.accent_color = updates.accentColor;
   if (updates.ownerPhone !== undefined) dbUpdates.owner_phone = updates.ownerPhone;
   if (updates.allowEmployeeChoice !== undefined) dbUpdates.allow_employee_choice = updates.allowEmployeeChoice;

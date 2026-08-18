@@ -37,6 +37,7 @@ type Faq = { id: string; question: string; answer: string };
 type ScheduleException = { id: string; date: string; startTime: string | null; endTime: string | null; note: string | null };
 type Business = {
   name: string;
+  nameAr: string | null;
   slug: string;
   startHour: number;
   endHour: number;
@@ -44,6 +45,7 @@ type Business = {
   employees: Employee[];
   offDays: number[];
   about: string | null;
+  aboutAr: string | null;
   heroImageUrl: string | null;
   logoUrl: string | null;
   accentColor: string | null;
@@ -72,6 +74,7 @@ export default function SettingsPage() {
 
   const [business, setBusiness] = useState<Business | null>(null);
   const [name, setName] = useState("");
+  const [nameAr, setNameAr] = useState("");
   const [ownerPhone, setOwnerPhone] = useState("");
   const [savingBasicInfo, setSavingBasicInfo] = useState(false);
   const [basicInfoSaved, setBasicInfoSaved] = useState(false);
@@ -106,6 +109,7 @@ export default function SettingsPage() {
   const [savingEmployeeChoice, setSavingEmployeeChoice] = useState(false);
 
   const [about, setAbout] = useState("");
+  const [aboutAr, setAboutAr] = useState("");
   const [savingAbout, setSavingAbout] = useState(false);
   const [aboutSaved, setAboutSaved] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -144,6 +148,7 @@ export default function SettingsPage() {
       .then((data) => {
         setBusiness(data.business);
         setName(data.business.name);
+        setNameAr(data.business.nameAr ?? "");
         setStartHour(data.business.startHour);
         setEndHour(data.business.endHour);
         setOffDays(data.business.offDays);
@@ -151,6 +156,7 @@ export default function SettingsPage() {
         setBreakStart(data.business.breakStartTime ?? "13:00");
         setBreakEnd(data.business.breakEndTime ?? "14:00");
         setAbout(data.business.about ?? "");
+        setAboutAr(data.business.aboutAr ?? "");
         setAccentColor(data.business.accentColor ?? DEFAULT_ACCENT_COLOR);
         setOwnerPhone(data.business.ownerPhone ?? "");
       });
@@ -175,7 +181,7 @@ export default function SettingsPage() {
       await fetch("/api/business", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, ownerPhone }),
+        body: JSON.stringify({ name, nameAr, ownerPhone }),
       });
       loadBusiness();
       setBasicInfoSaved(true);
@@ -321,7 +327,7 @@ export default function SettingsPage() {
       await fetch("/api/business", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ about, accentColor }),
+        body: JSON.stringify({ about, aboutAr, accentColor }),
       });
       loadBusiness();
       setAboutSaved(true);
@@ -543,6 +549,20 @@ export default function SettingsPage() {
                     }}
                     className={inputClass}
                   />
+                </label>
+                <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                  {t.businessNameAr}
+                  <input
+                    dir="rtl"
+                    placeholder={t.businessNameArPlaceholder}
+                    value={nameAr}
+                    onChange={(e) => {
+                      setNameAr(e.target.value);
+                      setBasicInfoSaved(false);
+                    }}
+                    className={inputClass}
+                  />
+                  <span className="text-xs text-zinc-400">{t.businessNameArHint}</span>
                 </label>
                 <label className="flex flex-col gap-1 text-sm text-zinc-600">
                   {t.ownerPhoneLabel}
@@ -959,6 +979,22 @@ export default function SettingsPage() {
                     }}
                     className={inputClass}
                   />
+                </label>
+
+                <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                  {t.aboutArLabel}
+                  <textarea
+                    dir="rtl"
+                    rows={3}
+                    placeholder={t.aboutArPlaceholder}
+                    value={aboutAr}
+                    onChange={(e) => {
+                      setAboutAr(e.target.value);
+                      setAboutSaved(false);
+                    }}
+                    className={inputClass}
+                  />
+                  <span className="text-xs text-zinc-400">{t.aboutArHint}</span>
                 </label>
                 <div className="flex items-center gap-3">
                   <button type="submit" disabled={savingAbout} className={primaryButtonClass}>
