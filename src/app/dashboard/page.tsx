@@ -777,13 +777,22 @@ export default function DashboardPage() {
                               )}
                               {b.note && <span className="ms-2 italic text-zinc-500">&ldquo;{b.note}&rdquo;</span>}
                             </span>
-                            <button
-                              onClick={() => handleCancel(b.id)}
-                              disabled={busyId === b.id}
-                              className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
-                            >
-                              {busyId === b.id ? t.busy : t.cancel}
-                            </button>
+                            <div className="flex shrink-0 gap-2">
+                              <button
+                                onClick={() => setReschedulingBooking(b)}
+                                disabled={busyId === b.id}
+                                className="rounded-full px-3 py-1 text-xs font-medium text-zinc-600 transition-all duration-150 hover:scale-[1.05] hover:bg-zinc-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                              >
+                                {t.reschedule}
+                              </button>
+                              <button
+                                onClick={() => handleCancel(b.id)}
+                                disabled={busyId === b.id}
+                                className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                              >
+                                {busyId === b.id ? t.busy : t.cancel}
+                              </button>
+                            </div>
                           </li>
                         ))}
                       </ul>
