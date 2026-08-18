@@ -5,7 +5,7 @@ import OwnerNav from "@/components/OwnerNav";
 import Spinner from "@/components/Spinner";
 import { cardClass, cardAccentBarClass, cardTopBorderClass, pulsingDotClass } from "@/lib/ui";
 import { IconShieldCheck, IconCreditCard, IconWhish } from "@/components/icons";
-import { PLANS, PlanId, WHISH_PAY_LINKS } from "@/lib/plans";
+import { PLANS, PlanId } from "@/lib/plans";
 import { useOwnerLang } from "@/lib/useOwnerLang";
 import { billingCopy } from "@/lib/billingPageTranslations";
 
@@ -32,6 +32,7 @@ export default function BillingPage() {
   const [billing, setBilling] = useState<BillingInfo | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("monthly");
   const [reported, setReported] = useState(false);
+  const [reporting, setReporting] = useState(false);
 
   function load() {
     fetch("/api/dashboard/billing")
@@ -44,13 +45,18 @@ export default function BillingPage() {
   }, []);
 
   async function reportPayment() {
-    await fetch("/api/dashboard/billing", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan: selectedPlan }),
-    });
-    setReported(true);
-    load();
+    setReporting(true);
+    try {
+      await fetch("/api/dashboard/billing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: selectedPlan }),
+      });
+      setReported(true);
+      load();
+    } finally {
+      setReporting(false);
+    }
   }
 
   return (
@@ -161,16 +167,15 @@ export default function BillingPage() {
                 <p className="mt-2 text-sm text-zinc-600">
                   {t.sendingFor(t.planNames[selectedPlan] ?? PLANS[selectedPlan].label, PLANS[selectedPlan].priceUsd)}
                 </p>
-                <a
-                  href={WHISH_PAY_LINKS[selectedPlan]}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => reportPayment()}
-                  className="mt-3 flex w-fit items-center gap-2 rounded-full bg-[#ED1C4D] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#d5183f]"
+                <button
+                  type="button"
+                  disabled={reporting}
+                  onClick={reportPayment}
+                  className="mt-3 flex w-fit items-center gap-2 rounded-full bg-[#ED1C4D] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#d5183f] disabled:opacity-60"
                 >
                   <IconWhish className="h-5 w-5" />
-                  {t.payWithWhish(PLANS[selectedPlan].priceUsd)}
-                </a>
+                  {reporting ? t.reporting : t.payWithWhish(PLANS[selectedPlan].priceUsd)}
+                </button>
                 {reported && <p className="mt-2 text-sm text-zinc-500">{t.thanksReported}</p>}
               </div>
             </div>
