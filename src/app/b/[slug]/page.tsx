@@ -24,7 +24,7 @@ function displayServiceName(s: Service, lang: Lang): string {
 }
 type Employee = { id: string; name: string };
 type GalleryPhoto = { id: string; url: string };
-type Faq = { id: string; question: string; answer: string };
+type Faq = { id: string; question: string; questionAr: string | null; answer: string; answerAr: string | null };
 type FoundBooking = {
   id: string;
   date: string;
@@ -1000,12 +1000,16 @@ export default function BookingPage() {
                 {faqs.map((faq) => (
                   <details key={faq.id} className="group rounded-2xl bg-white px-5 py-4 shadow-sm ring-1 ring-zinc-100 lg:px-6 lg:py-5">
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-3 marker:content-none">
-                      <span className="text-sm font-semibold text-zinc-900 lg:text-base">{faq.question}</span>
+                      <span className="text-sm font-semibold text-zinc-900 lg:text-base">
+                        {(lang === "ar" && faq.questionAr) || faq.question}
+                      </span>
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-900/10 text-zinc-900 transition-transform duration-200 group-open:rotate-180">
                         <IconChevronDown className="h-3.5 w-3.5" />
                       </span>
                     </summary>
-                    <p className="mt-3 text-sm text-zinc-600 lg:text-base">{faq.answer}</p>
+                    <p className="mt-3 text-sm text-zinc-600 lg:text-base">
+                      {(lang === "ar" && faq.answerAr) || faq.answer}
+                    </p>
                   </details>
                 ))}
               </div>

@@ -33,7 +33,7 @@ const ROOT_DOMAIN = "maw3edapp.com";
 type Service = { id: string; name: string; nameAr: string | null; durationMinutes: number; priceUsd: number | null };
 type Employee = { id: string; name: string };
 type GalleryPhoto = { id: string; url: string };
-type Faq = { id: string; question: string; answer: string };
+type Faq = { id: string; question: string; questionAr: string | null; answer: string; answerAr: string | null };
 type ScheduleException = { id: string; date: string; startTime: string | null; endTime: string | null; note: string | null };
 type Business = {
   name: string;
@@ -132,6 +132,8 @@ export default function SettingsPage() {
 
   const [newFaqQuestion, setNewFaqQuestion] = useState("");
   const [newFaqAnswer, setNewFaqAnswer] = useState("");
+  const [newFaqQuestionAr, setNewFaqQuestionAr] = useState("");
+  const [newFaqAnswerAr, setNewFaqAnswerAr] = useState("");
   const [addingFaq, setAddingFaq] = useState(false);
   const [removingFaqId, setRemovingFaqId] = useState<string | null>(null);
 
@@ -442,10 +444,17 @@ export default function SettingsPage() {
       await fetch("/api/business/faqs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: newFaqQuestion, answer: newFaqAnswer }),
+        body: JSON.stringify({
+          question: newFaqQuestion,
+          answer: newFaqAnswer,
+          questionAr: newFaqQuestionAr,
+          answerAr: newFaqAnswerAr,
+        }),
       });
       setNewFaqQuestion("");
       setNewFaqAnswer("");
+      setNewFaqQuestionAr("");
+      setNewFaqAnswerAr("");
       loadBusiness();
     } finally {
       setAddingFaq(false);
@@ -1161,6 +1170,12 @@ export default function SettingsPage() {
                       <div>
                         <p className="font-medium text-zinc-800">{faq.question}</p>
                         <p className="mt-0.5 text-zinc-500">{faq.answer}</p>
+                        {(faq.questionAr || faq.answerAr) && (
+                          <div dir="rtl" className="mt-1 border-t border-zinc-200 pt-1">
+                            {faq.questionAr && <p className="font-medium text-zinc-800">{faq.questionAr}</p>}
+                            {faq.answerAr && <p className="mt-0.5 text-zinc-500">{faq.answerAr}</p>}
+                          </div>
+                        )}
                       </div>
                       <button
                         onClick={() => removeFaq(faq.id)}
@@ -1190,6 +1205,26 @@ export default function SettingsPage() {
                       placeholder={t.answerPlaceholder}
                       value={newFaqAnswer}
                       onChange={(e) => setNewFaqAnswer(e.target.value)}
+                      className={inputClass}
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                    {t.questionAr}
+                    <input
+                      dir="rtl"
+                      placeholder={t.questionArPlaceholder}
+                      value={newFaqQuestionAr}
+                      onChange={(e) => setNewFaqQuestionAr(e.target.value)}
+                      className={inputClass}
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                    {t.answerAr}
+                    <input
+                      dir="rtl"
+                      placeholder={t.answerArPlaceholder}
+                      value={newFaqAnswerAr}
+                      onChange={(e) => setNewFaqAnswerAr(e.target.value)}
                       className={inputClass}
                     />
                   </label>

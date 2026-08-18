@@ -33,7 +33,9 @@ export type GalleryPhoto = {
 export type Faq = {
   id: string;
   question: string;
+  questionAr: string | null; // shown instead of `question` on the public booking page when viewed in Arabic
   answer: string;
+  answerAr: string | null; // shown instead of `answer` on the public booking page when viewed in Arabic
 };
 
 // A one-off exception on top of the weekly off-days: startTime/endTime both
@@ -247,7 +249,13 @@ async function businessContentFor(businessId: string) {
     })),
     employees: (employees ?? []).map((e) => ({ id: e.id, name: e.name })),
     gallery: (gallery ?? []).map((g) => ({ id: g.id, url: g.url })),
-    faqs: (faqs ?? []).map((f) => ({ id: f.id, question: f.question, answer: f.answer })),
+    faqs: (faqs ?? []).map((f) => ({
+      id: f.id,
+      question: f.question,
+      questionAr: f.question_ar ?? null,
+      answer: f.answer,
+      answerAr: f.answer_ar ?? null,
+    })),
   };
 }
 
@@ -565,14 +573,32 @@ export async function removeGalleryPhoto(photoId: string, businessId: string): P
   return { success: true };
 }
 
-export async function addFaq(businessId: string, question: string, answer: string): Promise<Faq> {
+export async function addFaq(
+  businessId: string,
+  question: string,
+  answer: string,
+  questionAr?: string | null,
+  answerAr?: string | null
+): Promise<Faq> {
   const { data, error } = await supabase
     .from("faqs")
-    .insert({ business_id: businessId, question, answer })
+    .insert({
+      business_id: businessId,
+      question,
+      question_ar: questionAr ?? null,
+      answer,
+      answer_ar: answerAr ?? null,
+    })
     .select()
     .single();
   if (error) throw new Error(error.message);
-  return { id: data.id, question: data.question, answer: data.answer };
+  return {
+    id: data.id,
+    question: data.question,
+    questionAr: data.question_ar ?? null,
+    answer: data.answer,
+    answerAr: data.answer_ar ?? null,
+  };
 }
 
 export async function removeFaq(faqId: string, businessId: string): Promise<{ success: boolean }> {
