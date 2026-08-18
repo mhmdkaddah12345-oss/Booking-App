@@ -66,9 +66,13 @@ export default function CustomersPage() {
   const dir = lang === "ar" ? "rtl" : "ltr";
 
   const [customers, setCustomers] = useState<CustomerSummary[] | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [serviceFilter, setServiceFilter] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [minSpent, setMinSpent] = useState("");
+  const [maxSpent, setMaxSpent] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"" | "pending" | "booked" | "cancelled">("");
   const [historyCustomer, setHistoryCustomer] = useState<CustomerSummary | null>(null);
 
   useEffect(() => {
@@ -84,20 +88,43 @@ export default function CustomersPage() {
 
   const filteredCustomers = useMemo(() => {
     if (!customers) return [];
+    const query = searchQuery.trim().toLowerCase();
+    const queryDigits = searchQuery.replace(/\D/g, "");
+    const min = minSpent.trim() === "" ? null : Number(minSpent);
+    const max = maxSpent.trim() === "" ? null : Number(maxSpent);
     return customers.filter((c) => {
+      if (query) {
+        const nameMatch = c.name.toLowerCase().includes(query);
+        const phoneMatch = queryDigits !== "" && c.phone.replace(/\D/g, "").includes(queryDigits);
+        if (!nameMatch && !phoneMatch) return false;
+      }
       if (serviceFilter && !c.serviceNames.includes(serviceFilter)) return false;
       if (fromDate && c.lastVisitDate < fromDate) return false;
       if (toDate && c.lastVisitDate > toDate) return false;
+      if (min !== null && (c.totalSpentUsd === null || c.totalSpentUsd < min)) return false;
+      if (max !== null && (c.totalSpentUsd === null || c.totalSpentUsd > max)) return false;
+      if (statusFilter && !c.history.some((h) => h.status === statusFilter)) return false;
       return true;
     });
-  }, [customers, serviceFilter, fromDate, toDate]);
+  }, [customers, searchQuery, serviceFilter, fromDate, toDate, minSpent, maxSpent, statusFilter]);
 
-  const hasActiveFilters = serviceFilter !== "" || fromDate !== "" || toDate !== "";
+  const hasActiveFilters =
+    searchQuery !== "" ||
+    serviceFilter !== "" ||
+    fromDate !== "" ||
+    toDate !== "" ||
+    minSpent !== "" ||
+    maxSpent !== "" ||
+    statusFilter !== "";
 
   function clearFilters() {
+    setSearchQuery("");
     setServiceFilter("");
     setFromDate("");
     setToDate("");
+    setMinSpent("");
+    setMaxSpent("");
+    setStatusFilter("");
   }
 
   return (
@@ -127,6 +154,16 @@ export default function CustomersPage() {
             {customers && customers.length > 0 && (
               <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-zinc-100 pt-4">
                 <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                  {t.searchLabel}
+                  <input
+                    type="text"
+                    placeholder={t.searchPlaceholder}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className={inputClass}
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm text-zinc-600">
                   {t.filterServiceLabel}
                   <select value={serviceFilter} onChange={(e) => setServiceFilter(e.target.value)} className={inputClass}>
                     <option value="">{t.filterServiceAll}</option>
@@ -135,6 +172,19 @@ export default function CustomersPage() {
                         {name}
                       </option>
                     ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                  {t.filterStatusLabel}
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                    className={inputClass}
+                  >
+                    <option value="">{t.filterStatusAll}</option>
+                    <option value="booked">{t.statusBooked}</option>
+                    <option value="pending">{t.statusPending}</option>
+                    <option value="cancelled">{t.statusCancelled}</option>
                   </select>
                 </label>
                 <label className="flex flex-col gap-1 text-sm text-zinc-600">
@@ -149,6 +199,28 @@ export default function CustomersPage() {
                 <label className="flex flex-col gap-1 text-sm text-zinc-600">
                   {t.filterToLabel}
                   <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className={inputClass} />
+                </label>
+                <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                  {t.filterMinSpentLabel}
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="0"
+                    value={minSpent}
+                    onChange={(e) => setMinSpent(e.target.value)}
+                    className={`w-24 ${inputClass}`}
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                  {t.filterMaxSpentLabel}
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="—"
+                    value={maxSpent}
+                    onChange={(e) => setMaxSpent(e.target.value)}
+                    className={`w-24 ${inputClass}`}
+                  />
                 </label>
                 {hasActiveFilters && (
                   <button type="button" onClick={clearFilters} className={ghostButtonClass}>
