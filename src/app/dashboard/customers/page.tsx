@@ -49,11 +49,47 @@ function downloadCsv(
     ].join(",")
   );
   const csv = [header, ...rows].join("\r\n");
+  triggerCsvDownload(csv, "customers.csv");
+}
+
+function downloadHistoryCsv(
+  customer: CustomerSummary,
+  lang: "en" | "ar",
+  t: {
+    historyColDate: string;
+    historyColTime: string;
+    historyColService: string;
+    historyColDuration: string;
+    historyColStatus: string;
+    statusBooked: string;
+    statusPending: string;
+    statusCancelled: string;
+    minutesShort: (m: number) => string;
+  }
+) {
+  const header = [t.historyColDate, t.historyColTime, t.historyColService, t.historyColDuration, t.historyColStatus]
+    .map(csvField)
+    .join(",");
+  const rows = customer.history.map((h) =>
+    [
+      csvField(formatDisplayDate(h.date, lang)),
+      csvField(h.time),
+      csvField(h.serviceName),
+      csvField(t.minutesShort(h.durationMinutes)),
+      csvField(h.status === "booked" ? t.statusBooked : h.status === "pending" ? t.statusPending : t.statusCancelled),
+    ].join(",")
+  );
+  const csv = [header, ...rows].join("\r\n");
+  const safeName = customer.name.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "") || "customer";
+  triggerCsvDownload(csv, `${safeName}-history.csv`);
+}
+
+function triggerCsvDownload(csv: string, filename: string) {
   const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "customers.csv";
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -289,12 +325,21 @@ export default function CustomersPage() {
             <div className={cardAccentBarClass} />
             <div className="p-5">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-zinc-800">{t.historyModalTitle(historyCustomer.name)}</p>
+                <p className="min-w-0 flex-1 text-sm font-semibold text-zinc-800">
+                  {t.historyModalTitle(historyCustomer.name)}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => downloadHistoryCsv(historyCustomer, lang, t)}
+                  className={`shrink-0 ${ghostButtonClass}`}
+                >
+                  {t.downloadCsv}
+                </button>
                 <button
                   type="button"
                   onClick={() => setHistoryCustomer(null)}
                   aria-label={t.close}
-                  className="rounded-full px-2 py-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                  className="shrink-0 rounded-full px-2 py-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
                 >
                   ✕
                 </button>
