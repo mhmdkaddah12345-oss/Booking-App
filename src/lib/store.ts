@@ -1397,15 +1397,23 @@ export type ReportsSummary = {
  * (bookings don't snapshot price at booking time), same approach as
  * getCustomerSummaries.
  */
-export async function getReportsSummary(businessId: string, period: ReportsPeriod): Promise<ReportsSummary> {
+export async function getReportsSummary(
+  businessId: string,
+  period: ReportsPeriod,
+  month?: string // optional "YYYY-MM" override — defaults to the current month when period is "month"
+): Promise<ReportsSummary> {
   let monthStart: string | undefined;
+  let monthEnd: string | undefined; // exclusive
   if (period === "month") {
-    const { dateStr } = beirutNow();
-    monthStart = `${dateStr.slice(0, 7)}-01`;
+    const ym = month ?? beirutNow().dateStr.slice(0, 7);
+    monthStart = `${ym}-01`;
+    const [y, m] = ym.split("-").map(Number);
+    monthEnd = m === 12 ? `${y + 1}-01-01` : `${y}-${pad(m + 1)}-01`;
   }
   const bookingsRaw = await fetchAllRows((from, to) => {
     let query = supabase.from("bookings").select("*").eq("business_id", businessId).order("id");
     if (monthStart) query = query.gte("date", monthStart);
+    if (monthEnd) query = query.lt("date", monthEnd);
     return query.range(from, to);
   });
   const bookings = bookingsRaw.map(mapBooking);

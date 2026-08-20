@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import OwnerNav from "@/components/OwnerNav";
 import Spinner from "@/components/Spinner";
-import { cardClass, cardAccentBarClass, statTileClass, emptyStateClass } from "@/lib/ui";
+import { cardClass, cardAccentBarClass, statTileClass, emptyStateClass, inputClass } from "@/lib/ui";
 import { IconTrendingUp } from "@/components/icons";
 import { useOwnerLang } from "@/lib/useOwnerLang";
 import { reportsCopy } from "@/lib/reportsPageTranslations";
@@ -16,7 +16,12 @@ type ReportsSummary = {
   busiestWeekdays: { dayOfWeek: number; count: number }[];
 };
 
-type Period = "month" | "all";
+type Period = "month" | "all" | "custom";
+
+function currentMonthStr() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
@@ -33,14 +38,18 @@ export default function ReportsPage() {
   const dir = lang === "ar" ? "rtl" : "ltr";
 
   const [period, setPeriod] = useState<Period>("month");
+  const [customMonth, setCustomMonth] = useState("");
   const [summary, setSummary] = useState<ReportsSummary | null>(null);
 
   useEffect(() => {
+    if (period === "custom" && !customMonth) return;
     setSummary(null);
-    fetch(`/api/dashboard/reports?period=${period}`)
+    const params = new URLSearchParams({ period: period === "all" ? "all" : "month" });
+    if (period === "custom") params.set("month", customMonth);
+    fetch(`/api/dashboard/reports?${params.toString()}`)
       .then((r) => r.json())
       .then((data) => setSummary(data.summary));
-  }, [period]);
+  }, [period, customMonth]);
 
   return (
     <div dir={dir} className={`min-h-screen bg-zinc-50 px-4 py-8 ${lang === "ar" ? "lang-ar" : ""}`}>
@@ -59,19 +68,34 @@ export default function ReportsPage() {
                   {t.title}
                 </h2>
               </div>
-              <div className="flex items-center gap-1 rounded-full bg-zinc-100 p-1">
-                {(["month", "all"] as const).map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setPeriod(p)}
-                    className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                      period === p ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-200"
-                    }`}
-                  >
-                    {p === "month" ? t.periodMonth : t.periodAll}
-                  </button>
-                ))}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1 rounded-full bg-zinc-100 p-1">
+                  {(["month", "all"] as const).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPeriod(p)}
+                      className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                        period === p ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-200"
+                      }`}
+                    >
+                      {p === "month" ? t.periodMonth : t.periodAll}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="month"
+                  aria-label={t.pickMonth}
+                  max={currentMonthStr()}
+                  value={customMonth}
+                  onChange={(e) => {
+                    setCustomMonth(e.target.value);
+                    setPeriod("custom");
+                  }}
+                  className={`${inputClass} w-auto py-1.5 text-xs ${
+                    period === "custom" ? "ring-2 ring-zinc-900" : ""
+                  }`}
+                />
               </div>
             </div>
 
