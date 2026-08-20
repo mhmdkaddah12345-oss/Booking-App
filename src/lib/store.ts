@@ -1020,9 +1020,14 @@ async function resolveCombinedService(
   const services = await Promise.all(serviceIds.map((id) => getServiceForBusiness(id, businessId)));
   if (services.some((s) => !s)) return undefined;
   const resolved = services as Service[];
+  // Sorted so the combined name is the same regardless of the order the
+  // customer picked services in — otherwise "Haircut + Coloring" and
+  // "Coloring + Haircut" would be stored as distinct strings and split
+  // apart in reports that group bookings by service_name.
+  const sorted = [...resolved].sort((a, b) => a.name.localeCompare(b.name));
   return {
     id: resolved[0].id,
-    name: resolved.map((s) => s.name).join(" + "),
+    name: sorted.map((s) => s.name).join(" + "),
     durationMinutes: resolved.reduce((sum, s) => sum + s.durationMinutes, 0),
   };
 }
@@ -1428,7 +1433,12 @@ export async function getReportsSummary(businessId: string, period: ReportsPerio
     const price = priceById.get(b.serviceId);
     if (typeof price === "number") {
       totalRevenueUsd += price;
-      revenueByServiceName.set(b.serviceName, (revenueByServiceName.get(b.serviceName) ?? 0) + price);
+      // Normalize combined-service names (e.g. "Coloring + Haircut" and
+      // "Haircut + Coloring") to the same bucket regardless of the order
+      // the customer picked them in — older bookings can still have
+      // either order stored on the row.
+      const normalizedName = b.serviceName.split(" + ").sort((a, c) => a.localeCompare(c)).join(" + ");
+      revenueByServiceName.set(normalizedName, (revenueByServiceName.get(normalizedName) ?? 0) + price);
     }
   }
 
