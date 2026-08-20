@@ -23,6 +23,7 @@ export const dashboardCopy = {
     statCancelled: "Cancelled",
     statWaitlist: "Waitlist",
     pendingRequests: (n: number) => `Pending Requests (${n})`,
+    missedRequests: (n: number) => `Missed Requests (${n})`,
     missed: "Missed",
     accept: "Accept",
     decline: "Decline",
@@ -42,6 +43,8 @@ export const dashboardCopy = {
     tellThem: "Tell them",
     tellThemTitle:
       "A slot just opened up — no action has been taken yet, this only lets the customer know so they can reply.",
+    contact: "Contact",
+    contactTitle: "Message the customer on WhatsApp — no action is taken on the request itself.",
     confirmIntoSlot: "Confirm into slot",
     laterAppointments: "Later Appointments",
     nothingBeyond: "Nothing booked beyond the next 5 days.",
@@ -78,6 +81,8 @@ export const dashboardCopy = {
         `Hi ${b.customerName}, we're sorry but we can't accommodate your appointment on ${b.date} at ${b.time} for ${b.serviceName}. Apologies for the inconvenience — feel free to book another time that works for you.`,
       cancelled: (b: MessageInput) =>
         `Hi ${b.customerName}, we're sorry but your appointment on ${b.date} at ${b.time} for ${b.serviceName} has had to be cancelled. Apologies for the inconvenience — feel free to book another time that works for you.`,
+      missedFollowup: (b: MessageInput) =>
+        `Hi ${b.customerName}, we missed your booking request for ${b.date} at ${b.time} for ${b.serviceName} — are you still interested? Let us know a time that works and we'll get you booked in.`,
       reserved: (b: MessageInput) =>
         `Hi ${b.customerName}! We've booked you in on ${b.date} at ${b.time} for ${b.serviceName}. See you soon!`,
       rescheduled: (b: MessageInput) =>
@@ -109,6 +114,7 @@ export const dashboardCopy = {
     statCancelled: "الملغية",
     statWaitlist: "لائحة الانتظار",
     pendingRequests: (n: number) => `طلبات بانتظار الرد (${n})`,
+    missedRequests: (n: number) => `طلبات فات وقتها (${n})`,
     missed: "فات وقتو",
     accept: "قبول",
     decline: "رفض",
@@ -127,6 +133,8 @@ export const dashboardCopy = {
     notifiedFor: (time: string) => `— انبعتلو إشعار لساعة ${time}`,
     tellThem: "خبّرو",
     tellThemTitle: "فتح موعد هلق — لسا ما انعمل شي، هيدا بس يخبر الزبون منشان يرد.",
+    contact: "تواصل",
+    contactTitle: "راسل الزبون عالواتساب — ما رح ينعمل شي عالطلب.",
     confirmIntoSlot: "أكّد له الموعد",
     laterAppointments: "مواعيد لاحقة",
     nothingBeyond: "ما في شي محجوز بعد الـ5 أيام الجايي.",
@@ -163,6 +171,8 @@ export const dashboardCopy = {
         `أهلين ${b.customerName}، معذرة ما فينا نستقبلك بموعدك يوم ${b.date} الساعة ${b.time} لـ${b.serviceName}. آسفين عالإزعاج — احجز وقت تاني بيناسبك.`,
       cancelled: (b: MessageInput) =>
         `أهلين ${b.customerName}، معذرة موعدك يوم ${b.date} الساعة ${b.time} لـ${b.serviceName} انلغى. آسفين عالإزعاج — احجز وقت تاني بيناسبك.`,
+      missedFollowup: (b: MessageInput) =>
+        `أهلين ${b.customerName}، فاتنا طلب حجزك ليوم ${b.date} الساعة ${b.time} لـ${b.serviceName} — بعدك مهتم؟ خبرنا وقت بيناسبك ومنأكدلك الموعد.`,
       reserved: (b: MessageInput) =>
         `أهلين ${b.customerName}! حجزنالك يوم ${b.date} الساعة ${b.time} لـ${b.serviceName}. منشوفك قريباً!`,
       rescheduled: (b: MessageInput) =>

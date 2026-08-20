@@ -267,6 +267,21 @@ export default function DashboardPage() {
     }
   }
 
+  // For a missed request, cancelling doesn't fire the usual "sorry, can't
+  // accommodate" message — the owner might have already talked to the
+  // customer via the Contact button, or the appointment time is long past
+  // and a decline message wouldn't make sense. This just clears it off the
+  // board.
+  async function handleCancelMissed(id: string) {
+    setBusyId(id);
+    try {
+      await fetch(`/api/bookings/${id}/decline`, { method: "POST" });
+      loadDashboard();
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   async function handleConfirmWaitlist(id: string) {
     const entry = waitlist.find((w) => w.id === id);
     if (entry)
@@ -310,17 +325,21 @@ export default function DashboardPage() {
 
   const laterDates = Array.from(new Set(bookings.filter((b) => b.date > lastGridDate).map((b) => b.date))).sort();
 
-  const pendingBookings = bookings
-    .filter((b) => b.status === "pending")
-    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
-
   // A pending request nobody Accepted/Declined before its own appointment
-  // time arrived — flagged rather than auto-resolved, since silently
-  // declining would fire an unreviewed "sorry, can't accommodate" WhatsApp
-  // message to the customer.
+  // time arrived — kept actionable rather than auto-resolved, since
+  // silently declining would fire an unreviewed "sorry, can't accommodate"
+  // WhatsApp message to the customer. Split into its own section instead
+  // of staying mixed into Pending Requests, so that list only ever shows
+  // requests that still need a timely answer.
   function isMissed(booking: Booking) {
     return new Date(`${booking.date}T${booking.time}`) < now;
   }
+
+  const allPendingBookings = bookings
+    .filter((b) => b.status === "pending")
+    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+  const pendingBookings = allPendingBookings.filter((b) => !isMissed(b));
+  const missedBookings = allPendingBookings.filter((b) => isMissed(b));
 
   const selectedBooking = bookings.find((b) => b.id === selectedBookingId) ?? null;
 
@@ -431,11 +450,6 @@ export default function DashboardPage() {
                         </span>{" "}
                         — {b.customerName} ({b.customerPhone}) — {b.serviceName} ({b.durationMinutes} min,{" "}
                         {b.employeeName})
-                        {isMissed(b) && (
-                          <span className="ms-2 rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-600">
-                            {t.missed}
-                          </span>
-                        )}
                         {b.note && <span className="ms-2 italic text-zinc-500">&ldquo;{b.note}&rdquo;</span>}
                       </span>
                       <div className="flex gap-2">
@@ -452,6 +466,56 @@ export default function DashboardPage() {
                           className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                         >
                           {busyId === b.id ? t.busy : t.decline}
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </Reveal>
+            )}
+
+            {missedBookings.length > 0 && (
+              <Reveal delayMs={90} className="mt-6 rounded-xl bg-zinc-100 p-4 ring-1 ring-zinc-200">
+                <h2 className="flex items-center gap-1.5 text-sm font-semibold text-zinc-700">
+                  <IconClock className="h-4 w-4 text-zinc-500" />
+                  {t.missedRequests(missedBookings.length)}
+                </h2>
+                <ul className="mt-2 flex flex-col gap-2">
+                  {missedBookings.map((b) => (
+                    <li
+                      key={b.id}
+                      className={`flex flex-col gap-2 rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-zinc-200 sm:flex-row sm:items-center sm:justify-between ${listRowHoverClass}`}
+                    >
+                      <span className="text-zinc-700">
+                        <span className="font-medium text-zinc-800">
+                          {formatDisplayDate(b.date, lang)} at {b.time}
+                        </span>{" "}
+                        — {b.customerName} ({b.customerPhone}) — {b.serviceName} ({b.durationMinutes} min,{" "}
+                        {b.employeeName})
+                        <span className="ms-2 rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-600">
+                          {t.missed}
+                        </span>
+                        {b.note && <span className="ms-2 italic text-zinc-500">&ldquo;{b.note}&rdquo;</span>}
+                      </span>
+                      <div className="flex gap-2">
+                        <a
+                          href={whatsappLink(
+                            b.customerPhone,
+                            t.message.missedFollowup({ ...b, date: formatDisplayDate(b.date, lang) })
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={t.contactTitle}
+                          className="flex items-center rounded-full bg-[#e7f7ee] px-3 py-1 text-xs font-medium text-[#1f7a4d] transition-all duration-150 hover:scale-[1.05] hover:bg-[#d5f2e2] active:scale-95"
+                        >
+                          {t.contact}
+                        </a>
+                        <button
+                          onClick={() => handleCancelMissed(b.id)}
+                          disabled={busyId === b.id}
+                          className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 transition-all duration-150 hover:scale-[1.05] hover:bg-red-100 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                        >
+                          {busyId === b.id ? t.busy : t.cancel}
                         </button>
                       </div>
                     </li>

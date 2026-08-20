@@ -1469,6 +1469,8 @@ export type DashboardStats = {
 /** Cheap "at a glance" counters for the dashboard — computed with count-only queries rather than fetching full rows. */
 export async function getDashboardStats(businessId: string): Promise<DashboardStats> {
   const { weekStart, weekEnd } = beirutWeekRange();
+  const { dateStr: today, minutesSinceMidnight: nowMinutes } = beirutNow();
+  const nowTime = minutesToTime(nowMinutes);
 
   const [appointments, pending, cancelled, waitlist] = await Promise.all([
     supabase
@@ -1478,7 +1480,15 @@ export async function getDashboardStats(businessId: string): Promise<DashboardSt
       .eq("status", "booked")
       .gte("date", weekStart)
       .lte("date", weekEnd),
-    supabase.from("bookings").select("id", { count: "exact", head: true }).eq("business_id", businessId).eq("status", "pending"),
+    // Excludes requests whose appointment time has already passed — those
+    // move into their own "Missed Requests" section on the dashboard
+    // instead of counting toward this stat.
+    supabase
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("business_id", businessId)
+      .eq("status", "pending")
+      .or(`date.gt.${today},and(date.eq.${today},time.gte.${nowTime})`),
     supabase
       .from("bookings")
       .select("id", { count: "exact", head: true })
