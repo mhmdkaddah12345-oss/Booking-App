@@ -19,12 +19,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid_name_ar" }, { status: 400 });
   }
 
+  const trimmedNameAr = typeof nameAr === "string" ? nameAr.trim() : null;
   const service = await addService(
     auth.businessId,
-    name,
+    name.trim(),
     durationMinutes,
     priceUsd ?? null,
-    nameAr === "" ? null : nameAr ?? null
+    trimmedNameAr === "" ? null : trimmedNameAr
   );
   return NextResponse.json({ service }, { status: 201 });
 }

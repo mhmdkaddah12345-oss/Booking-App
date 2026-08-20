@@ -16,13 +16,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "invalid_name_ar" }, { status: 400 });
   }
 
+  const trimmedNameAr = typeof nameAr === "string" ? nameAr.trim() : null;
   const service = await updateService(
     id,
     auth.businessId,
-    name,
+    name.trim(),
     durationMinutes,
     priceUsd ?? null,
-    nameAr === "" ? null : nameAr ?? null
+    trimmedNameAr === "" ? null : trimmedNameAr
   );
   if (!service) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
